@@ -1,0 +1,69 @@
+@use '@angular/material' as mat;
+
+@use "sass:map";
+@use 'theme-light' as light;
+@use 'theme-dark' as dark;
+
+// Theme based on:
+// - https://material.angular.dev/guide/theming
+// - https://material.angular.dev/guide/theming#custom-color-palettes
+html {
+    color-scheme: light dark;
+    @include mat.theme((
+        typography: Roboto,
+        density: 0
+    ));
+    @include mat.theme-overrides((
+        primary: light-dark(map.get(light.$palette, "primary"), map.get(dark.$palette, "primary")),
+        on-primary: light-dark(map.get(light.$palette, "on-primary"), map.get(dark.$palette, "on-primary")),
+        primary-container: light-dark(map.get(light.$palette, "primary-container"), map.get(dark.$palette, "primary-container")),
+        on-primary-container: light-dark(map.get(light.$palette, "on-primary-container"), map.get(dark.$palette, "on-primary-container")),
+        inverse-primary: light-dark(map.get(light.$palette, "inverse-primary"), map.get(dark.$palette, "inverse-primary")),
+        primary-fixed: light-dark(map.get(light.$palette, "primary-fixed"), map.get(dark.$palette, "primary-fixed")),
+        primary-fixed-dim: light-dark(map.get(light.$palette, "primary-fixed-dim"), map.get(dark.$palette, "primary-fixed-dim")),
+        on-primary-fixed: light-dark(map.get(light.$palette, "on-primary-fixed"), map.get(dark.$palette, "on-primary-fixed")),
+        on-primary-fixed-variant: light-dark(map.get(light.$palette, "on-primary-fixed-variant"), map.get(dark.$palette, "on-primary-fixed-variant")),
+        secondary: light-dark(map.get(light.$palette, "secondary"), map.get(dark.$palette, "secondary")),
+        on-secondary: light-dark(map.get(light.$palette, "on-secondary"), map.get(dark.$palette, "on-secondary")),
+        secondary-container: light-dark(map.get(light.$palette, "secondary-container"), map.get(dark.$palette, "secondary-container")),
+        on-secondary-container: light-dark(map.get(light.$palette, "on-secondary-container"), map.get(dark.$palette, "on-secondary-container")),
+        secondary-fixed: light-dark(map.get(light.$palette, "secondary-fixed"), map.get(dark.$palette, "secondary-fixed")),
+        secondary-fixed-dim: light-dark(map.get(light.$palette, "secondary-fixed-dim"), map.get(dark.$palette, "secondary-fixed-dim")),
+        on-secondary-fixed: light-dark(map.get(light.$palette, "on-secondary-fixed"), map.get(dark.$palette, "on-secondary-fixed")),
+        on-secondary-fixed-variant: light-dark(map.get(light.$palette, "on-secondary-fixed-variant"), map.get(dark.$palette, "on-secondary-fixed-variant")),
+        tertiary: light-dark(map.get(light.$palette, "tertiary"), map.get(dark.$palette, "tertiary")),
+        on-tertiary: light-dark(map.get(light.$palette, "on-tertiary"), map.get(dark.$palette, "on-tertiary")),
+        tertiary-container: light-dark(map.get(light.$palette, "tertiary-container"), map.get(dark.$palette, "tertiary-container")),
+        on-tertiary-container: light-dark(map.get(light.$palette, "on-tertiary-container"), map.get(dark.$palette, "on-tertiary-container")),
+        tertiary-fixed: light-dark(map.get(light.$palette, "tertiary-fixed"), map.get(dark.$palette, "tertiary-fixed")),
+        tertiary-fixed-dim: light-dark(map.get(light.$palette, "tertiary-fixed-dim"), map.get(dark.$palette, "tertiary-fixed-dim")),
+        on-tertiary-fixed: light-dark(map.get(light.$palette, "on-tertiary-fixed"), map.get(dark.$palette, "on-tertiary-fixed")),
+        on-tertiary-fixed-variant: light-dark(map.get(light.$palette, "on-tertiary-fixed-variant"), map.get(dark.$palette, "on-tertiary-fixed-variant")),
+        background: light-dark(map.get(light.$palette, "background"), map.get(dark.$palette, "background")),
+        on-background: light-dark(map.get(light.$palette, "on-background"), map.get(dark.$palette, "on-background")),
+        surface: light-dark(map.get(light.$palette, "surface"), map.get(dark.$palette, "surface")),
+        surface-dim: light-dark(map.get(light.$palette, "surface-dim"), map.get(dark.$palette, "surface-dim")),
+        surface-bright: light-dark(map.get(light.$palette, "surface-bright"), map.get(dark.$palette, "surface-bright")),
+        surface-container-lowest: light-dark(map.get(light.$palette, "surface-container-lowest"), map.get(dark.$palette, "surface-container-lowest")),
+        surface-container-low: light-dark(map.get(light.$palette, "surface-container-low"), map.get(dark.$palette, "surface-container-low")),
+        surface-container: light-dark(map.get(light.$palette, "surface-container"), map.get(dark.$palette, "surface-container")),
+        surface-container-high: light-dark(map.get(light.$palette, "surface-container-high"), map.get(dark.$palette, "surface-container-high")),
+        surface-container-highest: light-dark(map.get(light.$palette, "surface-container-highest"), map.get(dark.$palette, "surface-container-highest")),
+        on-surface: light-dark(map.get(light.$palette, "on-surface"), map.get(dark.$palette, "on-surface")),
+        shadow: light-dark(map.get(light.$palette, "shadow"), map.get(dark.$palette, "shadow")),
+        scrim: light-dark(map.get(light.$palette, "scrim"), map.get(dark.$palette, "scrim")),
+        surface-tint: light-dark(map.get(light.$palette, "surface-tint"), map.get(dark.$palette, "surface-tint")),
+        inverse-surface: light-dark(map.get(light.$palette, "inverse-surface"), map.get(dark.$palette, "inverse-surface")),
+        inverse-on-surface: light-dark(map.get(light.$palette, "inverse-on-surface"), map.get(dark.$palette, "inverse-on-surface")),
+        outline: light-dark(map.get(light.$palette, "outline"), map.get(dark.$palette, "outline")),
+        outline-variant: light-dark(map.get(light.$palette, "outline-variant"), map.get(dark.$palette, "outline-variant")),
+        error: light-dark(map.get(light.$palette, "error"), map.get(dark.$palette, "error")),
+        error-container: light-dark(map.get(light.$palette, "error-container"), map.get(dark.$palette, "error-container")),
+        on-error: light-dark(map.get(light.$palette, "on-error"), map.get(dark.$palette, "on-error")),
+        on-error-container: light-dark(map.get(light.$palette, "on-error-container"), map.get(dark.$palette, "on-error-container")),
+        surface-variant: light-dark(map.get(light.$palette, "surface-variant"), map.get(dark.$palette, "surface-variant")),
+        on-surface-variant: light-dark(map.get(light.$palette, "on-surface-variant"), map.get(dark.$palette, "on-surface-variant")),
+        inverse-secondary: light-dark(map.get(light.$palette, "inverse-secondary"), map.get(dark.$palette, "inverse-secondary")),
+        inverse-tertiary: light-dark(map.get(light.$palette, "inverse-tertiary"), map.get(dark.$palette, "inverse-tertiary")),
+    ));
+}

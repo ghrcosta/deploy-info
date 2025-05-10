@@ -1,0 +1,38 @@
+@use '@angular/material' as mat;
+
+.bar {
+    background-color: var(--mat-sys-primary);
+    height: var(--home-top-bar-height);
+    width: 100%;
+}
+
+.content {
+    width: var(--home-content-width);
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    height: 100%;
+}
+
+.app-name {
+    color: var(--mat-sys-on-primary);
+    font-size: x-large;
+    padding-left: 12px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.buttons {
+    margin-left: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+
+    @include mat.icon-button-overrides((
+        icon-color: var(--mat-sys-on-primary),
+        ripple-color: var(--mat-sys-primary-container),
+    ));
+}
+
+.logout-button {
+    margin-left: 40px;
+}

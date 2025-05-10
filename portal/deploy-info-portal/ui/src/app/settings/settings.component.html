@@ -1,0 +1,57 @@
+<div class="content">
+    <div class="title">
+        <span>Manage projects</span>
+    </div>
+    <div class="project-list">
+        @for (project of projects; track project.name) {
+            <mat-card appearance="outlined">
+                <mat-card-header>
+                    <mat-card-title-group>
+                        <mat-card-title>{{project.name}}</mat-card-title>
+                        <a (click)="onDeleteProjectClicked(project)">Delete</a>
+                    </mat-card-title-group>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="project-data">
+                        <mat-icon svgIcon="category" class="data-icon"></mat-icon>
+                        <span class="data-key">Category:</span>
+                        <a class="data-value" (click)="onEditProjectCategoryClicked(project)">
+                            <span class="single-line">{{project.category}}</span>
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </a>
+                    </div>
+                    <div class="project-data">
+                        <mat-icon svgIcon="service_account" class="data-icon"></mat-icon>
+                        <span class="data-key">Service account:</span>
+                        <a class="data-value" (click)="onEditProjectServiceAccountClicked(project)">
+                            <span class="single-line">{{project.service_account}}</span>
+                            <mat-icon svgIcon="edit"></mat-icon>
+                        </a>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        }
+    </div>
+    <div class="project-add">
+        <mat-expansion-panel>
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon>add_circle</mat-icon>
+                    Add new
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-form-field>
+                <mat-label>Category</mat-label>
+                <input matInput type="text" [(ngModel)]="newProjectCategory">
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Service account</mat-label>
+                <input matInput type="text" [(ngModel)]="newProjectServiceAccount">
+            </mat-form-field>
+            <button mat-flat-button class="button-add">
+                <mat-icon>add_circle</mat-icon>
+                Add project
+            </button>
+        </mat-expansion-panel>
+    </div>
+</div>

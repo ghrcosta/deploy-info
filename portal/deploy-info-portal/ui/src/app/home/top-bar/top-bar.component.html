@@ -1,0 +1,19 @@
+<div class="bar">
+    <div class="content">
+        <span class="app-name">DeployInfo</span>
+
+        <div class="buttons">
+            <button mat-icon-button (click)="toggleDarkMode()">
+                <mat-icon>
+                    @if (isDarkMode) { dark_mode } @else { light_mode }
+                </mat-icon>
+            </button>
+            <button mat-icon-button>
+                <mat-icon>settings</mat-icon>
+            </button>
+            <button mat-icon-button class="logout-button">
+                <mat-icon>logout</mat-icon>
+            </button>
+        </div>
+    </div>
+</div>

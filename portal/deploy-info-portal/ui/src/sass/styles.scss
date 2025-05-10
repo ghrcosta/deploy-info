@@ -1,0 +1,20 @@
+@use 'variables';
+@use 'mixins';
+@use 'highlightjs';
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.light-theme { color-scheme: light; }
+.dark-theme { color-scheme: dark; }
+
+
+.single-line {
+    word-break: break-all;
+    // Despite being unofficial, these are supported by all major browsers: https://stackoverflow.com/a/13924997
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
