@@ -3,11 +3,10 @@
         <top-bar></top-bar>
     </div>
     <div class="content">
-        <div class="left-side">
-            <deploy-navigator></deploy-navigator>
-        </div>
-        <div class="right-side">
-            <file-viewer></file-viewer>
-        </div>
+        @if (showSettings) {
+            <settings></settings>
+        } @else {
+            <deploy-viewer></deploy-viewer>
+        }
     </div>
 </div>

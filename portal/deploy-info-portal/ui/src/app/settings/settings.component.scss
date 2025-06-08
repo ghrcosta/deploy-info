@@ -18,51 +18,45 @@
         user-select: none;
         color: var(--mat-sys-error);
         font-size: medium;
+
+        & + a {
+            margin-left: 10px;
+        }
     }
 
     & mat-card-content {
         margin-top: 6px;
-    }
 
-    & .project-data {
-        display: flex;
-        flex-direction: row;
-
-        & .data-icon {
-            height: 22px;
-            width: 22px;
-            margin-top: auto;
-            margin-bottom: auto;
-            @include mat.icon-overrides((
-                color: var(--mat-sys-primary),
-            ));
-        }
-
-        & .data-key {
-            margin-top: auto;
-            margin-bottom: auto;
-            margin-left: 4px;
-            font-size: medium;
-        }
-        & .data-value {
-            margin-top: auto;
-            margin-bottom: auto;
-            margin-left: 6px;
-            font-size: medium;
-
+        & .project-data {
             display: flex;
-            color: var(--mat-sys-on-surface-variant);
-            cursor: pointer;
-            flex: 1;
+            flex-direction: row;
 
-            &:hover {
-                text-decoration: underline;
+            & .data-icon {
+                height: 22px;
+                width: 22px;
+                margin-top: auto;
+                margin-bottom: auto;
+                @include mat.icon-overrides((
+                    color: var(--mat-sys-primary),
+                ));
             }
 
-            & > mat-icon {
-                flex: none;
-                width: 20px;
-                height: 20px;
+            & .data-key {
+                margin-top: auto;
+                margin-bottom: auto;
+                margin-left: 4px;
+                font-size: medium;
+            }
+            & .data-value {
+                margin-top: auto;
+                margin-bottom: auto;
+                margin-left: 6px;
+                font-size: medium;
+
+                display: flex;
+                color: var(--mat-sys-on-surface-variant);
+                cursor: pointer;
+                flex: 1;
             }
         }
     }
@@ -71,20 +65,39 @@
 .project-add {
     margin-top: 16px;
 
-    & mat-panel-title mat-icon {
-        margin-right: 4px;
-    }
+    & mat-card {
+        cursor: pointer;
+        user-select: none;
 
-    @include mat.expansion-overrides((
-        container-background-color: var(--mat-sys-secondary-container),
-    ));
+        @include mat.card-overrides((
+            outlined-container-color: var(--mat-sys-secondary-container),
+        ));
 
-    & .button-add {
-        width: 180px;
-        align-self: end;
+        & mat-card-header {
+            padding-top: 8px;
+            padding-bottom: 8px;
+
+            & mat-card-title-group {
+                justify-content: center;
+
+                & div {
+                    display: flex;
+                    flex-direction: row;
+
+                    & mat-icon {
+                        height: 22px;
+                        width: 22px;
+                        margin-top: auto;
+                        margin-bottom: auto;
+                        margin-right: 4px;
+                    }
+
+                    & span {
+                        margin-top: auto;
+                        margin-bottom: auto;
+                    }
+                }
+            }
+        }
     }
-}
-::ng-deep .project-add .mat-expansion-panel-body {
-    display: flex;
-    flex-direction: column;
 }

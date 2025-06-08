@@ -23,6 +23,7 @@ export class AppComponent {
         iconRegistry.addSvgIcon('label', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/label.svg'));
         iconRegistry.addSvgIcon('service_account', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/key.svg'));
         iconRegistry.addSvgIcon('edit', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/edit.svg'));
+        iconRegistry.addSvgIcon('delete', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/delete.svg'));
     }
 
     title = 'ui';

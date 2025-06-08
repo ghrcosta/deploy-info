@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule } from '@angular/forms';
@@ -6,9 +6,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { ProjectDataDialogComponent, ProjectDataDialogAction } from "./project-data-dialog/project-data-dialog.component";
 
 @Component({
-    selector: 'app-settings',
+    selector: 'settings',
     templateUrl: './settings.component.html',
     styleUrl: './settings.component.scss',
     imports: [
@@ -22,35 +24,61 @@ import { MatIconModule } from '@angular/material/icon';
     ],
 })
 export class SettingsComponent {
+    readonly dialog = inject(MatDialog);
+
     projects = EXAMPLE;
 
-    newProjectCategory='';
-    newProjectServiceAccount='';
-
-    onEditProjectCategoryClicked = (project: Project) => {
+    onAddProjectClicked = () => {
+        const dialogRef = this.dialog.open(ProjectDataDialogComponent, {
+            disableClose: true,
+            data: {
+                action: ProjectDataDialogAction.ADD
+            }
+        });
+        dialogRef.afterClosed().subscribe(result => this.refreshPage())
     }
 
-    onEditProjectServiceAccountClicked = (project: Project) => {
+    onEditProjectClicked = (project: Project) => {
+        const dialogRef = this.dialog.open(ProjectDataDialogComponent, {
+            disableClose: true,
+            data: {
+                action: ProjectDataDialogAction.EDIT,
+                project: { ...project } // Shallow copy
+            }
+        });
+        dialogRef.afterClosed().subscribe(result => this.refreshPage())
     }
 
     onDeleteProjectClicked = (project: Project) => {
+        const dialogRef = this.dialog.open(ProjectDataDialogComponent, {
+            disableClose: true,
+            data: {
+                action: ProjectDataDialogAction.DELETE,
+                project: { ...project } // Shallow copy
+            }
+        });
+        dialogRef.afterClosed().subscribe(result => this.refreshPage())
+    }
+
+    refreshPage = () => {
+        // TODO
     }
 }
 
-interface Project {
+export interface Project {
     name: string;
     category?: string;
-    service_account: string;
+    serviceAccount: string;
 }
 const EXAMPLE: Project[] = [
     {
         name: "Project A",
         category: "Some category",
-        service_account: "project-a@serviceaccount.comdli ylsdiuv lasylfi ifgawubswçiouçufgiurçouaeroçeoçr aeoçrugvaeo urçouwg4çouerçfu grwçfg srgoçerug çoeurgeuvrvçeu gçorguv eçrou"
+        serviceAccount: "project-a@serviceaccount.comdli ylsdiuv lasylfi ifgawubswçiouçufgiurçouaeroçeoçr aeoçrugvaeo urçouwg4çouerçfu grwçfg srgoçerug çoeurgeuvrvçeu gçorguv eçrou"
     },
     {
         name: "Project B",
         category: "Some other category",
-        service_account: "project-b@serviceaccount.com"
+        serviceAccount: "project-b@serviceaccount.com"
     }
 ];

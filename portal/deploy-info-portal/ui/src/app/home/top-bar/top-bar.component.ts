@@ -2,6 +2,7 @@ import { Component, inject, Renderer2 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HighlightLoader } from 'ngx-highlightjs';
+import { HomeService } from '../home.component'
 
 @Component({
     selector: 'top-bar',
@@ -13,6 +14,10 @@ import { HighlightLoader } from 'ngx-highlightjs';
     styleUrl: './top-bar.component.scss'
 })
 export class TopBarComponent {
+    constructor(
+        private homeService: HomeService,
+    ) {}
+
     isDarkMode = false;
 
     private readonly renderer = inject(Renderer2);
@@ -31,5 +36,13 @@ export class TopBarComponent {
             this.renderer.removeClass(body, 'dark-theme');
             this.highlightjsLoader.setTheme('assets/highlightjs/stackoverflow-light.min.css');
         }
-    };
+    }
+
+    openDeployViewer = () => {
+        this.homeService.showSettingsClickedEvent(false);
+    }
+
+    openSettings = () => {
+        this.homeService.showSettingsClickedEvent(true);
+    }
 }

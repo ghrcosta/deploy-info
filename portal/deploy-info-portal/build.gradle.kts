@@ -1,7 +1,7 @@
 plugins {
 	kotlin("jvm") version "1.9.25"
 	kotlin("plugin.spring") version "1.9.25"
-	id("org.springframework.boot") version "3.4.4"
+	id("org.springframework.boot") version "3.4.6"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -18,7 +18,7 @@ repositories {
 	mavenCentral()
 }
 
-extra["springCloudGcpVersion"] = "6.1.1"
+extra["springCloudGcpVersion"] = "6.2.1"
 extra["springCloudVersion"] = "2024.0.1"
 
 dependencies {
@@ -30,6 +30,8 @@ dependencies {
 
 	implementation("com.google.cloud:spring-cloud-gcp-starter")
 	implementation("com.google.cloud:spring-cloud-gcp-starter-logging")
+	implementation("com.google.cloud:spring-cloud-gcp-starter-storage")
+	implementation("com.google.cloud:spring-cloud-gcp-starter-data-datastore")
 
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

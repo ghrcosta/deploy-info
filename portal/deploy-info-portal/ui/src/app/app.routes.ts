@@ -4,7 +4,7 @@ import { SettingsComponent } from './settings/settings.component';
 
 export const routes: Routes = [
     {
-        path: 'home',
+        path: '',
         title: 'Home',
         component: HomeComponent,
     },

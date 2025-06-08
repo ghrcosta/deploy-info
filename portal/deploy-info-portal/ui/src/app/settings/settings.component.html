@@ -1,6 +1,6 @@
 <div class="content">
     <div class="title">
-        <span>Manage projects</span>
+        <h2>Manage projects</h2>
     </div>
     <div class="project-list">
         @for (project of projects; track project.name) {
@@ -8,50 +8,45 @@
                 <mat-card-header>
                     <mat-card-title-group>
                         <mat-card-title>{{project.name}}</mat-card-title>
-                        <a (click)="onDeleteProjectClicked(project)">Delete</a>
+                        <div>
+                            <a (click)="onEditProjectClicked(project)">
+                                <mat-icon svgIcon="edit"></mat-icon>
+                            </a>
+                            <a (click)="onDeleteProjectClicked(project)">
+                                <mat-icon svgIcon="delete"></mat-icon>
+                            </a>
+                        </div>
                     </mat-card-title-group>
                 </mat-card-header>
                 <mat-card-content>
                     <div class="project-data">
                         <mat-icon svgIcon="category" class="data-icon"></mat-icon>
                         <span class="data-key">Category:</span>
-                        <a class="data-value" (click)="onEditProjectCategoryClicked(project)">
+                        <div class="data-value">
                             <span class="single-line">{{project.category}}</span>
-                            <mat-icon svgIcon="edit"></mat-icon>
-                        </a>
+                        </div>
                     </div>
                     <div class="project-data">
                         <mat-icon svgIcon="service_account" class="data-icon"></mat-icon>
                         <span class="data-key">Service account:</span>
-                        <a class="data-value" (click)="onEditProjectServiceAccountClicked(project)">
-                            <span class="single-line">{{project.service_account}}</span>
-                            <mat-icon svgIcon="edit"></mat-icon>
-                        </a>
+                        <div class="data-value">
+                            <span class="single-line">{{project.serviceAccount}}</span>
+                        </div>
                     </div>
                 </mat-card-content>
             </mat-card>
         }
     </div>
     <div class="project-add">
-        <mat-expansion-panel>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <mat-icon>add_circle</mat-icon>
-                    Add new
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <mat-form-field>
-                <mat-label>Category</mat-label>
-                <input matInput type="text" [(ngModel)]="newProjectCategory">
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Service account</mat-label>
-                <input matInput type="text" [(ngModel)]="newProjectServiceAccount">
-            </mat-form-field>
-            <button mat-flat-button class="button-add">
-                <mat-icon>add_circle</mat-icon>
-                Add project
-            </button>
-        </mat-expansion-panel>
+        <mat-card appearance="outlined" (click)="onAddProjectClicked()">
+            <mat-card-header>
+                <mat-card-title-group>
+                    <div>
+                        <mat-icon>add_circle</mat-icon>
+                        <span>Add new</span>
+                    </div>
+                </mat-card-title-group>
+            </mat-card-header>
+        </mat-card>
     </div>
 </div>

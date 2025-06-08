@@ -1,29 +1,41 @@
 import { Component, Injectable } from '@angular/core';
-import { DeployNavigatorComponent } from "./deploy-navigator/deploy-navigator.component";
-import { FileViewerComponent } from './file-viewer/file-viewer.component';
-import { TopBarComponent } from "./top-bar/top-bar.component";
 import { Subject } from 'rxjs';
+import { TopBarComponent } from "./top-bar/top-bar.component";
+import { DeployViewerComponent } from '../deploy-viewer/deploy-viewer.component';
+import { SettingsComponent } from '../settings/settings.component'
 
 @Component({
     selector: 'app-home',
     templateUrl: './home.component.html',
     styleUrl: './home.component.scss',
     imports: [
-        DeployNavigatorComponent,
-        FileViewerComponent,
-        TopBarComponent
+        TopBarComponent,
+        DeployViewerComponent,
+        SettingsComponent,
     ],
 })
-export class HomeComponent { }
+export class HomeComponent {
+    constructor(
+        private homeService: HomeService
+    ) {}
+
+    showSettings = false;
+
+    ngOnInit() {
+        this.homeService.showSettingsEventObservable.subscribe(showSettings => {
+            this.showSettings = showSettings;
+        })
+    }
+}
 
 @Injectable({
     providedIn: 'root'
 })
 export class HomeService {
-    private _deployClickedSubject = new Subject<string>();
-    deployClickedEventObservable = this._deployClickedSubject.asObservable();
+    private _showSettingsSubject = new Subject<boolean>();
+    showSettingsEventObservable = this._showSettingsSubject.asObservable();
 
-    newDeployClickedEvent(event: string) {
-        this._deployClickedSubject.next(event);
+    showSettingsClickedEvent(showSettings: boolean) {
+        this._showSettingsSubject.next(showSettings);
     }
 }
