@@ -3,12 +3,16 @@ package application.settings
 import application.ProjectRepository
 import domain.Project
 
-class GetAllProjectsUseCase (
+class DeleteProjectUseCase(
     private val projectRepository: ProjectRepository
 ) {
-    fun execute(): Output {
+    fun execute(projectName: String): Output {
+        projectRepository.delete(projectName)
+
         return Output(projectRepository.getAll())
     }
 
-    class Output (val projectsInDatabase: List<Project>)
+    class Output(
+        val projectsInDatabase: List<Project>
+    )
 }

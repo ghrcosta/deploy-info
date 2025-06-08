@@ -4,6 +4,7 @@ import domain.Project
 
 interface ProjectRepository {
     fun getAll(): List<Project>
-    fun get(projectId: Long): Project?
-    fun save(project: Project): Unit
+    fun get(projectName: String): Project?
+    fun save(project: Project)
+    fun delete(projectName: String)
 }

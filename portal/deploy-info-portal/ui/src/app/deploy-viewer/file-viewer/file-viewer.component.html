@@ -1,0 +1,87 @@
+<div class="content">
+    @if (isLoading) {
+        <mat-spinner></mat-spinner>
+    }
+    @else if (data) {
+        <div class="deploy-id">
+            <mat-icon class="type-icon" svgIcon="project" aria-label="Project"/>
+            <span>{{data.project}}</span>
+            <mat-icon class="separator-icon">chevron_right</mat-icon>
+            <mat-icon class="type-icon" svgIcon={{data.type}} [attr.aria-label]="'Deploy of type ' + data.type"/>
+            <span>{{data.service}}</span>
+            <mat-icon class="separator-icon">chevron_right</mat-icon>
+            <mat-icon class="type-icon" svgIcon="deployed_code" aria-label="Deploy"/>
+            <span>{{data.version}}</span>
+        </div>
+        <div class="deploy-details">
+            <div class="link">
+                <mat-icon>link</mat-icon>
+                <span><a [href]="data.link">{{data.link}}</a></span>
+            </div>
+            <div class="author">
+                <mat-icon>person_outline</mat-icon>
+                <span>{{data.author}}</span>
+            </div>
+            <div class="date">
+                <mat-icon>schedule</mat-icon>
+                <span>{{timestampToUtc(data.timestamp)}}</span>
+            </div>
+        </div>
+        <mat-tab-group>
+            <mat-tab label="GIT">
+                @if (data.git) {
+                    @if (data.git.gitlog) {
+                        <mat-expansion-panel>
+                            <mat-expansion-panel-header>
+                                <mat-panel-title>git log</mat-panel-title>
+                            </mat-expansion-panel-header>
+                    
+                            <pre class="code-area"><code [highlight]="data.git.gitlog" language="plaintext" lineNumbers></code></pre>
+                        </mat-expansion-panel>
+                    }
+                    @if (data.git.gitstatus) {
+                        <mat-expansion-panel>
+                            <mat-expansion-panel-header>
+                                <mat-panel-title>git status</mat-panel-title>
+                            </mat-expansion-panel-header>
+                    
+                            <pre class="code-area"><code [highlight]="data.git.gitstatus" language="plaintext" lineNumbers></code></pre>
+                        </mat-expansion-panel>
+                    }
+                    @for (change of data.git.changes; track change.filepath) {
+                        <mat-expansion-panel>
+                            <mat-expansion-panel-header>
+                                <mat-panel-title>{{change.filepath}}</mat-panel-title>
+                            </mat-expansion-panel-header>
+                    
+                            <pre class="code-area"><code [highlightAuto]="change.content" lineNumbers></code></pre>
+                        </mat-expansion-panel>
+                    }
+                } @else {
+                    <div class="no-data-alert">
+                        <mat-icon svgIcon="no_data" aria-label="No data found" class="alert-icon"></mat-icon>
+                        <span>No data found</span>
+                    </div>
+                }
+            </mat-tab>
+            <mat-tab label="Extras">
+                @if (data.extras) {
+                    @for (extra of data.extras; track extra.filepath) {
+                        <mat-expansion-panel>
+                            <mat-expansion-panel-header>
+                                <mat-panel-title>{{extra.filepath}}</mat-panel-title>
+                            </mat-expansion-panel-header>
+                    
+                            <pre class="code-area"><code [highlightAuto]="extra.content" lineNumbers></code></pre>
+                        </mat-expansion-panel>
+                    }
+                } @else {
+                    <div class="no-data-alert">
+                        <mat-icon svgIcon="no_data" aria-label="No data found" class="alert-icon"></mat-icon>
+                        <span>No data found</span>
+                    </div>
+                }
+            </mat-tab>
+        </mat-tab-group>
+    }
+</div>

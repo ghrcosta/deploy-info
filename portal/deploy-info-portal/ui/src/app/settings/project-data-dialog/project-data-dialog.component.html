@@ -1,0 +1,43 @@
+@if (isActionAdd() || isActionEdit()) {
+    <div class="project-add-or-edit">
+        <h2 mat-dialog-title>@if (isActionAdd()) {Add new project} @else {Edit project}</h2>
+        <mat-dialog-content>
+            <mat-form-field>
+                <mat-label>GCP project name @if (isActionEdit()) {(cannot be changed)}</mat-label>
+                <input matInput type="text" [formControl]="nameFormControl">
+                @if (nameFormControl.hasError('required')) {
+                    <mat-error>Field required</mat-error>
+                }
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Category</mat-label>
+                <input matInput type="text" [formControl]="categoryFormControl">
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Service account</mat-label>
+                <input matInput type="email" [formControl]="serviceAccountFormControl">
+                @if (serviceAccountFormControl.hasError('email')) {
+                    <mat-error>Enter a valid service account email address</mat-error>
+                } @else if (serviceAccountFormControl.hasError('required')) {
+                    <mat-error>Field required</mat-error>
+                }
+            </mat-form-field>
+        </mat-dialog-content>
+        <mat-dialog-actions>
+            <button mat-button (click)="onCancelClicked()">Cancel</button>
+            <button mat-button [disabled]="isFormInvalid()" (click)="onSaveClicked()">@if (isActionAdd()) { Add } @else { Save }</button>
+        </mat-dialog-actions>
+    </div>
+
+} @else if (isActionDelete()) {
+    <div class="project-delete">
+        <h2 mat-dialog-title>Delete project</h2>
+        <mat-dialog-content>
+            Are you sure you want to delete project '<strong>{{data.project.name}}</strong>'?
+        </mat-dialog-content>
+        <mat-dialog-actions>
+            <button mat-button (click)="onCancelClicked()">Cancel</button>
+            <button mat-button (click)="onSaveClicked()">Delete</button>
+        </mat-dialog-actions>
+    </div>
+}

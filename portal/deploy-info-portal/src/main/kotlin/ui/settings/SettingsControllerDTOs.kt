@@ -19,3 +19,24 @@ class ProjectDTO(
         serviceAccount = serviceAccount,
     )
 }
+
+@Suppress("unused")
+class AddProjectResultDTO(
+    private val issues: IssuesDTO? = null,
+    private val projects: List<ProjectDTO>? = null,
+) {
+    class IssuesDTO (
+        private val hasNameConflict: Boolean,
+    )
+}
+
+@Suppress("unused")
+class EditProjectResultDTO(
+    private val issues: IssuesDTO? = null,
+    private val projects: List<ProjectDTO>? = null,
+) {
+    class IssuesDTO (
+        private val issueProjectNotFound: Boolean,
+        private val issueServiceAccountError: Boolean,
+    )
+}
