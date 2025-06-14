@@ -29,14 +29,14 @@ class EditProjectUseCase(
         return Output(
             issueProjectNotFound = issueProjectNotFound,
             issueServiceAccountError = issueServiceAccountError,
-            projectsInDatabase = projectsInDatabase
+            projectsInRepository = projectsInDatabase
         )
     }
 
     class Output(
         val issueProjectNotFound: Boolean,
         val issueServiceAccountError: Boolean,
-        val projectsInDatabase: List<Project>?
+        val projectsInRepository: List<Project>?
     ) {
         fun issuesFound() = issueProjectNotFound || issueServiceAccountError
     }

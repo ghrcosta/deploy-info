@@ -7,10 +7,10 @@ import application.settings.GetAllProjectsUseCase
 import org.springframework.http.ResponseEntity
 
 fun GetAllProjectsUseCase.Output.toResponse(): ResponseEntity<List<ProjectDTO>> =
-    if (projectsInDatabase.isEmpty()) {
+    if (projectsInRepository.isEmpty()) {
         ResponseEntity.noContent().build()
     } else {
-        ResponseEntity.ok(projectsInDatabase.map { ProjectDTO(it) })
+        ResponseEntity.ok(projectsInRepository.map { ProjectDTO(it) })
     }
 
 fun AddProjectUseCase.Output.toResponse(): ResponseEntity<AddProjectResultDTO> =
@@ -18,16 +18,17 @@ fun AddProjectUseCase.Output.toResponse(): ResponseEntity<AddProjectResultDTO> =
         ResponseEntity.ok(
             AddProjectResultDTO(
                 issues = AddProjectResultDTO.IssuesDTO(
-                    hasNameConflict = issueHasNameConflict,
+                    issueNameConflict = issueNameConflict,
+                    issueServiceAccountError = issueServiceAccountError,
                 )
             )
         )
-    } else if (projectsInDatabase.isNullOrEmpty()) {
+    } else if (projectsInRepository.isNullOrEmpty()) {
         ResponseEntity.noContent().build()
     } else {
         ResponseEntity.ok(
             AddProjectResultDTO(
-                projects = projectsInDatabase.map { ProjectDTO(it) },
+                projects = projectsInRepository.map { ProjectDTO(it) },
             )
         )
     }
@@ -42,19 +43,19 @@ fun EditProjectUseCase.Output.toResponse(): ResponseEntity<EditProjectResultDTO>
                 )
             )
         )
-    } else if (projectsInDatabase.isNullOrEmpty()) {
+    } else if (projectsInRepository.isNullOrEmpty()) {
         ResponseEntity.noContent().build()
     } else {
         ResponseEntity.ok(
             EditProjectResultDTO(
-                projects = projectsInDatabase.map { ProjectDTO(it) },
+                projects = projectsInRepository.map { ProjectDTO(it) },
             )
         )
     }
 
 fun DeleteProjectUseCase.Output.toResponse(): ResponseEntity<List<ProjectDTO>> =
-    if (projectsInDatabase.isEmpty()) {
+    if (projectsInRepository.isEmpty()) {
         ResponseEntity.noContent().build()
     } else {
-        ResponseEntity.ok(projectsInDatabase.map { ProjectDTO(it) })
+        ResponseEntity.ok(projectsInRepository.map { ProjectDTO(it) })
     }

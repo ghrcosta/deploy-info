@@ -1,6 +1,6 @@
 package domain
 
-class Project(
+data class Project(
     var name: String,
     var category: String? = null,
     var serviceAccount: String

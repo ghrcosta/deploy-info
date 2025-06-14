@@ -13,6 +13,6 @@ class DeleteProjectUseCase(
     }
 
     class Output(
-        val projectsInDatabase: List<Project>
+        val projectsInRepository: List<Project>
     )
 }

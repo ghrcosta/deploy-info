@@ -10,5 +10,5 @@ class GetAllProjectsUseCase (
         return Output(projectRepository.getAll())
     }
 
-    class Output (val projectsInDatabase: List<Project>)
+    class Output (val projectsInRepository: List<Project>)
 }

@@ -2,10 +2,10 @@ package ui.settings
 
 import domain.Project
 
-class ProjectDTO(
-    private val name: String,
-    private val category: String? = null,
-    private val serviceAccount: String
+data class ProjectDTO(
+    val name: String,
+    val category: String? = null,
+    val serviceAccount: String
 ) {
     constructor(project: Project) : this(
         name = project.name,
@@ -20,23 +20,22 @@ class ProjectDTO(
     )
 }
 
-@Suppress("unused")
 class AddProjectResultDTO(
-    private val issues: IssuesDTO? = null,
-    private val projects: List<ProjectDTO>? = null,
+    val issues: IssuesDTO? = null,
+    val projects: List<ProjectDTO>? = null,
 ) {
     class IssuesDTO (
-        private val hasNameConflict: Boolean,
+        val issueNameConflict: Boolean,
+        val issueServiceAccountError: Boolean,
     )
 }
 
-@Suppress("unused")
 class EditProjectResultDTO(
-    private val issues: IssuesDTO? = null,
-    private val projects: List<ProjectDTO>? = null,
+    val issues: IssuesDTO? = null,
+    val projects: List<ProjectDTO>? = null,
 ) {
     class IssuesDTO (
-        private val issueProjectNotFound: Boolean,
-        private val issueServiceAccountError: Boolean,
+        val issueProjectNotFound: Boolean,
+        val issueServiceAccountError: Boolean,
     )
 }

@@ -9,29 +9,29 @@ class AddProjectUseCase(
     fun execute(newProject: Project): Output {
         val existingProjects = projectRepository.getAll()
 
-        val issueHasNameConflict = existingProjects.any { it.name == newProject.name }
+        val issueNameConflict = existingProjects.any { it.name == newProject.name }
 
         var issueServiceAccountError = false
         // TODO: Test if name + serviceAccount are working
 
         var projectsInDatabase: List<Project>? = null
-        if (!issueHasNameConflict) {
+        if (!issueNameConflict) {
             projectRepository.save(newProject)
             projectsInDatabase = projectRepository.getAll()
         }
 
         return Output(
-            issueHasNameConflict = issueHasNameConflict,
+            issueNameConflict = issueNameConflict,
             issueServiceAccountError = issueServiceAccountError,
-            projectsInDatabase = projectsInDatabase
+            projectsInRepository = projectsInDatabase
         )
     }
 
     class Output(
-        val issueHasNameConflict: Boolean,
+        val issueNameConflict: Boolean,
         val issueServiceAccountError: Boolean,
-        val projectsInDatabase: List<Project>?
+        val projectsInRepository: List<Project>?
     ) {
-        fun issuesFound() = issueHasNameConflict || issueServiceAccountError
+        fun issuesFound() = issueNameConflict || issueServiceAccountError
     }
 }
