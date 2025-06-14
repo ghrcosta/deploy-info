@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { ProjectDataDialogComponent, ProjectDataDialogAction } from "./project-data-dialog/project-data-dialog.component";
+import { SettingsNetworkService } from './settings.network.service';
 
 @Component({
     selector: 'settings',
@@ -25,8 +26,15 @@ import { ProjectDataDialogComponent, ProjectDataDialogAction } from "./project-d
 })
 export class SettingsComponent {
     readonly dialog = inject(MatDialog);
+    readonly network = inject(SettingsNetworkService)
 
-    projects = EXAMPLE;
+    projects: Project[] = [];
+
+    ngOnInit() {
+        this.network.getProjects().subscribe(projects => {
+            this.projects = projects;
+        });
+    }
 
     onAddProjectClicked = () => {
         const dialogRef = this.dialog.open(ProjectDataDialogComponent, {
@@ -70,15 +78,3 @@ export interface Project {
     category?: string;
     serviceAccount: string;
 }
-const EXAMPLE: Project[] = [
-    {
-        name: "Project A",
-        category: "Some category",
-        serviceAccount: "project-a@serviceaccount.comdli ylsdiuv lasylfi ifgawubswçiouçufgiurçouaeroçeoçr aeoçrugvaeo urçouwg4çouerçfu grwçfg srgoçerug çoeurgeuvrvçeu gçorguv eçrou"
-    },
-    {
-        name: "Project B",
-        category: "Some other category",
-        serviceAccount: "project-b@serviceaccount.com"
-    }
-];

@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { Project } from "../settings.component";
+import { SettingsNetworkService } from '../settings.network.service';
 
 @Component({
     selector: 'project-data-dialog',
@@ -24,6 +25,7 @@ import { Project } from "../settings.component";
 export class ProjectDataDialogComponent {
     readonly dialogRef = inject(MatDialogRef<ProjectDataDialogComponent>);
     readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+    readonly network = inject(SettingsNetworkService)
 
     isActionAdd = () => { return this.data.action == ProjectDataDialogAction.ADD}
     isActionEdit = () => { return this.data.action == ProjectDataDialogAction.EDIT}
