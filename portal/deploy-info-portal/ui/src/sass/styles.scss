@@ -1,6 +1,7 @@
 @use 'variables';
 @use 'mixins';
 @use 'highlightjs';
+@use '@angular/material' as mat;
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
@@ -17,4 +18,14 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     -webkit-line-clamp: 1;
     line-clamp: 1;
     -webkit-box-orient: vertical;
+}
+
+.snackbar {
+    white-space: pre-wrap;
+
+    @include mat.snack-bar-overrides((
+        container-color: var(--mat-sys-error-container),
+        supporting-text-color: var(--mat-sys-on-error-container),
+        button-color: var(--mat-sys-on-background)
+    ));
 }

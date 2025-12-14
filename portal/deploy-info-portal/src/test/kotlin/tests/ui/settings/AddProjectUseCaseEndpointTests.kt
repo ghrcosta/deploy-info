@@ -39,7 +39,7 @@ class AddProjectUseCaseEndpointTests {
 
     @Test
     fun `Add project without issues`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = AddProjectUseCase.Output(
             issueNameConflict = false,
             issueServiceAccountError = false,
@@ -62,7 +62,7 @@ class AddProjectUseCaseEndpointTests {
 
     @Test
     fun `Notify issue when adding project with same name twice`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = AddProjectUseCase.Output(
             issueNameConflict = true,
             issueServiceAccountError = false,
@@ -85,7 +85,7 @@ class AddProjectUseCaseEndpointTests {
 
     @Test
     fun `Notify issue when adding project with service account problem`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = AddProjectUseCase.Output(
             issueNameConflict = false,
             issueServiceAccountError = true,

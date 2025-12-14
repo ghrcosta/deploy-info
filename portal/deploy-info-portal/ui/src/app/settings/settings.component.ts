@@ -43,7 +43,7 @@ export class SettingsComponent {
                 action: ProjectDataDialogAction.ADD
             }
         });
-        dialogRef.afterClosed().subscribe(result => this.refreshPage())
+        dialogRef.afterClosed().subscribe(result => this.refreshPage(result))
     }
 
     onEditProjectClicked = (project: Project) => {
@@ -54,7 +54,7 @@ export class SettingsComponent {
                 project: { ...project } // Shallow copy
             }
         });
-        dialogRef.afterClosed().subscribe(result => this.refreshPage())
+        dialogRef.afterClosed().subscribe(result => this.refreshPage(result))
     }
 
     onDeleteProjectClicked = (project: Project) => {
@@ -65,16 +65,18 @@ export class SettingsComponent {
                 project: { ...project } // Shallow copy
             }
         });
-        dialogRef.afterClosed().subscribe(result => this.refreshPage())
+        dialogRef.afterClosed().subscribe(result => this.refreshPage(result))
     }
 
-    refreshPage = () => {
-        // TODO
+    refreshPage = (projects: Project[] | undefined) => {
+        if (projects) {
+            this.projects = projects;
+        }
     }
 }
 
 export interface Project {
     name: string;
-    category?: string;
+    group?: string;
     serviceAccount: string;
 }

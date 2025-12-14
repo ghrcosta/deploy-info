@@ -38,7 +38,7 @@ class DeleteProjectUseCaseEndpointTests {
     fun `Return after delete project operation`() {
         val output = DeleteProjectUseCase.Output(
             projectsInRepository = listOf(
-                Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+                Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
             )
         )
         whenever(useCase.execute(any())).thenReturn(output)

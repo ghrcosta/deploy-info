@@ -4,7 +4,7 @@
     </div>
     <div class="project-list">
         @for (project of projects; track project.name) {
-            <mat-card appearance="outlined">
+            <mat-card appearance="outlined" class="project">
                 <mat-card-header>
                     <mat-card-title-group>
                         <mat-card-title>{{project.name}}</mat-card-title>
@@ -20,10 +20,10 @@
                 </mat-card-header>
                 <mat-card-content>
                     <div class="project-data">
-                        <mat-icon svgIcon="category" class="data-icon"></mat-icon>
-                        <span class="data-key">Category:</span>
+                        <mat-icon svgIcon="group" class="data-icon"></mat-icon>
+                        <span class="data-key">Group:</span>
                         <div class="data-value">
-                            <span class="single-line">{{project.category}}</span>
+                            <span class="single-line">@if (project.group) {{{project.group}}} @else {&lt;No Group&gt;}</span>
                         </div>
                     </div>
                     <div class="project-data">

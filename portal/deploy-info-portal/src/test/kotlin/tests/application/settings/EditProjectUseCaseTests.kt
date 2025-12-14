@@ -32,23 +32,23 @@ class EditProjectUseCaseTests {
 
     @Test
     fun `Edit project without issues`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         projectRepository.save(project)
 
-        val modifiedProject = Project(name = "testProject1", category = "test2", serviceAccount = "test2@account.com")
+        val modifiedProject = Project(name = "testProject1", group = "test2", serviceAccount = "test2@account.com")
         val output = editProjectUseCase.execute(modifiedProject)
         assertFalse(output.issuesFound())
         assertEquals(1, output.projectsInRepository?.size)
 
         val savedProject = projectRepository.get(project.name)
         assertNotNull(savedProject)
-        assertEquals(modifiedProject.category, savedProject.category)
+        assertEquals(modifiedProject.group, savedProject.group)
         assertEquals(modifiedProject.serviceAccount, savedProject.serviceAccount)
     }
 
     @Test
     fun `Notify issue when editing project that does not exist`() {
-        val project = Project(name = "testProject", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject", group = "test", serviceAccount = "test@account.com")
 
         val output = editProjectUseCase.execute(project)
         assertTrue(output.issuesFound())
@@ -58,10 +58,10 @@ class EditProjectUseCaseTests {
 
     @Test
     fun `Notify issue when editing project with service account problem`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         projectRepository.save(project)
 
-        val modifiedProject = Project(name = "testProject1", category = "test", serviceAccount = "test2@account.com")
+        val modifiedProject = Project(name = "testProject1", group = "test", serviceAccount = "test2@account.com")
         val output = editProjectUseCase.execute(modifiedProject)
         assertTrue(output.issuesFound())
         assertTrue(output.issueServiceAccountError)

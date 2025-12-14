@@ -4,8 +4,10 @@ import { FormsModule, ReactiveFormsModule, FormControl, Validators } from '@angu
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Project } from "../settings.component";
-import { SettingsNetworkService } from '../settings.network.service';
+import { ProjectDataDialogNetworkService } from './project-data-dialog.network.service';
 
 @Component({
     selector: 'project-data-dialog',
@@ -15,6 +17,7 @@ import { SettingsNetworkService } from '../settings.network.service';
         MatButtonModule,
         MatInputModule,
         MatFormFieldModule,
+        MatProgressSpinnerModule,
         MatDialogTitle,
         MatDialogContent,
         MatDialogActions,
@@ -25,7 +28,10 @@ import { SettingsNetworkService } from '../settings.network.service';
 export class ProjectDataDialogComponent {
     readonly dialogRef = inject(MatDialogRef<ProjectDataDialogComponent>);
     readonly data = inject<DialogData>(MAT_DIALOG_DATA);
-    readonly network = inject(SettingsNetworkService)
+    readonly network = inject(ProjectDataDialogNetworkService)
+    readonly snackBar = inject(MatSnackBar);
+
+    isRequestOngoing = false;
 
     isActionAdd = () => { return this.data.action == ProjectDataDialogAction.ADD}
     isActionEdit = () => { return this.data.action == ProjectDataDialogAction.EDIT}
@@ -35,8 +41,8 @@ export class ProjectDataDialogComponent {
         if (this.isActionEdit()) { return this.data.project.name } else { return '' }
     }
 
-    getInitialCategoryValue = () => {
-        if (this.isActionEdit()) { return this.data.project.category } else { return '' }
+    getInitialGroupValue = () => {
+        if (this.isActionEdit()) { return this.data.project.group } else { return '' }
     }
 
     getInitialServiceAccountValue = () => {
@@ -44,37 +50,121 @@ export class ProjectDataDialogComponent {
     }
 
     nameFormControl = new FormControl({value: this.getInitialNameValue(), disabled: this.isActionEdit()}, [Validators.required]);
-    categoryFormControl = new FormControl(this.getInitialCategoryValue(), []);
+    groupFormControl = new FormControl(this.getInitialGroupValue(), []);
     serviceAccountFormControl = new FormControl(this.getInitialServiceAccountValue(), [Validators.required, Validators.email]);
 
     isFormInvalid = () => {
         const formContainsErrors = this.nameFormControl.invalid
-            || this.categoryFormControl.invalid
+            || this.groupFormControl.invalid
             || this.serviceAccountFormControl.invalid;
 
         const noDataWasChanged = (this.nameFormControl.value == this.getInitialNameValue())
-            && (this.categoryFormControl.value == this.getInitialCategoryValue())
+            && (this.groupFormControl.value == this.getInitialGroupValue())
             && (this.serviceAccountFormControl.value == this.getInitialServiceAccountValue());
 
         return formContainsErrors || noDataWasChanged;
     }
 
     onSaveClicked = () => {
+        this.snackBar.dismiss();
+
         if (this.isActionAdd()) {
-            // TODO: Send request to backend
-            // TODO: Handle response
+            this.addProject();
         } else if (this.isActionEdit()) {
-            // TODO: Send request to backend
-            // TODO: Handle response
+            this.editProject();
         } else if (this.isActionDelete()) {
-            // TODO: Send request to backend
-            // TODO: Handle response
+            this.deleteProject();
         }
-        this.dialogRef.close();
+    }
+
+    addProject() {
+        this.isRequestOngoing = true;
+        const project: Project = {
+            name: this.nameFormControl.value ?? '',
+            group: this.groupFormControl.value ?? '',
+            serviceAccount: this.serviceAccountFormControl.value ?? ''
+        }
+        this.network.addProject(project).subscribe({
+            next: result => {
+                if (result.issues) {
+                    let issuesText = [];
+                    if (result.issues.issueNameConflict) {
+                        issuesText.push('A project with this name already exists.');
+                    }
+                    if (result.issues.issueServiceAccountError) {
+                        issuesText.push('Failed to validate service account.');
+                    }
+                    let text = issuesText.join('\n\n');
+                    this.openSnackBar(text);
+                } else {
+                    this.dialogRef.close(result.projects);
+                }
+                this.isRequestOngoing = false;
+            },
+            error: error => {
+                this.openSnackBar(error.message);
+                this.isRequestOngoing = false;
+            }
+        })
+    }
+
+    editProject() {
+        this.isRequestOngoing = true;
+        const project: Project = {
+            name: this.nameFormControl.value ?? '',
+            group: this.groupFormControl.value ?? '',
+            serviceAccount: this.serviceAccountFormControl.value ?? ''
+        }
+        this.network.editProject(project).subscribe({
+            next: result => {
+                if (result.issues) {
+                    let issuesText = [];
+                    if (result.issues.issueProjectNotFound) {
+                        issuesText.push('Project not found.');
+                    }
+                    if (result.issues.issueServiceAccountError) {
+                        issuesText.push('Failed to validate service account.');
+                    }
+                    let text = issuesText.join('\n\n');
+                    this.openSnackBar(text);
+                } else {
+                    this.dialogRef.close(result.projects);
+                }
+                this.isRequestOngoing = false;
+            },
+            error: error => {
+                this.openSnackBar(error.message);
+                this.isRequestOngoing = false;
+            }
+        })
+    }
+
+    deleteProject() {
+        this.isRequestOngoing = true;
+        const projectName = this.data.project.name;
+        this.network.deleteProject(projectName).subscribe({
+            next: projects => {
+                this.dialogRef.close(projects);
+                this.isRequestOngoing = false;
+            },
+            error: error => {
+                this.openSnackBar(error.message);
+                this.isRequestOngoing = false;
+            }
+        })
     }
 
     onCancelClicked = () => {
+        this.snackBar.dismiss();
         this.dialogRef.close();
+    }
+
+    openSnackBar(text: any) {
+        this.snackBar.open(text, 'OK', {
+            horizontalPosition: 'start',
+            verticalPosition: 'top',
+            panelClass: ['snackbar']
+        })
     }
 }
 
@@ -85,4 +175,22 @@ export enum ProjectDataDialogAction {
 export interface DialogData {
   action: ProjectDataDialogAction;
   project: Project;
+}
+
+export interface AddProjectResult {
+    issues?: AddProjectIssues;
+    projects?: Project[];
+}
+export interface AddProjectIssues {
+    issueNameConflict: boolean;
+    issueServiceAccountError: boolean;
+}
+
+export interface EditProjectResult {
+    issues?: EditProjectIssues;
+    projects?: Project[];
+}
+export interface EditProjectIssues {
+    issueProjectNotFound: boolean;
+    issueServiceAccountError: boolean;
 }

@@ -4,18 +4,18 @@ import domain.Project
 
 data class ProjectDTO(
     val name: String,
-    val category: String? = null,
+    val group: String? = null,
     val serviceAccount: String
 ) {
     constructor(project: Project) : this(
         name = project.name,
-        category = project.category,
+        group = project.group,
         serviceAccount = project.serviceAccount,
     )
 
     fun toModel(): Project = Project(
         name = name,
-        category = category,
+        group = group,
         serviceAccount = serviceAccount,
     )
 }

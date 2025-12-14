@@ -36,9 +36,9 @@ class ProjectDatastoreRepositoryTests {
 
     @Test
     fun `Return all projects from the repository`() {
-        val newProject1 = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
-        val newProject2 = Project(name = "testProject2", category = "test", serviceAccount = "test@account.com")
-        val newProject3 = Project(name = "testProject3", category = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
+        val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
         projectRepository.save(newProject1)
         projectRepository.save(newProject2)
         projectRepository.save(newProject3)
@@ -52,9 +52,9 @@ class ProjectDatastoreRepositoryTests {
 
     @Test
     fun `Return one project from the repository`() {
-        val newProject1 = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
-        val newProject2 = Project(name = "testProject2", category = "test", serviceAccount = "test@account.com")
-        val newProject3 = Project(name = "testProject3", category = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
+        val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
         projectRepository.save(newProject1)
         projectRepository.save(newProject2)
         projectRepository.save(newProject3)
@@ -65,9 +65,9 @@ class ProjectDatastoreRepositoryTests {
 
     @Test
     fun `Delete a project from the repository`() {
-        val newProject1 = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
-        val newProject2 = Project(name = "testProject2", category = "test", serviceAccount = "test@account.com")
-        val newProject3 = Project(name = "testProject3", category = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
+        val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
         projectRepository.save(newProject1)
         projectRepository.save(newProject2)
         projectRepository.save(newProject3)

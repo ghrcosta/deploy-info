@@ -12,3 +12,16 @@
         }
     }
 }
+
+.button {
+    width: 70px;
+}
+
+.button-spinner {
+    width: 16px !important;
+}
+
+::ng-deep .mat-mdc-dialog-surface {
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+}

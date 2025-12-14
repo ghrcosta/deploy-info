@@ -32,7 +32,7 @@ class AddProjectUseCaseTests {
 
     @Test
     fun `Add project without issues`() {
-        val newProject1 = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = addProjectUseCase.execute(newProject1)
         assertFalse(output.issuesFound())
         assertEquals(1, output.projectsInRepository?.size)
@@ -40,10 +40,10 @@ class AddProjectUseCaseTests {
 
     @Test
     fun `Notify issue when adding project with same name twice`() {
-        val newProject1 = Project(name = "testProject", category = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(name = "testProject", group = "test", serviceAccount = "test@account.com")
         projectRepository.save(newProject1)
 
-        val newProject2 = Project(name = "testProject", category = "test2", serviceAccount = "test2@account.com")
+        val newProject2 = Project(name = "testProject", group = "test2", serviceAccount = "test2@account.com")
         val output = addProjectUseCase.execute(newProject2)
         assertTrue(output.issuesFound())
         assertTrue(output.issueNameConflict)
@@ -52,7 +52,7 @@ class AddProjectUseCaseTests {
 
     @Test
     fun `Notify issue when adding project with service account problem`() {
-        val newProject1 = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
 
         val output = addProjectUseCase.execute(newProject1)
         assertTrue(output.issuesFound())

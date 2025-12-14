@@ -39,7 +39,7 @@ class EditProjectUseCaseEndpointTests {
 
     @Test
     fun `Edit project without issues`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = EditProjectUseCase.Output(
             issueProjectNotFound = false,
             issueServiceAccountError = false,
@@ -62,7 +62,7 @@ class EditProjectUseCaseEndpointTests {
 
     @Test
     fun `Notify issue when editing project that does not exist`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = EditProjectUseCase.Output(
             issueProjectNotFound = true,
             issueServiceAccountError = false,
@@ -85,7 +85,7 @@ class EditProjectUseCaseEndpointTests {
 
     @Test
     fun `Notify issue when editing project with service account problem`() {
-        val project = Project(name = "testProject1", category = "test", serviceAccount = "test@account.com")
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = EditProjectUseCase.Output(
             issueProjectNotFound = false,
             issueServiceAccountError = true,

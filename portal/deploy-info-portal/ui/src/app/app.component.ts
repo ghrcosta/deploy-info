@@ -17,7 +17,7 @@ export class AppComponent {
         iconRegistry.addSvgIcon('GAE', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/gcp_gae.svg'));
         iconRegistry.addSvgIcon('RUN', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/gcp_run.svg'));
         iconRegistry.addSvgIcon('no_data', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/data_off.svg'));
-        iconRegistry.addSvgIcon('category', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/category.svg'));
+        iconRegistry.addSvgIcon('group', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/group.svg'));
         iconRegistry.addSvgIcon('deployed_code', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/deployed_code.svg'));
         iconRegistry.addSvgIcon('deployed_code_alert', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/deployed_code_alert.svg'));
         iconRegistry.addSvgIcon('label', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/label.svg'));
