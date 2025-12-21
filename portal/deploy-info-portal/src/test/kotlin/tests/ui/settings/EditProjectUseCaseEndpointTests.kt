@@ -66,7 +66,7 @@ class EditProjectUseCaseEndpointTests {
         val output = EditProjectUseCase.Output(
             issueProjectNotFound = true,
             issueServiceAccountError = false,
-            projectsInRepository = null
+            projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
 
@@ -89,7 +89,7 @@ class EditProjectUseCaseEndpointTests {
         val output = EditProjectUseCase.Output(
             issueProjectNotFound = false,
             issueServiceAccountError = true,
-            projectsInRepository = null
+            projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
 

@@ -5,7 +5,6 @@ import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import domain.Project
 import org.springframework.stereotype.Repository
 
-@Suppress("unused")
 @Repository
 class ProjectDatastoreRepository(
     private val datastoreTemplate: DatastoreTemplate

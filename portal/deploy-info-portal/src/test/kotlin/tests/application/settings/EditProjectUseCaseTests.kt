@@ -38,7 +38,7 @@ class EditProjectUseCaseTests {
         val modifiedProject = Project(name = "testProject1", group = "test2", serviceAccount = "test2@account.com")
         val output = editProjectUseCase.execute(modifiedProject)
         assertFalse(output.issuesFound())
-        assertEquals(1, output.projectsInRepository?.size)
+        assertEquals(1, output.projectsInRepository.size)
 
         val savedProject = projectRepository.get(project.name)
         assertNotNull(savedProject)
@@ -53,7 +53,7 @@ class EditProjectUseCaseTests {
         val output = editProjectUseCase.execute(project)
         assertTrue(output.issuesFound())
         assertTrue(output.issueProjectNotFound)
-        assertNull(output.projectsInRepository)
+        assert(output.projectsInRepository.isEmpty())
     }
 
     @Test
@@ -65,6 +65,6 @@ class EditProjectUseCaseTests {
         val output = editProjectUseCase.execute(modifiedProject)
         assertTrue(output.issuesFound())
         assertTrue(output.issueServiceAccountError)
-        assertNull(output.projectsInRepository)
+        assert(output.projectsInRepository.isEmpty())
     }
 }

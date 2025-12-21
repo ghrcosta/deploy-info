@@ -14,7 +14,7 @@ class AddProjectUseCase(
         var issueServiceAccountError = false
         // TODO: Test if name + serviceAccount are working
 
-        var projectsInDatabase: List<Project>? = null
+        var projectsInDatabase: List<Project> = emptyList()
         if (!issueNameConflict) {
             projectRepository.save(newProject)
             projectsInDatabase = projectRepository.getAll()
@@ -30,7 +30,7 @@ class AddProjectUseCase(
     class Output(
         val issueNameConflict: Boolean,
         val issueServiceAccountError: Boolean,
-        val projectsInRepository: List<Project>?
+        val projectsInRepository: List<Project>
     ) {
         fun issuesFound() = issueNameConflict || issueServiceAccountError
     }

@@ -35,7 +35,7 @@ class AddProjectUseCaseTests {
         val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = addProjectUseCase.execute(newProject1)
         assertFalse(output.issuesFound())
-        assertEquals(1, output.projectsInRepository?.size)
+        assertEquals(1, output.projectsInRepository.size)
     }
 
     @Test
@@ -47,7 +47,7 @@ class AddProjectUseCaseTests {
         val output = addProjectUseCase.execute(newProject2)
         assertTrue(output.issuesFound())
         assertTrue(output.issueNameConflict)
-        assertNull(output.projectsInRepository)
+        assert(output.projectsInRepository.isEmpty())
     }
 
     @Test
@@ -57,6 +57,6 @@ class AddProjectUseCaseTests {
         val output = addProjectUseCase.execute(newProject1)
         assertTrue(output.issuesFound())
         assertTrue(output.issueServiceAccountError)
-        assertNull(output.projectsInRepository)
+        assert(output.projectsInRepository.isEmpty())
     }
 }

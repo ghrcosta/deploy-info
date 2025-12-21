@@ -11,7 +11,7 @@ class EditProjectUseCase(
 
         var issueProjectNotFound = false
         var issueServiceAccountError = false
-        var projectsInDatabase: List<Project>? = null
+        var projectsInDatabase: List<Project> = emptyList()
 
         if (existingProject != null) {
             if (existingProject.serviceAccount != modifiedProject.serviceAccount) {
@@ -36,7 +36,7 @@ class EditProjectUseCase(
     class Output(
         val issueProjectNotFound: Boolean,
         val issueServiceAccountError: Boolean,
-        val projectsInRepository: List<Project>?
+        val projectsInRepository: List<Project>
     ) {
         fun issuesFound() = issueProjectNotFound || issueServiceAccountError
     }

@@ -66,7 +66,7 @@ class AddProjectUseCaseEndpointTests {
         val output = AddProjectUseCase.Output(
             issueNameConflict = true,
             issueServiceAccountError = false,
-            projectsInRepository = null
+            projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
 
@@ -89,7 +89,7 @@ class AddProjectUseCaseEndpointTests {
         val output = AddProjectUseCase.Output(
             issueNameConflict = false,
             issueServiceAccountError = true,
-            projectsInRepository = null
+            projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
 
