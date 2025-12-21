@@ -4,7 +4,7 @@ import com.google.cloud.spring.data.datastore.core.mapping.Entity
 import domain.Project
 import org.springframework.data.annotation.Id
 
-@Entity(name = "project")
+@Entity(name = "deploy-info/project")
 class ProjectEntity(
     @Id
     val name: String,
