@@ -23,8 +23,6 @@ fun AddProjectUseCase.Output.toResponse(): ResponseEntity<AddProjectResultDTO> =
                 )
             )
         )
-    } else if (projectsInRepository.isNullOrEmpty()) {
-        ResponseEntity.noContent().build()
     } else {
         ResponseEntity.ok(
             AddProjectResultDTO(
@@ -43,8 +41,6 @@ fun EditProjectUseCase.Output.toResponse(): ResponseEntity<EditProjectResultDTO>
                 )
             )
         )
-    } else if (projectsInRepository.isNullOrEmpty()) {
-        ResponseEntity.noContent().build()
     } else {
         ResponseEntity.ok(
             EditProjectResultDTO(
@@ -54,8 +50,4 @@ fun EditProjectUseCase.Output.toResponse(): ResponseEntity<EditProjectResultDTO>
     }
 
 fun DeleteProjectUseCase.Output.toResponse(): ResponseEntity<List<ProjectDTO>> =
-    if (projectsInRepository.isEmpty()) {
-        ResponseEntity.noContent().build()
-    } else {
-        ResponseEntity.ok(projectsInRepository.map { ProjectDTO(it) })
-    }
+    ResponseEntity.ok(projectsInRepository.map { ProjectDTO(it) })
