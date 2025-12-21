@@ -1,6 +1,5 @@
 package ui.settings
 
-import application.ProjectRepository
 import application.settings.AddProjectUseCase
 import application.settings.DeleteProjectUseCase
 import application.settings.EditProjectUseCase
@@ -11,11 +10,10 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("settings")
 class SettingsController(
-    projectRepository: ProjectRepository,
-    private val getAllProjectsUseCase: GetAllProjectsUseCase = GetAllProjectsUseCase(projectRepository),
-    private val addProjectUseCase: AddProjectUseCase = AddProjectUseCase(projectRepository),
-    private val editProjectUseCase: EditProjectUseCase = EditProjectUseCase(projectRepository),
-    private val deleteProjectUseCase: DeleteProjectUseCase = DeleteProjectUseCase(projectRepository),
+    private val getAllProjectsUseCase: GetAllProjectsUseCase,
+    private val addProjectUseCase: AddProjectUseCase,
+    private val editProjectUseCase: EditProjectUseCase,
+    private val deleteProjectUseCase: DeleteProjectUseCase,
 ) {
 
     @GetMapping("/projects")
