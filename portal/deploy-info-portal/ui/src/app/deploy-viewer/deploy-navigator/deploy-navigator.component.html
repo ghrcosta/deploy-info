@@ -8,7 +8,7 @@
         @for (group of groupList; track group.name) {
             @if (groupList.length > 1 || group.name) {
                 <div class="group-list">
-                    <span>@if (group.name) { {{group.name}} } @else { Ungrouped }</span>
+                    <span>@if (group.name) { {{group.name}} } @else { &lt;No Group&gt; }</span>
                 </div>
             }
             <div class="project-list">
@@ -19,19 +19,21 @@
                                 <span>{{ project.name }}</span>
                             </mat-panel-title>
                         </mat-expansion-panel-header>
-                
+
                         <mat-tree #tree [dataSource]="project.services" [childrenAccessor]="childrenAccessor">
                             <!-- Version format -->
-                            <mat-tree-node *matTreeNodeDef="let node" [attr.id]="node.id" class="version-node" (click)="onDeployClicked(node.id)">
+                            <mat-tree-node *matTreeNodeDef="let node"
+                                           [attr.id]="node.id" class="version-node"
+                                           (click)="onDeployClicked($event, node.id)">
                                 <div class="version-entry">
                                     <mat-icon svgIcon="deployed_code" aria-label="Deploy" class="icon"/>
                                     <span>{{node.name}}</span>
                                 </div>
                             </mat-tree-node>
-            
+
                             <!-- Service format -->
                             <mat-tree-node *matTreeNodeDef="let node;when: hasChild" matTreeNodeToggle
-                                            [cdkTreeNodeTypeaheadLabel]="node.name">
+                                            [cdkTreeNodeTypeaheadLabel]="node.id">
                                 <div class="service-entry">
                                     <mat-icon svgIcon={{node.icon}} class="icon"
                                               [attr.aria-label]="'Deploy of type ' + node.icon"/>

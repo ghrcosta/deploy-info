@@ -35,8 +35,10 @@
                             <mat-expansion-panel-header>
                                 <mat-panel-title>git log</mat-panel-title>
                             </mat-expansion-panel-header>
-                    
-                            <pre class="code-area"><code [highlight]="data.git.gitlog" language="plaintext" lineNumbers></code></pre>
+
+                            <pre class="code-area">
+                              <code [highlight]="data.git.gitlog" language="git" lineNumbers></code>
+                            </pre>
                         </mat-expansion-panel>
                     }
                     @if (data.git.gitstatus) {
@@ -44,8 +46,10 @@
                             <mat-expansion-panel-header>
                                 <mat-panel-title>git status</mat-panel-title>
                             </mat-expansion-panel-header>
-                    
-                            <pre class="code-area"><code [highlight]="data.git.gitstatus" language="plaintext" lineNumbers></code></pre>
+
+                            <pre class="code-area">
+                              <code [highlight]="data.git.gitstatus" language="git" lineNumbers></code>
+                            </pre>
                         </mat-expansion-panel>
                     }
                     @for (change of data.git.changes; track change.filepath) {
@@ -53,8 +57,10 @@
                             <mat-expansion-panel-header>
                                 <mat-panel-title>{{change.filepath}}</mat-panel-title>
                             </mat-expansion-panel-header>
-                    
-                            <pre class="code-area"><code [highlightAuto]="change.content" lineNumbers></code></pre>
+
+                            <pre class="code-area">
+                              <code [highlightAuto]="change.content" lineNumbers></code>
+                            </pre>
                         </mat-expansion-panel>
                     }
                 } @else {
@@ -71,8 +77,10 @@
                             <mat-expansion-panel-header>
                                 <mat-panel-title>{{extra.filepath}}</mat-panel-title>
                             </mat-expansion-panel-header>
-                    
-                            <pre class="code-area"><code [highlightAuto]="extra.content" lineNumbers></code></pre>
+
+                            <pre class="code-area">
+                              <code [highlightAuto]="extra.content" lineNumbers></code>
+                            </pre>
                         </mat-expansion-panel>
                     }
                 } @else {

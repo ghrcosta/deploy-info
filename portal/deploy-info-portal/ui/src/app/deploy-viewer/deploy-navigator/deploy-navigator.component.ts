@@ -25,11 +25,12 @@ export class DeployNavigatorComponent {
         private elementRef: ElementRef
     ) {}
 
-    onDeployClicked = (versionId: string) => {
-        this.deployViewerService.newDeployClickedEvent(versionId);
+    onDeployClicked = (event: MouseEvent, deployId: string) => {
+        this.deployViewerService.newDeployClickedEvent(deployId);
 
-        let newVersionClicked = this.elementRef.nativeElement.querySelector('#'+versionId);
+        const newVersionClicked = event.currentTarget as HTMLElement;
         if (!newVersionClicked.classList.contains(VERSION_NODE_HIGHLIGHTED_CLASS)) {
+            // Ensure other versions are no longer highlighted, then highlight clicked version
             let versionNodes = this.elementRef.nativeElement.querySelectorAll('.'+VERSION_NODE_CLASS);
             for (var versionNode of versionNodes) {
                 versionNode.classList.remove(VERSION_NODE_HIGHLIGHTED_CLASS);
@@ -66,14 +67,14 @@ export class DeployNavigatorComponent {
 
                 serviceNodes.sort((a, b) => a.name.localeCompare(b.name));
                 projectNodes.push({
-                    name: project.project,
+                    name: project.name,
                     services: serviceNodes,
                 });
             }
 
             projectNodes.sort((a, b) => a.name.localeCompare(b.name));
             groupNodes.push({
-                name: group.group,
+                name: group.name,
                 projects: projectNodes,
             });
         }
@@ -85,7 +86,7 @@ export class DeployNavigatorComponent {
         });
         return groupNodes;
     }
-    
+
     groupList = this.convertDataToNodes(EXAMPLE_DATA_FULL);
     //groupList = this.convertDataToNodes(EXAMPLE_DATA_1_GROUP_WITH_NAME);
     //groupList = this.convertDataToNodes(EXAMPLE_DATA_1_GROUP_WITHOUT_NAME);
@@ -102,122 +103,81 @@ interface ProjectNode {
     name: string;
     services: TreeNode[];
 }
-
 interface TreeNode {
-  name: string;
-  id: string;
-  icon?: string;
-  children?: TreeNode[];
+    id: string;
+    name: string;
+    icon?: string;
+    children?: TreeNode[];
 }
 
 interface GroupEntry {
-    group: string;
+    name: string;
     projects: ProjectEntry[];
 }
 interface ProjectEntry {
-    project: string;
+    name: string;
     services: ServiceEntry[];
 }
 interface ServiceEntry {
     name: string;
     type: string;
-    versions: TreeNode[];
+    versions: VersionEntry[];
 }
-
-const EXAMPLE_DATA_EMPTY: GroupEntry[] = [];
-
-const EXAMPLE_DATA_1_GROUP_WITH_NAME: GroupEntry[] = [
-    {
-        group: 'PROD',
-        projects: [
-            {
-                project: 'Project C',
-                services: [
-                    {
-                        name: 'GAE Service 23',
-                        type: 'GAE',
-                        versions: [
-                            { id: 'id1', name: 'Version name 42' },
-                            { id: 'id2', name: 'Version name 51232' },
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
-];
-
-const EXAMPLE_DATA_1_GROUP_WITHOUT_NAME: GroupEntry[] = [
-    {
-        group: '',
-        projects: [
-            {
-                project: 'Project C',
-                services: [
-                    {
-                        name: 'GAE Service 23',
-                        type: 'GAE',
-                        versions: [
-                            { id: 'id1', name: 'Version name 42' },
-                            { id: 'id2', name: 'Version name 51232' },
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
-];
+interface VersionEntry {
+    id: string;
+    name: string;
+}
 
 const EXAMPLE_DATA_FULL: GroupEntry[] = [
     {
-        group: 'PROD',
+        name: 'PROD',
         projects: [
             {
-                project: 'Project C',
+                name: 'Project C',
                 services: [
                     {
                         name: 'GAE Service 23',
                         type: 'GAE',
                         versions: [
-                            { id: 'id3', name: 'Version name 42' },
-                            { id: 'id4', name: 'Version name 51232' },
+                            { id: '1', name: 'Version name 42' },
+                            { id: '2', name: 'Version name 51232' },
                         ]
                     },
                     {
                         name: 'GAE Service 151',
                         type: 'GAE',
                         versions: [
-                            { id: 'id5', name: 'Version name 42' },
-                            { id: 'id6', name: 'Version name 51232' },
+                            { id: '3', name: 'Version name 42' },
+                            { id: '4', name: 'Version name 51232' },
                         ]
                     },
                     {
                         name: 'GAE Service A3',
                         type: 'GAE',
                         versions: [
-                            { id: 'id7', name: 'Version name 42' },
-                            { id: 'id8', name: 'Version name 51232' },
+                            { id: '5', name: 'Version name 42' },
+                            { id: '6', name: 'Version name 51232' },
                         ]
                     }
                 ]
             },
             {
-                project: 'Project B',
+                name: 'Project B',
                 services: [
                     {
                         name: 'GAE Service B1',
                         type: 'GAE',
                         versions: [
-                            { id: 'id9', name: 'Version name 42' },
-                            { id: 'id10', name: 'Version name 51232' },
+                            { id: '7', name: 'Version name 42' },
+                            { id: '8', name: 'Version name 51232' },
                         ]
                     },
                     {
                         name: 'RUN Service B2',
                         type: 'RUN',
                         versions: [
-                            { id: 'id11', name: 'Version name 42' },
-                            { id: 'id12', name: 'Version name 51232' },
+                            { id: '9', name: 'Version name 42' },
+                            { id: '10', name: 'Version name 51232' },
                         ]
                     }
                 ]
@@ -225,25 +185,25 @@ const EXAMPLE_DATA_FULL: GroupEntry[] = [
         ]
     },
     {
-        group: 'DEV',
+        name: 'DEV',
         projects: [
             {
-                project: 'Project A has a very long name, like, really really long for real',
+                name: 'Project A has a very long name, like, really really long for real',
                 services: [
                     {
                         name: 'GAE Service with a very long name',
                         type: 'GAE',
                         versions: [
-                            { id: 'id13', name: 'Version name 42' },
-                            { id: 'id14', name: 'Version name 51232' },
+                            { id: '11', name: 'Version name 42' },
+                            { id: '12', name: 'Version name 51232' },
                         ]
                     },
                     {
                         name: 'RUN Service B2',
                         type: 'RUN',
                         versions: [
-                            { id: 'id15', name: 'Version name 42' },
-                            { id: 'id16', name: 'Version name 51232' },
+                            { id: '13', name: 'MyVersion_FULL' },
+                            { id: '14', name: 'MyVersion_NO_EXTRA' },
                         ]
                     }
                 ]
@@ -251,25 +211,25 @@ const EXAMPLE_DATA_FULL: GroupEntry[] = [
         ]
     },
     {
-        group: '',
+        name: '',
         projects: [
             {
-                project: 'Project D',
+                name: 'Project D',
                 services: [
                     {
                         name: 'RUN Service B1',
                         type: 'RUN',
                         versions: [
-                            { id: 'id17', name: 'Version name 42' },
-                            { id: 'id18', name: 'Version name 51232' },
+                            { id: '15', name: 'MyVersion_NO_GIT' },
+                            { id: '16', name: 'Version name 51232' },
                         ]
                     },
                     {
                         name: 'RUN Service B2',
                         type: 'RUN',
                         versions: [
-                            { id: 'id19', name: 'Version name 42' },
-                            { id: 'id20', name: 'Version name 51232' },
+                            { id: '17', name: 'Version name 42' },
+                            { id: '18', name: 'Version name 51232' },
                         ]
                     }
                 ]

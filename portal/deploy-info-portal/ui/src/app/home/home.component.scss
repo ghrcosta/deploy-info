@@ -1,3 +1,5 @@
+@use '@angular/material' as mat;
+
 .home {
     display: flex;
     flex-direction: column;
@@ -16,6 +18,7 @@
     overflow: auto;
     height: 100%;
     width: 100%;
+    background: var(--mat-sys-surface);
 }
 
 deploy-viewer {

@@ -30,11 +30,11 @@ export class TopBarComponent {
         if (this.isDarkMode) {
             this.renderer.addClass(body, 'dark-theme');
             this.renderer.removeClass(body, 'light-theme');
-            this.highlightjsLoader.setTheme('assets/highlightjs/stackoverflow-dark.min.css');
+            this.highlightjsLoader.setTheme('assets/highlightjs/atom-one-dark.min.css');
         } else {
             this.renderer.addClass(body, 'light-theme');
             this.renderer.removeClass(body, 'dark-theme');
-            this.highlightjsLoader.setTheme('assets/highlightjs/stackoverflow-light.min.css');
+            this.highlightjsLoader.setTheme('assets/highlightjs/atom-one-light.min.css');
         }
     }
 

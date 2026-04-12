@@ -3,9 +3,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Highlight, HighlightAuto } from 'ngx-highlightjs';
+import { Highlight, HighlightAuto, HighlightJS } from 'ngx-highlightjs';
 import { HighlightLineNumbers } from 'ngx-highlightjs/line-numbers';
 import { DeployViewerService } from '../deploy-viewer.component'
+
+import highlightGitLanguage from '../../highlightjs/git.js';
 
 @Component({
     selector: 'file-viewer',
@@ -23,24 +25,29 @@ import { DeployViewerService } from '../deploy-viewer.component'
 })
 export class FileViewerComponent {
     constructor(
-        private deployViewerService: DeployViewerService
+        private deployViewerService: DeployViewerService,
+        private highlightService: HighlightJS
     ) {}
 
     isLoading = false;
     data: DeployData | null = null;
 
     ngOnInit() {
-        this.deployViewerService.deployClickedEventObservable.subscribe(versionId => {
+        this.highlightService.registerLanguage('git', highlightGitLanguage);
+
+        this.deployViewerService.deployClickedEventObservable.subscribe(deployId => {
             (async () => {
                 this.isLoading = true;
-                
+
+                // TODO: Get data
+
                 await this.delay(1000);
 
-                if (versionId == 'id13') {
+                if (deployId == '13') {
                     this.data = EXAMPLE_DATA_FULL;
-                } else if (versionId == 'id14') {
+                } else if (deployId == '14') {
                     this.data = EXAMPLE_DATA_NO_EXTRA;
-                } else if (versionId == 'id15') {
+                } else if (deployId == '15') {
                     this.data = EXAMPLE_DATA_NO_GIT;
                 } else {
                     this.data = null;
@@ -211,11 +218,11 @@ index 7c7a0cc..11329bf 100644
 +import io.github.ghrcosta.CollectorTask
     import org.apache.tools.ant.taskdefs.condition.Os
     import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-    
+
 +
     plugins {
         val kotlinVersion = "1.9.0"
-    
+
 @@ -22,6 +24,21 @@ plugins {
         // https://github.com/GoogleCloudPlatform/app-gradle-plugin#using-plugins-block
         // https://github.com/GoogleCloudPlatform/app-gradle-plugin/blob/master/USER_GUIDE.md#applying-the-plugin
@@ -236,7 +243,7 @@ index 7c7a0cc..11329bf 100644
 +tasks.appengineDeploy {
 +	finalizedBy("deployInfoCollect")
     }
-    
+
     noArg {
 @@ -168,15 +185,4 @@ appengine {
                 setCloudSdkHome(googleCloudSdkHome)

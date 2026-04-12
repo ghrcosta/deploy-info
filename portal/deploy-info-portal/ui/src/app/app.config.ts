@@ -19,7 +19,8 @@ export const appConfig: ApplicationConfig = {
         provideHighlightOptions({
             fullLibraryLoader: () => import('highlight.js'),
             lineNumbersLoader: () => import('ngx-highlightjs/line-numbers'),
-            themePath: 'assets/highlightjs/stackoverflow-light.min.css',
+            // Theme downloaded from https://cdnjs.com/libraries/highlight.js
+            themePath: 'assets/highlightjs/atom-one-light.min.css',
         }),
     ]
 };

@@ -7,7 +7,6 @@
     padding-left: 10px;
     padding-right: 10px;
     min-height: 100%;
-    background-color: var(--mat-sys-surface-container-low);
 }
 
 .deploy-id {
@@ -102,11 +101,11 @@ mat-tab-group {
     margin-top: 20px;
 
     @include mat.tabs-overrides((
-        active-indicator-color: var(--mat-sys-tertiary),
-        active-focus-indicator-color: var(--mat-sys-tertiary),
-        active-hover-indicator-color: var(--mat-sys-tertiary),
+        active-indicator-color: var(--mat-sys-secondary-container),
+        active-focus-indicator-color: var(--mat-sys-secondary-container),
+        active-hover-indicator-color: var(--mat-sys-secondary-container),
         active-indicator-height: 48px,
-        divider-color: var(--mat-sys-tertiary),
+        divider-color: var(--mat-sys-secondary-container),
     ));
 }
 
@@ -120,6 +119,7 @@ mat-tab-group {
 mat-tab-group mat-expansion-panel {
     margin-top: 10px;
     margin-bottom: 10px;
+    background: var(--mat-sys-surface-container-high);
 }
 
 .code-area {

@@ -6,7 +6,6 @@
     padding-left: 10px;
     padding-right: 10px;
     min-height: 100%;
-    background-color: var(--mat-sys-primary-container);
 }
 
 .group-list {
@@ -15,7 +14,7 @@
     & > span {
         margin-left: 10px;
         font-weight: bold;
-        color: var(--mat-sys-on-primary-container);
+        color: var(--mat-sys-on-surface);
     }
 
     &:first-of-type {
@@ -26,6 +25,13 @@
 .project-list {
     padding-top: 10px;
     padding-bottom: 10px;
+
+    & mat-expansion-panel {
+        background: var(--mat-sys-surface-container-high);
+        & mat-tree {
+            background: var(--mat-sys-surface-container-high);
+        }
+    }
 
     & mat-panel-title {
         & span {
