@@ -1,1 +1,10 @@
 # deploy-info
+
+Let users see exactly which commits and local changes were in the code of each GCP App Engine or Cloud Run deploy.
+
+Components:
+
+- [`collector-java/deploy-info-collector`](collector-java/deploy-info-collector/README.md) — Gradle plugin that collects git/extra file info and uploads it to Cloud Storage ([how it works](docs/collector-plugin.md))
+- [`portal/deploy-info-portal`](portal/deploy-info-portal) — Spring Boot backend + Angular frontend ([run everything locally](docs/local-development.md))
+
+Project plan and status: see [TODO.md](TODO.md) and [STATUS_REPORT.md](STATUS_REPORT.md).
