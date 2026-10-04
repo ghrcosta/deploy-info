@@ -5,7 +5,7 @@ the root [README](../../../README.md) and [local-development.md](../../../docs/l
 
 ## Backend
 
-Located in this repository root (`portal/deploy-info-portal`; Spring Boot 3.5.x, Kotlin, Spring Cloud
+Located in this repository root (`portal/deploy-info-portal`; Spring Boot 4.1.x, Kotlin, Spring Cloud
 GCP 7.x).
 
 The app **auto-selects its profile** (`infrastructure/DeployInfoPortalApplication.kt`): if the

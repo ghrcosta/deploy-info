@@ -51,7 +51,7 @@ class GcpAppEngineApiClient(
             listing()
         } catch (e: ApiException) {
             throw GcpListingException(
-                "GCP App Engine API returned ${e.statusCode?.code} for project ${project.name}", e
+                "GCP App Engine API returned ${e.statusCode.code} for project ${project.name}", e
             )
         }
 

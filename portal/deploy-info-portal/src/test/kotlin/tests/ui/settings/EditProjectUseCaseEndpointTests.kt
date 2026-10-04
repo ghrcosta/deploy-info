@@ -1,27 +1,26 @@
 package tests.ui.settings
 
 import application.settings.EditProjectUseCase
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.google.gson.Gson
 import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
+import com.google.gson.Gson
 import domain.Project
 import infrastructure.DeployInfoPortalApplication
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import ui.settings.EditProjectResultDTO
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @SpringBootTest(classes = [DeployInfoPortalApplication::class])
 @AutoConfigureMockMvc
@@ -83,7 +82,7 @@ class EditProjectUseCaseEndpointTests {
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
         val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
-        assertTrue(dto.issues?.issueProjectNotFound == true)
+        assertEquals(true, dto.issues?.issueProjectNotFound)
         assertNull(dto.projects)
     }
 
@@ -106,7 +105,7 @@ class EditProjectUseCaseEndpointTests {
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
         val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
-        assertTrue(dto.issues?.issueServiceAccountError == true)
+        assertEquals(true, dto.issues?.issueServiceAccountError)
         assertNull(dto.projects)
     }
 }

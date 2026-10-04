@@ -27,7 +27,7 @@ dependencies {
 	implementation(platform(libs.spring.cloud.bom))
 	implementation(libs.spring.boot.starter.web)
 
-	implementation(libs.fasterxml.jackson)
+	implementation(libs.jackson.kotlin)
 
 	implementation(libs.google.cloud.appengine.admin)
 	implementation(libs.google.cloud.run)
@@ -39,10 +39,11 @@ dependencies {
 	implementation(libs.spring.cloud.gcp.starter.storage)
 
 	testImplementation(libs.spring.boot.starter.test)
+	testImplementation(libs.spring.boot.starter.webmvc.test)
 	testImplementation(libs.junit)
-	testImplementation(libs.mockito.core)
+	@Suppress("AvoidDuplicateDependencies") testImplementation(libs.mockito.core)
+	@Suppress("AvoidDuplicateDependencies") mockitoAgent(libs.mockito.core) { isTransitive = false }
 	testImplementation(libs.mockito.kotlin)
-	mockitoAgent(libs.mockito.core) { isTransitive = false }
 
 	testRuntimeOnly(libs.junit.launcher)
 }

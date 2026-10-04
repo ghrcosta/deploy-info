@@ -100,9 +100,10 @@ class GcpCloudRunApiClientTests {
         )
     }
 
+    @Suppress("SameParameterValue")
     private fun statusCode(code: StatusCode.Code): StatusCode = object : StatusCode {
         override fun getCode(): StatusCode.Code = code
-        override fun getTransportCode(): Any? = null
+        override fun getTransportCode(): Any = ""
     }
 
     private fun service(name: String, uri: String): Service =

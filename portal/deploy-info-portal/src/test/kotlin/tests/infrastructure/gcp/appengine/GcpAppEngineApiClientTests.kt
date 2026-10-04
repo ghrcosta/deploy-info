@@ -82,9 +82,10 @@ class GcpAppEngineApiClientTests {
         )
     }
 
+    @Suppress("SameParameterValue")
     private fun statusCode(code: StatusCode.Code): StatusCode = object : StatusCode {
         override fun getCode(): StatusCode.Code = code
-        override fun getTransportCode(): Any? = null
+        override fun getTransportCode(): Any = ""
     }
 
     private fun service(id: String): com.google.appengine.v1.Service =

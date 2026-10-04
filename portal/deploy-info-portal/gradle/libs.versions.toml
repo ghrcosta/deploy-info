@@ -1,19 +1,20 @@
 [versions] # Use Spring Initializr (https://start.spring.io) to generate a project, use the versions set there
-kotlin = "1.9.25" # See Spring Initializr
-googleCloudAppengineAdmin = "2.71.0" # Aligned with the gax 2.71.0 / grpc 1.71.0 stack used by Spring Cloud GCP
-googleCloudRun = "0.71.0" # Aligned with the gax 2.71.0 / grpc 1.71.0 stack used by Spring Cloud GCP
-mockito = "5.14.2" # Use max(5.14.2, version supported by [mockitoKotlin]) -- 5.14 adds agent required by Java 21
-mockitoKotlin = "5.4.0" # https://github.com/mockito/mockito-kotlin/releases
-spring-boot = "3.5.9" # See Spring Initializr
+kotlin = "2.4.20" # See Spring Initializr
+googleCloudAppengineAdmin = "2.99.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
+googleCloudRun = "0.93.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
+mockito = "5.24.0" # Use max(5.24.0, version supported by [mockitoKotlin]) -- agent required by Java 21
+mockitoKotlin = "6.4.0" # https://github.com/mockito/mockito-kotlin/releases
+spring-boot = "4.1.1" # See Spring Initializr
 spring-dependencyManagement = "1.1.7" # See Spring Initializr
-spring-cloud = "2025.0.1" # See Spring Initializr
-spring-cloud-gcp = "7.4.1" # See Spring Initializr
+spring-cloud = "2025.1.3" # See Spring Initializr
+spring-cloud-gcp = "8.2.1" # See Spring Initializr
 
 [libraries]
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+spring-boot-starter-webmvc-test = { group = "org.springframework.boot", name = "spring-boot-starter-webmvc-test" }
 spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
 spring-cloud-bom = { group = "org.springframework.cloud", name = "spring-cloud-dependencies", version.ref = "spring-cloud" }
 spring-cloud-gcp-bom = { group = "com.google.cloud", name = "spring-cloud-gcp-dependencies", version.ref = "spring-cloud-gcp" }
@@ -21,7 +22,7 @@ spring-cloud-gcp-starter = { group = "com.google.cloud", name = "spring-cloud-gc
 spring-cloud-gcp-starter-datastore = { group = "com.google.cloud", name = "spring-cloud-gcp-starter-data-datastore" }
 spring-cloud-gcp-starter-logging = { group = "com.google.cloud", name = "spring-cloud-gcp-starter-logging" }
 spring-cloud-gcp-starter-storage = { group = "com.google.cloud", name = "spring-cloud-gcp-starter-storage" }
-fasterxml-jackson = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
+jackson-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
 junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit5" }
 junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 
