@@ -1,36 +1,25 @@
 package tests.application.settings
 
-import application.ProjectRepository
 import application.settings.GetAllProjectsUseCase
-import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import domain.Project
-import infrastructure.DeployInfoPortalApplication
-import infrastructure.gcp.datastore.ProjectEntity
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
+import tests.fakes.FakeProjectRepository
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@SpringBootTest(classes = [DeployInfoPortalApplication::class])
-@ActiveProfiles("test")
+
 class GetAllProjectsUseCaseTests {
 
-    @Autowired
-    private lateinit var datastoreTemplate: DatastoreTemplate
-
-    @Autowired
-    private lateinit var projectRepository: ProjectRepository
+    private lateinit var fakeProjectRepository: FakeProjectRepository
 
     private lateinit var getAllProjectsUseCase: GetAllProjectsUseCase
 
     @BeforeTest
     fun setup() {
-        datastoreTemplate.deleteAll(ProjectEntity::class.java)
+        fakeProjectRepository = FakeProjectRepository()
 
-        getAllProjectsUseCase = GetAllProjectsUseCase(projectRepository)
+        getAllProjectsUseCase = GetAllProjectsUseCase(fakeProjectRepository)
     }
 
     @Test
@@ -44,9 +33,9 @@ class GetAllProjectsUseCaseTests {
         val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
         val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
-        projectRepository.save(newProject1)
-        projectRepository.save(newProject2)
-        projectRepository.save(newProject3)
+        fakeProjectRepository.save(newProject1)
+        fakeProjectRepository.save(newProject2)
+        fakeProjectRepository.save(newProject3)
 
         val output = getAllProjectsUseCase.execute()
         assertEquals(3, output.projectsInRepository.size)

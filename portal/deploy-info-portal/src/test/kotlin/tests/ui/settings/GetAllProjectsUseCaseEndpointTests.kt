@@ -3,6 +3,7 @@ package tests.ui.settings
 import application.settings.GetAllProjectsUseCase
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import domain.Project
 import infrastructure.DeployInfoPortalApplication
 import org.mockito.kotlin.whenever
@@ -26,6 +27,9 @@ class GetAllProjectsUseCaseEndpointTests {
 
     @Autowired
     private lateinit var mvc: MockMvc
+
+    @MockitoBean
+    private lateinit var datastoreTemplate: DatastoreTemplate
 
     @MockitoBean
     private lateinit var useCase: GetAllProjectsUseCase

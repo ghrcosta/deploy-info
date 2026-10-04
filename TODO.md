@@ -25,7 +25,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [x] Document using the collector locally: how to apply the plugin to a sample project, run `deployInfoCollect`, and where output lands before upload
 - [x] Document (or stub) the pieces that cannot run fully local yet — gcloud storage upload to a real/test bucket, `PortalTrigger` (stub), GCP deploy listing — and note what changes once the backend core exists
 - [x] Validate the doc by following it end to end on a clean checkout; fix any gaps found
-- [x] Deliverables: `docs/collector-plugin.md` (or `PLUGIN.md` in the collector) + `docs/local-development.md` (link from root README)
+- [x] Deliverables: per-component documentation folders — `collector-java/deploy-info-collector/documentation/` (plugin internals) and `portal/deploy-info-portal/documentation/` (features + local run) — plus the cross-component `docs/local-development.md` (link from root README)
 
 ---
 
@@ -34,8 +34,8 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 ### 1. Portal backend core (first — the contract depends on it)
 
 - [ ] Datastore model + repository for the deploy link (project, deployType/service/version as identifier — design decided here, storage folder, email, timestamp)
-- [ ] GCP deploy-listing client for App Engine (list services/versions)
-- [ ] GCP deploy-listing client for Cloud Run (list services/revisions)
+- [x] GCP deploy-listing client for App Engine (list services/versions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
+- [x] GCP deploy-listing client for Cloud Run (list services/revisions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [ ] Impersonation: generate an access token for each configured project's service account to call the listing APIs
 - [ ] Core linking logic: given a collector upload, find the most recent deploy of the given type; if < 5 min old and not yet linked, create the link record
 - [ ] File-content capability: read `git-log.txt`, `git-status.txt`, per-changed-file diffs (GIT section) and uuid-mapped extras (Extras section) from the Cloud Storage folder (structure per Phase 0 doc)

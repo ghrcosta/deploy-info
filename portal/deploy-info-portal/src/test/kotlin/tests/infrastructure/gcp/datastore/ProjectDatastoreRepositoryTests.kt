@@ -1,82 +1,82 @@
 package tests.infrastructure.gcp.datastore
 
-import application.ProjectRepository
 import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import domain.Project
-import infrastructure.DeployInfoPortalApplication
+import infrastructure.gcp.datastore.ProjectDatastoreRepository
 import infrastructure.gcp.datastore.ProjectEntity
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import kotlin.test.BeforeTest
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertNull
 
-@SpringBootTest(classes = [DeployInfoPortalApplication::class])
-@ActiveProfiles("test")
+
+/**
+ * Unit tests for [ProjectDatastoreRepository] using a mocked [DatastoreTemplate], so no Datastore
+ * emulator (nor any other external dependency) is needed: they verify that the repository delegates
+ * to the template and maps entities to domain models correctly.
+ */
 class ProjectDatastoreRepositoryTests {
 
-    @Autowired
-    private lateinit var datastoreTemplate: DatastoreTemplate
+    private val datastoreTemplate: DatastoreTemplate = mock()
 
-    @Autowired
-    private lateinit var projectRepository: ProjectRepository
+    private val repository = ProjectDatastoreRepository(datastoreTemplate)
 
-    @BeforeTest
-    fun setup() {
-        datastoreTemplate.deleteAll(ProjectEntity::class.java)
+    @Test
+    fun `Save a project through the datastore template`() {
+        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+
+        repository.save(project)
+
+        argumentCaptor<ProjectEntity>().apply {
+            verify(datastoreTemplate).save(capture())
+            assertEquals(project, firstValue.toModel())
+        }
     }
 
     @Test
-    fun `Return empty list when repository is empty`() {
-        val projectsInRepository = projectRepository.getAll()
-        assertTrue(projectsInRepository.isEmpty())
+    fun `Get one project from the datastore`() {
+        val entity = ProjectEntity(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        whenever(datastoreTemplate.findById("testProject1", ProjectEntity::class.java)).thenReturn(entity)
+
+        val project = repository.get("testProject1")
+
+        assertEquals(entity.toModel(), project)
     }
 
     @Test
-    fun `Return all projects from the repository`() {
-        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
-        val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
-        projectRepository.save(newProject1)
-        projectRepository.save(newProject2)
-        projectRepository.save(newProject3)
+    fun `Return null when getting a project that does not exist`() {
+        whenever(datastoreTemplate.findById("missing", ProjectEntity::class.java)).thenReturn(null)
 
-        val projectsInRepository = projectRepository.getAll()
-        assertEquals(3, projectsInRepository.size)
-        assertEquals(newProject1, projectsInRepository[0])
-        assertEquals(newProject2, projectsInRepository[1])
-        assertEquals(newProject3, projectsInRepository[2])
+        assertNull(repository.get("missing"))
     }
 
     @Test
-    fun `Return one project from the repository`() {
-        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
-        val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
-        projectRepository.save(newProject1)
-        projectRepository.save(newProject2)
-        projectRepository.save(newProject3)
+    fun `Get all projects from the datastore`() {
+        val entities = listOf(
+            ProjectEntity(name = "testProject1", group = "group1", serviceAccount = "test@account.com"),
+            ProjectEntity(name = "testProject2", group = null, serviceAccount = "test@account.com"),
+        )
+        whenever(datastoreTemplate.findAll(ProjectEntity::class.java)).thenReturn(entities)
 
-        val savedProject1 = projectRepository.get(newProject1.name)
-        assertTrue(savedProject1 == newProject1)
+        val projects = repository.getAll()
+
+        assertEquals(
+            listOf(
+                Project(name = "testProject1", group = "group1", serviceAccount = "test@account.com"),
+                Project(name = "testProject2", group = null, serviceAccount = "test@account.com"),
+            ),
+            projects,
+        )
     }
 
     @Test
-    fun `Delete a project from the repository`() {
-        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val newProject2 = Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
-        val newProject3 = Project(name = "testProject3", group = "test", serviceAccount = "test@account.com")
-        projectRepository.save(newProject1)
-        projectRepository.save(newProject2)
-        projectRepository.save(newProject3)
+    fun `Delete a project from the datastore`() {
+        repository.delete("testProject1")
 
-        projectRepository.delete(newProject1.name)
-
-        val projectsInRepository = projectRepository.getAll()
-        assertEquals(2, projectsInRepository.size)
-        assertEquals(newProject2, projectsInRepository[0])
-        assertEquals(newProject3, projectsInRepository[1])
+        verify(datastoreTemplate).deleteById(eq("testProject1"), eq(ProjectEntity::class.java))
     }
 }

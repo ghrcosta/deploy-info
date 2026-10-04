@@ -8,7 +8,7 @@
 |---|---|
 | Gradle collector plugin (`collector-java/deploy-info-collector`) | **~80% done** — collects, uploads, but portal trigger is a stub; missing 2 parameters |
 | Python collector script | **0% — does not exist at all** (no directory anywhere in the workspace) |
-| Portal backend (`portal/deploy-info-portal`) | **~35% done** — Settings CRUD working; the entire "deploy" core is missing |
+| Portal backend (`portal/deploy-info-portal`) | **~40% done** — Settings CRUD working; GCP deploy-listing clients implemented (impersonation pending); the "deploy" linking core is missing |
 | Portal frontend (`portal/deploy-info-portal/ui`) | **~45% done** — full UI shell built on mock data; no real backend integration for the main screen |
 | DevOps / deployment of the portal itself | **~10%** — no app.yaml/Dockerfile, no frontend build integration |
 
@@ -64,7 +64,11 @@
    - Search all versions/services of the configured projects (via GCP APIs using each project's service account) to find the most recent deploy of that type.
    - Linking logic: if most recent deploy < 5 min old and not yet linked, create the Datastore link record (project, deploy type+service+version as identifier, Cloud Storage folder, email, timestamp).
 2. **No Datastore model/repository for the deploy link** — only `Project` exists.
-3. **No GCP deploy-listing client** — nothing reads AppEngine Admin API or Cloud Run API; no IAM/impersonation logic (generating tokens for each project's service account, validating it can list deploys). Dependencies (`spring-cloud-gcp-starter-*`) are present but only datastore/storage/logging are used.
+3. **GCP deploy-listing clients now exist** (`application/GcpAppEngineLister` / `GcpCloudRunLister` +
+   `infrastructure/gcp/...` implementations, unit-tested without any external dependency) — but
+   impersonation (generating access tokens per project's service account) is still a placeholder that
+   throws, and no endpoint exposes the listing yet. See
+   `portal/deploy-info-portal/documentation/gcp-deploy-listing.md`.
 4. **`AddProjectUseCase`:** `issueServiceAccountError` is hardcoded `false` with `// TODO: Test if name + serviceAccount are working` — service-account permission validation not implemented (same presumably needed for Edit).
 5. **`PortalController` is an empty stub** (`GET /portal/` returning nothing). Needs:
    - Main-screen data endpoint: tree of project > service > version, with validity check (delete Datastore entry + Storage folder if deploy no longer exists in GCP).

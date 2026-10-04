@@ -3,6 +3,7 @@ package tests.ui.settings
 import application.settings.EditProjectUseCase
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.Gson
+import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import domain.Project
 import infrastructure.DeployInfoPortalApplication
 import org.mockito.kotlin.any
@@ -29,6 +30,9 @@ class EditProjectUseCaseEndpointTests {
 
     @Autowired
     private lateinit var mvc: MockMvc
+
+    @MockitoBean
+    private lateinit var datastoreTemplate: DatastoreTemplate
 
     @MockitoBean
     private lateinit var useCase: EditProjectUseCase

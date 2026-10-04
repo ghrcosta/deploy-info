@@ -1,8 +1,8 @@
 # DeployInfo Collector — Gradle Plugin
 
 Documentation of how the Gradle collector plugin (`collector-java/deploy-info-collector`) works internally.
-For how to use it, see the plugin's own [README](../collector-java/deploy-info-collector/README.md).
-For how to run the whole project locally, see [local-development.md](local-development.md).
+For how to use it, see the plugin's own [README](../README.md).
+For how to run the whole project locally, see [local-development.md](../../../docs/local-development.md).
 
 Plugin id: `io.github.ghrcosta.deploy-info-collector` · version `0.0.1` · Kotlin 2.1.10 · JVM toolchain 17.
 
