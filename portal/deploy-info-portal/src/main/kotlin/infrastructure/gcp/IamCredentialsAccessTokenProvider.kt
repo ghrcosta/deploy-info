@@ -1,0 +1,93 @@
+package infrastructure.gcp
+
+import com.google.auth.http.HttpTransportFactory
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.auth.oauth2.ImpersonatedCredentials
+import domain.AccessTokenErrorCategory
+import domain.AccessTokenException
+import domain.Project
+import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * Generates an access token for a project's service account through GCP impersonation: the portal's
+ * own identity — supplied as Application Default Credentials — impersonates the target service
+ * account via the IAM Credentials API, which requires the
+ * `roles/iam.serviceAccountTokenCreator` permission on that account.
+ *
+ * The returned token has the `cloud-platform` scope, so it can be used to call the listing APIs
+ * (App Engine Admin, Cloud Run Admin) on behalf of the impersonated service account.
+ *
+ * One [ImpersonatedCredentials] instance is kept per service account; token caching and
+ * refresh-on-expiry are handled by the Google auth library itself.
+ *
+ * Failures are wrapped in [domain.AccessTokenException] with a category telling whether the user
+ * may be able to fix the problem (service account misconfiguration) or it is a portal-side issue.
+ */
+class IamCredentialsAccessTokenProvider(
+    /** Supplies the portal's own credentials used to authenticate the impersonation. */
+    private val callerCredentials: () -> GoogleCredentials,
+    /** Overridable for tests; null uses the library default (real network). */
+    private val transportFactory: HttpTransportFactory? = null,
+) : AccessTokenProvider {
+
+    private val credentialsByServiceAccount = ConcurrentHashMap<String, ImpersonatedCredentials>()
+
+    override fun tokenFor(project: Project): String {
+        val credentials = credentialsByServiceAccount.computeIfAbsent(project.serviceAccount) {
+            impersonatedCredentials(project.serviceAccount)
+        }
+        return try {
+            credentials.refreshIfExpired()
+            credentials.accessToken.tokenValue
+        } catch (e: AccessTokenException) {
+            throw e
+        } catch (e: Exception) {
+            throw AccessTokenException(
+                "Could not generate an access token for ${project.serviceAccount}",
+                categorize(e),
+                e,
+            )
+        }
+    }
+
+    private fun impersonatedCredentials(serviceAccount: String): ImpersonatedCredentials = try {
+        val builder = ImpersonatedCredentials.newBuilder()
+            .setSourceCredentials(callerCredentials())
+            .setTargetPrincipal(serviceAccount)
+            .setScopes(listOf(CLOUD_PLATFORM_SCOPE))
+            .setLifetime(TOKEN_LIFETIME_SECONDS)
+        transportFactory?.let { builder.setHttpTransportFactory(it) }
+        builder.build()
+    } catch (e: Exception) {
+        throw AccessTokenException(
+            "Could not obtain the portal's own credentials (Application Default Credentials)",
+            AccessTokenErrorCategory.PORTAL_ISSUE,
+            e,
+        )
+    }
+
+    /**
+     * Maps an underlying failure to the category that tells who can act on it.
+     *
+     * The auth library surfaces the IAM API error text (including the status code) in the exception
+     * message, so permission problems are recognized by their message — the library does not expose
+     * typed exceptions per HTTP status. Everything else is treated as a portal-side issue.
+     */
+    private fun categorize(e: Exception): AccessTokenErrorCategory {
+        val messages = generateSequence(e as Throwable?) { it.cause }.joinToString(" ") { it.message ?: "" }
+        val message = messages.lowercase()
+        return if (PERMISSION_DENIED_MARKERS.any { it in message }) {
+            AccessTokenErrorCategory.SERVICE_ACCOUNT_MISCONFIGURATION
+        } else {
+            AccessTokenErrorCategory.PORTAL_ISSUE
+        }
+    }
+
+    companion object {
+        private const val CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+        private const val TOKEN_LIFETIME_SECONDS = 3600
+
+        /** Message fragments that indicate a user-fixable service account permission problem. */
+        private val PERMISSION_DENIED_MARKERS = listOf("403", "permission denied", "forbidden")
+    }
+}

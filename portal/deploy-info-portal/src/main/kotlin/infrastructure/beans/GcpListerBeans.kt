@@ -2,7 +2,9 @@ package infrastructure.beans
 
 import application.GcpAppEngineLister
 import application.GcpCloudRunLister
+import com.google.auth.oauth2.GoogleCredentials
 import infrastructure.gcp.AccessTokenProvider
+import infrastructure.gcp.IamCredentialsAccessTokenProvider
 import infrastructure.gcp.appengine.GcpAppEngineApiClient
 import infrastructure.gcp.cloudrun.GcpCloudRunApiClient
 import org.springframework.context.annotation.Bean
@@ -21,13 +23,13 @@ class GcpListerBeans {
         GcpCloudRunApiClient(RestTemplate(), accessTokenProvider)
 
     /**
-     * Placeholder until impersonation is implemented (Phase 1, item 4): any attempt to call a GCP
-     * listing API will fail until a real token provider is registered.
+     * Impersonates each configured project's service account through the IAM Credentials API to
+     * obtain the access tokens used by the listing APIs. The portal's own credentials are resolved
+     * lazily (Application Default Credentials) so that missing credentials only fail when a listing
+     * call is actually made, not at startup.
      */
     @Bean
-    fun accessTokenProvider(): AccessTokenProvider = AccessTokenProvider {
-        throw IllegalStateException(
-            "Access token generation for project '${it.name}' is not implemented yet (impersonation, TODO Phase 1)"
-        )
-    }
+    fun accessTokenProvider(): AccessTokenProvider = IamCredentialsAccessTokenProvider(
+        callerCredentials = { GoogleCredentials.getApplicationDefault() },
+    )
 }

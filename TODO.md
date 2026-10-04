@@ -36,7 +36,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [ ] Datastore model + repository for the deploy link (project, deployType/service/version as identifier — design decided here, storage folder, email, timestamp)
 - [x] GCP deploy-listing client for App Engine (list services/versions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [x] GCP deploy-listing client for Cloud Run (list services/revisions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
-- [ ] Impersonation: generate an access token for each configured project's service account to call the listing APIs
+- [x] Impersonation: generate an access token for each configured project's service account to call the listing APIs — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [ ] Core linking logic: given a collector upload, find the most recent deploy of the given type; if < 5 min old and not yet linked, create the link record
 - [ ] File-content capability: read `git-log.txt`, `git-status.txt`, per-changed-file diffs (GIT section) and uuid-mapped extras (Extras section) from the Cloud Storage folder (structure per Phase 0 doc)
 - [ ] Validity/cleanup logic: detect deploys that no longer exist in GCP and delete Datastore entry + Storage folder
