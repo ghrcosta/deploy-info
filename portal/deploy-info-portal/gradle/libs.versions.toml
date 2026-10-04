@@ -1,5 +1,7 @@
 [versions] # Use Spring Initializr (https://start.spring.io) to generate a project, use the versions set there
 kotlin = "1.9.25" # See Spring Initializr
+googleCloudAppengineAdmin = "2.71.0" # Aligned with the gax 2.71.0 / grpc 1.71.0 stack used by Spring Cloud GCP
+googleCloudRun = "0.71.0" # Aligned with the gax 2.71.0 / grpc 1.71.0 stack used by Spring Cloud GCP
 mockito = "5.14.2" # Use max(5.14.2, version supported by [mockitoKotlin]) -- 5.14 adds agent required by Java 21
 mockitoKotlin = "5.4.0" # https://github.com/mockito/mockito-kotlin/releases
 spring-boot = "3.5.9" # See Spring Initializr
@@ -22,6 +24,9 @@ spring-cloud-gcp-starter-storage = { group = "com.google.cloud", name = "spring-
 fasterxml-jackson = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
 junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit5" }
 junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+
+google-cloud-appengine-admin = { group = "com.google.cloud", name = "google-cloud-appengine-admin", version.ref = "googleCloudAppengineAdmin" }
+google-cloud-run = { group = "com.google.cloud", name = "google-cloud-run", version.ref = "googleCloudRun" }
 
 [plugins] # Find IDs at https://plugins.gradle.org
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

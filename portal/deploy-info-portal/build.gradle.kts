@@ -29,6 +29,9 @@ dependencies {
 
 	implementation(libs.fasterxml.jackson)
 
+	implementation(libs.google.cloud.appengine.admin)
+	implementation(libs.google.cloud.run)
+
 	implementation(platform(libs.spring.cloud.gcp.bom))
 	implementation(libs.spring.cloud.gcp.starter)
 	implementation(libs.spring.cloud.gcp.starter.datastore)

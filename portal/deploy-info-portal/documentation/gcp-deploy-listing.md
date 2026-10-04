@@ -14,28 +14,32 @@ the linking logic that will associate a collector upload with the deploy it was 
 - `domain/AppEngineDeploy.kt` / `domain/CloudRunDeploy.kt` — one deploy of one service, with project,
   service, version/revision id, creation time, and the public URL when available.
 - `infrastructure/gcp/appengine/GcpAppEngineApiClient.kt` — implements the App Engine listing through
-  the App Engine Admin REST API (`https://appengine.googleapis.com`, `v1/apps/...`), paging through
-  services and versions.
+  the official Google Cloud client library (`com.google.cloud:google-cloud-appengine-admin`,
+  `ServicesClient`/`VersionsClient`), listing every service and version of the project. The library
+  handles authentication, request building, JSON parsing and pagination; the client caches one
+  underlying client per service account and maps the library's resources into `AppEngineDeploy`.
 - `infrastructure/gcp/cloudrun/GcpCloudRunApiClient.kt` — implements the Cloud Run listing through
-  the Cloud Run Admin REST API (`https://run.googleapis.com`, `v2/projects/...`), listing every service in
-  every region and their revisions, parsing the location/service/revision ids out of the resource
-  names.
-- `infrastructure/gcp/IamCredentialsAccessTokenProvider.kt` — implements impersonation (Phase 1): the
-  portal's own credentials (Application Default Credentials) impersonate the project's service
-  account via the IAM Credentials API and return an access token with the `cloud-platform` scope.
-  Uses `ImpersonatedCredentials` from the Google auth library (already a transitive dependency — no
-  new libraries), which handles token caching and refresh-on-expiry; one credentials instance is kept
-  per service account. The portal's credentials are resolved lazily, so missing ADC fails only when a
-  listing call is made, not at startup.
-- `domain/AccessTokenException.kt` — thrown on impersonation failure, with a category telling who can
-  act on it: `SERVICE_ACCOUNT_MISCONFIGURATION` (user-fixable: wrong service account email or missing
-  `roles/iam.serviceAccountTokenCreator` permission — the IAM API returns 403) vs `PORTAL_ISSUE`
-  (portal-side: missing ADC, network failure, server errors, unexpected responses).
-- `infrastructure/gcp/AccessTokenProvider.kt` — the interface (application seam) that supplies the
-  bearer token used to authenticate each listing call on behalf of a project's service account.
-- `infrastructure/beans/GcpListerBeans.kt` — registers the two listers as Spring beans, each with its
-  own `RestTemplate`, the shared access token provider, and the API base URL constant defined by the
-  client itself.
+  the official Google Cloud client library (`com.google.cloud:google-cloud-run`,
+  `ServicesClient`/`RevisionsClient`), listing every service in every region and their revisions,
+  resolving the location/service/revision ids out of the resource names with the library's
+  `ServiceName`/`RevisionName` helpers. The client caches one underlying client pair per service
+  account and maps the library's resources into `CloudRunDeploy`.
+- `infrastructure/gcp/GcpCredentialsProvider.kt` — implements impersonation (Phase 1): the portal's
+  own credentials (Application Default Credentials) impersonate the project's service account via
+  the IAM Credentials API and return `GoogleCredentials` (an `ImpersonatedCredentials` instance)
+  with the `cloud-platform` scope, handed directly to the client libraries (no raw bearer tokens).
+  Uses the Google auth library (already a transitive dependency — no new libraries), which handles
+  token caching and refresh-on-expiry; one credentials instance is kept per service account. The
+  portal's credentials are resolved lazily, so missing ADC fails only when a listing call is made,
+  not at startup.
+- `infrastructure/gcp/CredentialsProvider.kt` — the interface (application seam) that supplies the
+  credentials used to authenticate each listing call on behalf of a project's service account.
+- `domain/CredentialsException.kt` — thrown on impersonation failure, with a category telling who
+  can act on it: `SERVICE_ACCOUNT_MISCONFIGURATION` (user-fixable: wrong service account email or
+  missing `roles/iam.serviceAccountTokenCreator` permission — the IAM API returns 403) vs
+  `PORTAL_ISSUE` (portal-side: missing ADC, network failure, server errors, unexpected responses).
+- `infrastructure/beans/GcpListerBeans.kt` — registers the two listers as Spring beans, each backed
+  by the client library factory (`create(...)`) and the shared credentials provider.
 
 ## Required IAM setup
 
@@ -51,7 +55,11 @@ Cloud Run Viewer).
 
 ## Testing
 
-The API clients and the access token provider are covered by unit tests (`tests/infrastructure/gcp/...`)
-that stub all HTTP calls locally — no external dependency, no GCP credentials and no internet access.
-The fakes in `src/test/kotlin/tests/fakes/` provide in-memory listers for other tests and future
-local-profile stubbing.
+The credentials provider is covered by unit tests (`tests/infrastructure/gcp/GcpCredentialsProviderTests.kt`)
+that stub the impersonation transport locally — no external dependency, no GCP credentials and no
+internet access. The API clients are covered by thin unit tests over a small seam
+(`AppEngineAdminClient` / `CloudRunAdminClient`) that verify the domain mapping, client caching and
+the wrapping of library API errors into `GcpListingException`; the client libraries themselves
+(pagination, JSON parsing, transport) are assumed to be covered by Google. The fakes in
+`src/test/kotlin/tests/fakes/` provide in-memory listers for other tests and future local-profile
+stubbing.

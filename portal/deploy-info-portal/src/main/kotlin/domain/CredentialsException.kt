@@ -1,9 +1,9 @@
 package domain
 
 /**
- * Why an access token could not be generated for a project's service account.
+ * Why credentials could not be obtained for a project's service account.
  */
-enum class AccessTokenErrorCategory {
+enum class CredentialsErrorCategory {
 
     /**
      * Potentially fixable by the user who configured the project: wrong service account email,
@@ -18,9 +18,9 @@ enum class AccessTokenErrorCategory {
     PORTAL_ISSUE,
 }
 
-/** Thrown when an access token could not be generated for a project's service account (impersonation). */
-class AccessTokenException(
+/** Thrown when credentials could not be obtained for a project's service account (impersonation). */
+class CredentialsException(
     message: String,
-    val category: AccessTokenErrorCategory,
+    val category: CredentialsErrorCategory,
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)

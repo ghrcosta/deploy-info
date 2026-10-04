@@ -1,133 +1,134 @@
 package infrastructure.gcp.appengine
 
 import application.GcpAppEngineLister
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.google.api.gax.core.FixedCredentialsProvider
+import com.google.api.gax.rpc.ApiException
+import com.google.appengine.v1.*
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.protobuf.Timestamp
 import domain.AppEngineDeploy
 import domain.GcpListingException
 import domain.Project
-import infrastructure.gcp.AccessTokenProvider
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.RequestEntity
-import org.springframework.web.client.HttpStatusCodeException
-import org.springframework.web.client.RestClientException
-import org.springframework.web.client.RestTemplate
-import java.net.URI
+import infrastructure.gcp.CredentialsProvider
 import java.time.Instant
-import java.time.format.DateTimeParseException
+import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Lists App Engine services/versions of a project through the App Engine Admin REST API
- * (https://appengine.googleapis.com), authenticating with a bearer access token.
+ * Lists App Engine services/versions of a project through the official Google Cloud App Engine Admin
+ * client library, authenticating with credentials impersonating the project's service account.
+ *
+ * The client library takes care of authentication, request building, JSON parsing and pagination;
+ * this class only caches the underlying client per service account and maps the library's resources
+ * into [AppEngineDeploy] domain objects.
  */
 class GcpAppEngineApiClient(
-    private val restTemplate: RestTemplate,
-    private val accessTokenProvider: AccessTokenProvider,
+    private val credentialsProvider: CredentialsProvider,
+    private val adminClientFactory: (GoogleCredentials) -> AppEngineAdminClient,
 ) : GcpAppEngineLister {
 
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val adminClientsByServiceAccount = ConcurrentHashMap<String, AppEngineAdminClient>()
 
     override fun listAllDeploys(project: Project): List<AppEngineDeploy> {
-        val serviceIds = listServiceIds(project)
-        return serviceIds
-            .flatMap { listVersions(project, it) }
+        val adminClient = adminClientFor(project)
+        val services = catchListingErrors(project) { adminClient.listServices(project.name) }
+        return services
+            .flatMap { service ->
+                val versions = catchListingErrors(project) { adminClient.listVersions(project.name, service.id) }
+                versions.map { it.toAppEngineDeploy(project, service.id) }
+            }
             .sortedByDescending { it.createTime }
     }
 
-    private fun listServiceIds(project: Project): List<String> {
-        val firstPageUrl = "${API_BASE_URL}/${API_PATH}/${project.name}/services?pageSize=${PAGE_SIZE}"
-        return fetchAllPages(project, firstPageUrl) { body ->
-            val response = parseBody(body, ServicesResponse::class.java, project)
-            ApiPage(response.services.map { it.id }, response.nextPageToken)
+    /** One client per service account — each uses its own impersonated credentials. */
+    private fun adminClientFor(project: Project): AppEngineAdminClient =
+        adminClientsByServiceAccount.computeIfAbsent(project.serviceAccount) {
+            adminClientFactory(credentialsProvider.credentialsFor(project))
         }
-    }
 
-    private fun listVersions(project: Project, serviceId: String): List<AppEngineDeploy> {
-        val firstPageUrl = "${API_BASE_URL}/${API_PATH}/${project.name}/services/${serviceId}/versions?pageSize=${PAGE_SIZE}"
-        return fetchAllPages(project, firstPageUrl) { body ->
-            val response = parseBody(body, VersionsResponse::class.java, project)
-            ApiPage(response.versions.map { it.toAppEngineDeploy(project.name, serviceId) }, response.nextPageToken)
-        }
-    }
-
-    /** Follows `nextPageToken` until every page of a paginated listing has been fetched. */
-    private fun <T> fetchAllPages(
-        project: Project,
-        firstPageUrl: String,
-        parsePage: (body: String) -> ApiPage<T>,
-    ): List<T> {
-        val allItems = mutableListOf<T>()
-        var pageToken: String? = null
-        do {
-            val url = pageUrl(firstPageUrl, pageToken)
-            val page = parsePage(getResponseBody(project, url))
-            allItems += page.items
-            pageToken = page.nextPageToken
-        } while (pageToken != null)
-        return allItems
-    }
-
-    private fun pageUrl(firstPageUrl: String, pageToken: String?): String =
-        if (pageToken == null) firstPageUrl else "${firstPageUrl}&pageToken=${pageToken}"
-
-    private fun getResponseBody(project: Project, url: String): String {
-        val request = RequestEntity<Void>(authHeaders(project), HttpMethod.GET, URI(url))
-        return try {
-            restTemplate.exchange(request, String::class.java).body ?: ""
-        } catch (e: HttpStatusCodeException) {
-            throw GcpListingException(
-                "GCP App Engine API returned ${e.statusCode} for project ${project.name}", e
-            )
-        } catch (e: RestClientException) {
-            throw GcpListingException(
-                "Could not call the GCP App Engine API for project ${project.name}", e
-            )
-        }
-    }
-
-    private fun authHeaders(project: Project): HttpHeaders = HttpHeaders().apply {
-        contentType = MediaType.APPLICATION_JSON
-        setBearerAuth(accessTokenProvider.tokenFor(project))
-    }
-
-    private fun <T> parseBody(body: String, type: Class<T>, project: Project): T =
+    /** Wraps API failures of the client library in [GcpListingException]. */
+    private fun <T> catchListingErrors(project: Project, listing: () -> T): T =
         try {
-            objectMapper.readValue(body, type)
-        } catch (e: Exception) {
-            throw GcpListingException("Could not parse the App Engine API response for project ${project.name}", e)
+            listing()
+        } catch (e: ApiException) {
+            throw GcpListingException(
+                "GCP App Engine API returned ${e.statusCode?.code} for project ${project.name}", e
+            )
         }
 
-    private fun VersionDto.toAppEngineDeploy(projectId: String, serviceId: String): AppEngineDeploy =
+    private fun Version.toAppEngineDeploy(project: Project, serviceId: String): AppEngineDeploy =
         AppEngineDeploy(
-            projectId = projectId,
+            projectId = project.name,
             serviceId = serviceId,
             versionId = id,
-            createTime = parseCreateTime(createTime, projectId, serviceId, id),
-            url = versionUrl,
+            createTime = createTime.toInstant(project.name, serviceId, id),
+            url = versionUrl.takeIf { it.isNotEmpty() },
         )
 
-    private fun parseCreateTime(
-        createTime: String,
-        projectId: String,
-        serviceId: String,
-        versionId: String,
-    ): Instant =
-        try {
-            Instant.parse(createTime)
-        } catch (e: DateTimeParseException) {
+    private fun Timestamp.toInstant(projectId: String, serviceId: String, versionId: String): Instant {
+        if (seconds == 0L && nanos == 0) {
             throw GcpListingException(
-                "Version ${serviceId}/${versionId} of project ${projectId} has an unparsable createTime '${createTime}'", e
+                "Version ${serviceId}/${versionId} of project ${projectId} has no createTime"
             )
         }
+        return Instant.ofEpochSecond(seconds, nanos.toLong())
+    }
 
-    /** One page of a paginated listing: its items plus the token for the next page, if any. */
-    private data class ApiPage<T>(val items: List<T>, val nextPageToken: String?)
+    /**
+     * Seam over the App Engine Admin client library, so the tests can exercise the mapping and
+     * error handling with simple in-memory doubles instead of mocking the gax paging machinery.
+     */
+    interface AppEngineAdminClient {
+
+        /** Lists every service of the App Engine application. */
+        fun listServices(projectId: String): List<Service>
+
+        fun listVersions(projectId: String, serviceId: String): List<Version>
+    }
+
+    private class GaxAppEngineAdminClient(
+        private val servicesClient: ServicesClient,
+        private val versionsClient: VersionsClient,
+    ) : AppEngineAdminClient {
+
+        override fun listServices(projectId: String): List<Service> =
+            servicesClient
+                .listServices(
+                    ListServicesRequest.newBuilder().setParent("apps/${projectId}").build()
+                )
+                .iterateAll()
+                .toList()
+
+        override fun listVersions(projectId: String, serviceId: String): List<Version> =
+            versionsClient
+                .listVersions(
+                    ListVersionsRequest.newBuilder()
+                        .setParent("apps/${projectId}/services/${serviceId}")
+                        .build()
+                )
+                .iterateAll()
+                .toList()
+    }
 
     companion object {
-        private const val API_BASE_URL = "https://appengine.googleapis.com"
-        private const val API_PATH = "v1/apps"
-        private const val PAGE_SIZE = 100
+
+        /** Creates the lister backed by the real App Engine Admin client library. */
+        fun create(credentialsProvider: CredentialsProvider): GcpAppEngineLister =
+            GcpAppEngineApiClient(credentialsProvider, ::gaxAppEngineAdminClient)
+
+        private fun gaxAppEngineAdminClient(credentials: GoogleCredentials): AppEngineAdminClient =
+            GaxAppEngineAdminClient(
+                ServicesClient.create(servicesSettings(credentials)),
+                VersionsClient.create(versionsSettings(credentials)),
+            )
+
+        private fun servicesSettings(credentials: GoogleCredentials): ServicesSettings =
+            ServicesSettings.newBuilder()
+                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                .build()
+
+        private fun versionsSettings(credentials: GoogleCredentials): VersionsSettings =
+            VersionsSettings.newBuilder()
+                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                .build()
     }
 }

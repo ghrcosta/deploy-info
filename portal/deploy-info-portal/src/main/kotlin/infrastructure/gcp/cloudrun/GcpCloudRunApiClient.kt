@@ -1,169 +1,141 @@
 package infrastructure.gcp.cloudrun
 
 import application.GcpCloudRunLister
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.google.api.gax.core.FixedCredentialsProvider
+import com.google.api.gax.rpc.ApiException
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.run.v2.*
+import com.google.protobuf.Timestamp
 import domain.CloudRunDeploy
 import domain.GcpListingException
 import domain.Project
-import infrastructure.gcp.AccessTokenProvider
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.RequestEntity
-import org.springframework.web.client.HttpStatusCodeException
-import org.springframework.web.client.RestClientException
-import org.springframework.web.client.RestTemplate
-import java.net.URI
+import infrastructure.gcp.CredentialsProvider
 import java.time.Instant
-import java.time.format.DateTimeParseException
+import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Lists Cloud Run services/revisions of a project through the Cloud Run Admin REST API
- * (https://run.googleapis.com), authenticating with a bearer access token.
+ * Lists Cloud Run services/revisions of a project through the official Google Cloud Run client
+ * library, authenticating with credentials impersonating the project's service account.
+ *
+ * The client library takes care of authentication, request building, JSON parsing and pagination;
+ * this class only caches the underlying clients per service account, resolves the location/service
+ * ids out of the resource names and maps the library's resources into [CloudRunDeploy] domain
+ * objects.
  */
 class GcpCloudRunApiClient(
-    private val restTemplate: RestTemplate,
-    private val accessTokenProvider: AccessTokenProvider,
+    private val credentialsProvider: CredentialsProvider,
+    private val adminClientFactory: (GoogleCredentials) -> CloudRunAdminClient,
 ) : GcpCloudRunLister {
 
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val adminClientsByServiceAccount = ConcurrentHashMap<String, CloudRunAdminClient>()
 
     override fun listAllDeploys(project: Project): List<CloudRunDeploy> {
-        val services = listServices(project)
-        return services
-            .flatMap { listRevisions(project, it) }
-            .sortedByDescending { it.createTime }
-    }
-
-    /** Lists every service in every region, parsing its location and id out of the resource name. */
-    private fun listServices(project: Project): List<ServiceRef> {
-        val firstPageUrl =
-            "${API_BASE_URL}/${API_PATH}/${project.name}/locations/${ALL_LOCATIONS}" +
-                "/services?pageSize=${PAGE_SIZE}"
-        return fetchAllPages(project, firstPageUrl) { body ->
-            val response = parseBody(body, ServicesResponse::class.java, project)
-            ApiPage(response.services.map { it.toServiceRef(project.name) }, response.nextPageToken)
+        val adminClient = adminClientFor(project)
+        return catchListingErrors(project) {
+            adminClient
+                .listServices(project.name)
+                .flatMap { service ->
+                    val serviceName = ServiceName.parse(service.name)
+                    adminClient.listRevisions(service.name).map { revision ->
+                        revision.toCloudRunDeploy(
+                            project, serviceName.service, serviceName.location, service.uri.takeIf { it.isNotEmpty() },
+                        )
+                    }
+                }
+                .sortedByDescending { it.createTime }
         }
     }
 
-    private fun listRevisions(project: Project, service: ServiceRef): List<CloudRunDeploy> {
-        val firstPageUrl =
-            "${API_BASE_URL}/${API_PATH}/${project.name}/locations/${service.location}" +
-                "/services/${service.serviceId}/revisions?pageSize=${PAGE_SIZE}"
-        return fetchAllPages(project, firstPageUrl) { body ->
-            val response = parseBody(body, RevisionsResponse::class.java, project)
-            ApiPage(response.revisions.map { it.toCloudRunDeploy(project.name, service) }, response.nextPageToken)
+    /** One client pair per service account — each uses its own impersonated credentials. */
+    private fun adminClientFor(project: Project): CloudRunAdminClient =
+        adminClientsByServiceAccount.computeIfAbsent(project.serviceAccount) {
+            adminClientFactory(credentialsProvider.credentialsFor(project))
         }
-    }
 
-    /** Follows `nextPageToken` until every page of a paginated listing has been fetched. */
-    private fun <T> fetchAllPages(
-        project: Project,
-        firstPageUrl: String,
-        parsePage: (body: String) -> ApiPage<T>,
-    ): List<T> {
-        val allItems = mutableListOf<T>()
-        var pageToken: String? = null
-        do {
-            val url = pageUrl(firstPageUrl, pageToken)
-            val page = parsePage(getResponseBody(project, url))
-            allItems += page.items
-            pageToken = page.nextPageToken
-        } while (pageToken != null)
-        return allItems
-    }
-
-    private fun pageUrl(firstPageUrl: String, pageToken: String?): String =
-        if (pageToken == null) firstPageUrl else "${firstPageUrl}&pageToken=${pageToken}"
-
-    private fun getResponseBody(project: Project, url: String): String {
-        val request = RequestEntity<Void>(authHeaders(project), HttpMethod.GET, URI(url))
-        return try {
-            restTemplate.exchange(request, String::class.java).body ?: ""
-        } catch (e: HttpStatusCodeException) {
-            throw GcpListingException(
-                "GCP Cloud Run API returned ${e.statusCode} for project ${project.name}", e
-            )
-        } catch (e: RestClientException) {
-            throw GcpListingException(
-                "Could not call the GCP Cloud Run API for project ${project.name}", e
-            )
-        }
-    }
-
-    private fun authHeaders(project: Project): HttpHeaders = HttpHeaders().apply {
-        contentType = MediaType.APPLICATION_JSON
-        setBearerAuth(accessTokenProvider.tokenFor(project))
-    }
-
-    private fun <T> parseBody(body: String, type: Class<T>, project: Project): T =
+    /** Wraps API failures and unexpected resource names in [GcpListingException]. */
+    private fun <T> catchListingErrors(project: Project, listing: () -> T): T =
         try {
-            objectMapper.readValue(body, type)
-        } catch (e: Exception) {
-            throw GcpListingException("Could not parse the Cloud Run API response for project ${project.name}", e)
+            listing()
+        } catch (e: ApiException) {
+            throw GcpListingException(
+                "GCP Cloud Run API returned ${e.statusCode?.code} for project ${project.name}", e
+            )
         }
 
-    private fun ServiceDto.toServiceRef(projectId: String): ServiceRef {
-        val nameParts = parseResourceName(name, "services", projectId)
-        return ServiceRef(location = nameParts.location, serviceId = nameParts.resourceId, url = uri)
-    }
-
-    private fun RevisionDto.toCloudRunDeploy(projectId: String, service: ServiceRef): CloudRunDeploy {
-        val nameParts = parseResourceName(name, "revisions", projectId)
+    private fun Revision.toCloudRunDeploy(
+        project: Project,
+        serviceId: String,
+        location: String,
+        url: String?,
+    ): CloudRunDeploy {
+        val revisionName = RevisionName.parse(name)
         return CloudRunDeploy(
-            projectId = projectId,
-            location = service.location,
-            serviceId = service.serviceId,
-            revisionId = nameParts.resourceId,
-            createTime = parseCreateTime(createTime, projectId, service.serviceId, nameParts.resourceId),
-            url = service.url,
+            projectId = project.name,
+            location = location,
+            serviceId = serviceId,
+            revisionId = revisionName.revision,
+            createTime = createTime.toInstant(project.name, serviceId, revisionName.revision),
+            url = url,
         )
     }
 
-    /** Parses a `projects/{p}/locations/{l}/.../{collection}/{resourceId}` resource name. */
-    private fun parseResourceName(name: String, collection: String, projectId: String): ResourceNameParts {
-        val segments = name.split("/")
-        val collectionIndex = segments.indexOf(collection)
-        val locationIndex = segments.indexOf("locations")
-        val isWellFormed = segments.getOrNull(1) == projectId && locationIndex > 0 && collectionIndex > 0 &&
-            collectionIndex + 1 < segments.size
-        if (!isWellFormed) {
+    private fun Timestamp.toInstant(projectId: String, serviceId: String, revisionId: String): Instant {
+        if (seconds == 0L && nanos == 0) {
             throw GcpListingException(
-                "Cloud Run resource of project ${projectId} has an unexpected name '${name}'"
+                "Revision ${serviceId}/${revisionId} of project ${projectId} has no createTime"
             )
         }
-        return ResourceNameParts(location = segments[locationIndex + 1], resourceId = segments[collectionIndex + 1])
+        return Instant.ofEpochSecond(seconds, nanos.toLong())
     }
 
-    private fun parseCreateTime(
-        createTime: String,
-        projectId: String,
-        serviceId: String,
-        revisionId: String,
-    ): Instant =
-        try {
-            Instant.parse(createTime)
-        } catch (e: DateTimeParseException) {
-            throw GcpListingException(
-                "Revision ${serviceId}/${revisionId} of project ${projectId} has an unparsable createTime '${createTime}'", e
-            )
-        }
+    /**
+     * Seam over the Cloud Run client library, so the tests can exercise the mapping and error
+     * handling with simple in-memory doubles instead of mocking the gax paging machinery.
+     */
+    interface CloudRunAdminClient {
 
-    /** A Cloud Run service of the project, resolved from the listed resource name. */
-    private data class ServiceRef(val location: String, val serviceId: String, val url: String? = null)
+        /** Lists every service of the project in every region. */
+        fun listServices(projectId: String): List<Service>
 
-    /** Location and id parsed out of a Cloud Run resource name. */
-    private data class ResourceNameParts(val location: String, val resourceId: String)
+        fun listRevisions(serviceName: String): List<Revision>
+    }
 
-    /** One page of a paginated listing: its items plus the token for the next page, if any. */
-    private data class ApiPage<T>(val items: List<T>, val nextPageToken: String?)
+    private class GaxCloudRunAdminClient(
+        private val servicesClient: ServicesClient,
+        private val revisionsClient: RevisionsClient,
+    ) : CloudRunAdminClient {
+
+        override fun listServices(projectId: String): List<Service> =
+            servicesClient
+                .listServices("projects/${projectId}/locations/-")
+                .iterateAll()
+                .toList()
+
+        override fun listRevisions(serviceName: String): List<Revision> =
+            revisionsClient
+                .listRevisions(serviceName)
+                .iterateAll()
+                .toList()
+    }
 
     companion object {
-        private const val API_BASE_URL = "https://run.googleapis.com"
-        private const val API_PATH = "v2/projects"
-        private const val ALL_LOCATIONS = "-"
-        private const val PAGE_SIZE = 100
+
+        /** Creates the lister backed by the real Cloud Run client library. */
+        fun create(credentialsProvider: CredentialsProvider): GcpCloudRunLister =
+            GcpCloudRunApiClient(credentialsProvider, ::gaxCloudRunAdminClient)
+
+        private fun gaxCloudRunAdminClient(credentials: GoogleCredentials): CloudRunAdminClient =
+            GaxCloudRunAdminClient(
+                ServicesClient.create(
+                    ServicesSettings.newBuilder()
+                        .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                        .build()
+                ),
+                RevisionsClient.create(
+                    RevisionsSettings.newBuilder()
+                        .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                        .build()
+                ),
+            )
     }
 }
-

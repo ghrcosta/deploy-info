@@ -6,10 +6,11 @@ import com.google.api.client.http.LowLevelHttpResponse
 import com.google.auth.http.HttpTransportFactory
 import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
-import domain.AccessTokenErrorCategory
-import domain.AccessTokenException
+import com.google.auth.oauth2.ImpersonatedCredentials
+import domain.CredentialsErrorCategory
+import domain.CredentialsException
 import domain.Project
-import infrastructure.gcp.IamCredentialsAccessTokenProvider
+import infrastructure.gcp.GcpCredentialsProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -59,7 +60,7 @@ private fun portalCredentials(): GoogleCredentials = GoogleCredentials.create(
     AccessToken("source-token", Date(System.currentTimeMillis() + 3_600_000)),
 )
 
-class IamCredentialsAccessTokenProviderTests {
+class GcpCredentialsProviderTests {
 
     private lateinit var transportFactory: FakeTransportFactory
 
@@ -69,15 +70,15 @@ class IamCredentialsAccessTokenProviderTests {
     }
 
     private fun provider(callerCredentials: () -> GoogleCredentials = ::portalCredentials) =
-        IamCredentialsAccessTokenProvider(callerCredentials, transportFactory)
+        GcpCredentialsProvider(callerCredentials, transportFactory)
 
     @Test
-    fun `Return the token from the IAM response for the project's service account`() {
+    fun `Return impersonated credentials for the project's service account`() {
         val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
-        val token = provider().tokenFor(project)
+        val credentials = provider().credentialsFor(project) as ImpersonatedCredentials
 
-        assertEquals("token-1", token)
+        assertEquals("sa@proj.iam.gserviceaccount.com", credentials.account)
         assertEquals(
             listOf(
                 "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/" +
@@ -91,12 +92,17 @@ class IamCredentialsAccessTokenProviderTests {
     fun `Reuse the impersonated credentials of a service account across calls`() {
         val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
         val other = Project(name = "proj", group = null, serviceAccount = "other@proj.iam.gserviceaccount.com")
-        val accessTokenProvider = provider()
+        val credentialsProvider = provider()
 
-        assertEquals("token-1", accessTokenProvider.tokenFor(project))
-        assertEquals("token-1", accessTokenProvider.tokenFor(project))
-        assertEquals("token-1", accessTokenProvider.tokenFor(other))
+        val credentials = credentialsProvider.credentialsFor(project)
+        val sameCredentialsAgain = credentialsProvider.credentialsFor(project)
+        val credentialsOfOtherAccount = credentialsProvider.credentialsFor(other)
 
+        assertEquals(credentials, sameCredentialsAgain)
+        assertEquals(
+            "other@proj.iam.gserviceaccount.com",
+            (credentialsOfOtherAccount as ImpersonatedCredentials).account,
+        )
         // One impersonation call per distinct service account, none repeated for the same one.
         assertEquals(2, transportFactory.requestUrls.size)
     }
@@ -107,14 +113,9 @@ class IamCredentialsAccessTokenProviderTests {
         transportFactory.body = """{"error":{"code":403,"message":"Permission denied"}}"""
         val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
-        val exception = assertFailsWith<AccessTokenException> { provider().tokenFor(project) }
+        val exception = assertFailsWith<CredentialsException> { provider().credentialsFor(project) }
 
-        var t: Throwable? = exception
-        while (t != null) {
-            println("CHAIN: " + t.javaClass.name + " :: " + t.message)
-            t = t.cause
-        }
-        assertEquals(AccessTokenErrorCategory.SERVICE_ACCOUNT_MISCONFIGURATION, exception.category)
+        assertEquals(CredentialsErrorCategory.SERVICE_ACCOUNT_MISCONFIGURATION, exception.category)
     }
 
     @Test
@@ -122,20 +123,20 @@ class IamCredentialsAccessTokenProviderTests {
         transportFactory.statusCode = 500
         val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
-        val exception = assertFailsWith<AccessTokenException> { provider().tokenFor(project) }
+        val exception = assertFailsWith<CredentialsException> { provider().credentialsFor(project) }
 
-        assertEquals(AccessTokenErrorCategory.PORTAL_ISSUE, exception.category)
+        assertEquals(CredentialsErrorCategory.PORTAL_ISSUE, exception.category)
     }
 
     @Test
     fun `Report missing portal credentials as a portal issue`() {
         val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
-        val exception = assertFailsWith<AccessTokenException> {
+        val exception = assertFailsWith<CredentialsException> {
             provider(callerCredentials = { throw IllegalStateException("Your default credentials were not found") })
-                .tokenFor(project)
+                .credentialsFor(project)
         }
 
-        assertEquals(AccessTokenErrorCategory.PORTAL_ISSUE, exception.category)
+        assertEquals(CredentialsErrorCategory.PORTAL_ISSUE, exception.category)
     }
 }

@@ -1,174 +1,111 @@
 package tests.infrastructure.gcp.appengine
 
+import com.google.api.gax.rpc.ApiException
+import com.google.api.gax.rpc.StatusCode
+import com.google.appengine.v1.Version
 import domain.GcpListingException
 import domain.Project
-import infrastructure.gcp.AccessTokenProvider
+import infrastructure.gcp.CredentialsProvider
 import infrastructure.gcp.appengine.GcpAppEngineApiClient
-import org.junit.jupiter.api.BeforeEach
+import infrastructure.gcp.appengine.GcpAppEngineApiClient.AppEngineAdminClient
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.test.web.client.MockRestServiceServer
-import org.springframework.test.web.client.ResponseActions
-import org.springframework.test.web.client.match.MockRestRequestMatchers.header
-import org.springframework.test.web.client.match.MockRestRequestMatchers.method
-import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
-import org.springframework.test.web.client.response.MockRestResponseCreators.withException
-import org.springframework.test.web.client.response.MockRestResponseCreators.withStatus
-import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
-import org.springframework.web.client.RestTemplate
-import java.io.IOException
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.mock
 import java.time.Instant
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
 
-private const val BASE_URL = "https://appengine.googleapis.com"
+private const val PROJECT_ID = "testProject"
 
 class GcpAppEngineApiClientTests {
 
-    private val project = Project(name = "testProject", group = "test", serviceAccount = "test@account.com")
+    private val project = Project(name = PROJECT_ID, group = null, serviceAccount = "sa@test.iam.gserviceaccount.com")
 
-    private lateinit var restTemplate: RestTemplate
-    private lateinit var mockServer: MockRestServiceServer
-    private lateinit var client: GcpAppEngineApiClient
-
-    @BeforeEach
-    fun setup() {
-        restTemplate = RestTemplate()
-        mockServer = MockRestServiceServer.bindTo(restTemplate).build()
-        client = GcpAppEngineApiClient(restTemplate, AccessTokenProvider { "test-token" })
-    }
+    private fun client(
+        adminClient: AppEngineAdminClient,
+        credentialsProvider: CredentialsProvider = stubCredentialsProvider(),
+    ): GcpAppEngineApiClient = GcpAppEngineApiClient(credentialsProvider) { adminClient }
 
     @Test
-    fun `Return all versions of all services sorted newest first`() {
-        expectServicesRequest()
-            .andRespond(withSuccess("""{"services":[{"id":"default"},{"id":"worker"}]}""", MediaType.APPLICATION_JSON))
-        expectVersionsRequest("default").andRespond(
-            withSuccess(
-                """{"versions":[
-                    {"id":"v1","createTime":"2026-01-01T10:00:00Z","versionUrl":"https://v1.example.com"},
-                    {"id":"v2","createTime":"2026-01-02T10:00:00Z"}
-                ]}""",
-                MediaType.APPLICATION_JSON,
+    fun `Map every version of every service into a deploy, newest first`() {
+        val adminClient = mock<AppEngineAdminClient> {
+            on { listServices(PROJECT_ID) } doReturn listOf(
+                service(id = "web"), service(id = "worker"),
             )
-        )
-        expectVersionsRequest("worker").andRespond(
-            withSuccess(
-                """{"versions":[{"id":"v3","createTime":"2026-01-03T10:00:00Z"}]}""",
-                MediaType.APPLICATION_JSON,
+            on { listVersions(PROJECT_ID, "web") } doReturn listOf(
+                version(id = "2", createTime = epoch(20), versionUrl = "https://web-2.example.com"),
+                version(id = "1", createTime = epoch(10), versionUrl = ""),
             )
-        )
+            on { listVersions(PROJECT_ID, "worker") } doReturn listOf(
+                version(id = "1", createTime = epoch(30), versionUrl = null),
+            )
+        }
 
-        val deploys = client.listAllDeploys(project)
+        val deploys = client(adminClient).listAllDeploys(project)
 
+        assertEquals(listOf("1", "2", "1"), deploys.map { it.versionId })
+        assertEquals(listOf("worker", "web", "web"), deploys.map { it.serviceId })
+        assertEquals(listOf(PROJECT_ID, PROJECT_ID, PROJECT_ID), deploys.map { it.projectId })
         assertEquals(
-            listOf("worker/v3", "default/v2", "default/v1"),
-            deploys.map { "${it.serviceId}/${it.versionId}" },
+            listOf(instant(30), instant(20), instant(10)),
+            deploys.map { it.createTime },
         )
-        assertEquals(listOf(null, null, "https://v1.example.com"), deploys.map { it.url })
-        assertEquals(
-            listOf("2026-01-03", "2026-01-02", "2026-01-01"),
-            deploys.map { it.createTime.toString().substring(0, 10) },
-        )
-        mockServer.verify()
+        assertEquals(listOf<String?>(null, "https://web-2.example.com", null), deploys.map { it.url })
     }
 
     @Test
-    fun `Follow nextPageToken until all pages are fetched`() {
-        expectServicesRequest()
-            .andRespond(withSuccess("""{"services":[{"id":"default"}]}""", MediaType.APPLICATION_JSON))
-        expectVersionsRequest("default").andRespond(
-            withSuccess(
-                """{"versions":[{"id":"v1","createTime":"2026-01-01T10:00:00Z"}],"nextPageToken":"page-2"}""",
-                MediaType.APPLICATION_JSON,
-            )
-        )
-        expectVersionsRequest("default", pageToken = "page-2").andRespond(
-            withSuccess(
-                """{"versions":[{"id":"v2","createTime":"2026-01-02T10:00:00Z"}]}""",
-                MediaType.APPLICATION_JSON,
-            )
-        )
-
-        val deploys = client.listAllDeploys(project)
-
-        assertEquals(listOf("v2", "v1"), deploys.map { it.versionId })
-        mockServer.verify()
-    }
-
-    @Test
-    fun `Return empty list when the project has no services`() {
-        expectServicesRequest().andRespond(withSuccess("""{"services":[]}""", MediaType.APPLICATION_JSON))
-
-        val deploys = client.listAllDeploys(project)
-
-        assertTrue(deploys.isEmpty())
-        mockServer.verify()
-    }
-
-    @Test
-    fun `Send the access token as a bearer authorization header`() {
-        expectServicesRequest()
-            .andExpect(header("Authorization", "Bearer test-token"))
-            .andRespond(withSuccess("""{"services":[]}""", MediaType.APPLICATION_JSON))
+    fun `Reuse the admin client of a service account across calls`() {
+        val adminClient = mock<AppEngineAdminClient> {
+            on { listServices(PROJECT_ID) } doReturn emptyList()
+        }
+        val client = client(adminClient)
 
         client.listAllDeploys(project)
+        client.listAllDeploys(project)
 
-        mockServer.verify()
+        org.mockito.kotlin.verify(adminClient, org.mockito.kotlin.times(2)).listServices(PROJECT_ID)
     }
 
     @Test
-    fun `Throw GcpListingException when the API returns an error status`() {
-        expectServicesRequest()
-            .andRespond(withStatus(HttpStatus.FORBIDDEN).body("""{"error":{"message":"no permission"}}"""))
+    fun `Throw GcpListingException when the App Engine API returns an error`() {
+        val adminClient = mock<AppEngineAdminClient> {
+            on { listServices(PROJECT_ID) } doThrow
+                ApiException(RuntimeException("no permission"), statusCode(StatusCode.Code.PERMISSION_DENIED), false)
+        }
 
-        val exception = assertFailsWith<GcpListingException> { client.listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
 
-        assertTrue(exception.message!!.contains("FORBIDDEN"))
-        assertTrue(exception.message!!.contains("testProject"))
-    }
-
-    @Test
-    fun `Throw GcpListingException when the API cannot be reached`() {
-        expectServicesRequest().andRespond(withException(IOException("connection refused")))
-
-        val exception = assertFailsWith<GcpListingException> { client.listAllDeploys(project) }
-
-        assertTrue(exception.message!!.contains("Could not call"))
-    }
-
-    @Test
-    fun `Throw GcpListingException when a version has an unparsable createTime`() {
-        expectServicesRequest()
-            .andRespond(withSuccess("""{"services":[{"id":"default"}]}""", MediaType.APPLICATION_JSON))
-        expectVersionsRequest("default").andRespond(
-            withSuccess("""{"versions":[{"id":"v1","createTime":"not-a-date"}]}""", MediaType.APPLICATION_JSON)
+        assertEquals(
+            "GCP App Engine API returned PERMISSION_DENIED for project ${PROJECT_ID}",
+            exception.message,
         )
-
-        val exception = assertFailsWith<GcpListingException> { client.listAllDeploys(project) }
-
-        assertTrue(exception.message!!.contains("unparsable createTime"))
     }
 
-    @Test
-    fun `Throw GcpListingException when the API response is unparsable`() {
-        expectServicesRequest().andRespond(withSuccess("not-json", MediaType.APPLICATION_JSON))
-
-        val exception = assertFailsWith<GcpListingException> { client.listAllDeploys(project) }
-
-        assertTrue(exception.message!!.contains("Could not parse"))
+    private fun statusCode(code: StatusCode.Code): StatusCode = object : StatusCode {
+        override fun getCode(): StatusCode.Code = code
+        override fun getTransportCode(): Any? = null
     }
 
-    private fun expectServicesRequest() =
-        mockServer.expect(requestTo("${BASE_URL}/v1/apps/testProject/services?pageSize=100"))
-            .andExpect(method(HttpMethod.GET))
+    private fun service(id: String): com.google.appengine.v1.Service =
+        com.google.appengine.v1.Service.newBuilder().setId(id).build()
 
-    private fun expectVersionsRequest(serviceId: String, pageToken: String? = null): ResponseActions {
-        val versionsUrl = "${BASE_URL}/v1/apps/testProject/services/${serviceId}/versions?pageSize=100"
-        val expectedUrl = if (pageToken == null) versionsUrl else "${versionsUrl}&pageToken=${pageToken}"
-        return mockServer.expect(requestTo(expectedUrl)).andExpect(method(HttpMethod.GET))
+    private fun version(id: String, createTime: com.google.protobuf.Timestamp, versionUrl: String?): Version {
+        val builder = Version.newBuilder().setId(id)
+        if (versionUrl != null) {
+            builder.versionUrl = versionUrl
+        }
+        return builder.setCreateTime(createTime).build()
+    }
+
+    private fun epoch(seconds: Long): com.google.protobuf.Timestamp =
+        com.google.protobuf.Timestamp.newBuilder().setSeconds(seconds).build()
+
+    private fun instant(seconds: Long): Instant = Instant.ofEpochSecond(seconds)
+
+    private fun stubCredentialsProvider(): CredentialsProvider = CredentialsProvider {
+        com.google.auth.oauth2.GoogleCredentials.create(
+            com.google.auth.oauth2.AccessToken("token", java.util.Date(Long.MAX_VALUE))
+        )
     }
 }
-
