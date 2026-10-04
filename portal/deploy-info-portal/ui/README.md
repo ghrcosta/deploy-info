@@ -1,6 +1,11 @@
 # Ui
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.10.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) (now at version 22.2).
+
+## Requirements
+
+- Node.js **24.x** (tracked in `.nvmrc`; with [nvm](https://github.com/nvm-sh/nvm) installed, run `nvm use` inside this directory).
+- TypeScript ~6.0.x is managed by the Angular tooling in `package.json`.
 
 ## Development server
 

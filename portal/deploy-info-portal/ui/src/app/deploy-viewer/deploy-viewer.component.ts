@@ -1,4 +1,4 @@
-import { Component, Injectable } from '@angular/core';
+import { Component, Injectable, ChangeDetectionStrategy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { DeployNavigatorComponent } from "./deploy-navigator/deploy-navigator.component";
 import { FileViewerComponent } from './file-viewer/file-viewer.component';
@@ -10,6 +10,7 @@ import { FileViewerComponent } from './file-viewer/file-viewer.component';
     FileViewerComponent,
   ],
   templateUrl: './deploy-viewer.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './deploy-viewer.component.scss'
 })
 export class DeployViewerComponent { }

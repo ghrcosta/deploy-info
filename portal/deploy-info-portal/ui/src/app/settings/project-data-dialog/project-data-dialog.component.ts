@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
 import { FormsModule, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +23,7 @@ import { ProjectDataDialogNetworkService } from './project-data-dialog.network.s
         MatDialogActions,
     ],
     templateUrl: './project-data-dialog.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     styleUrl: './project-data-dialog.component.scss'
 })
 export class ProjectDataDialogComponent {

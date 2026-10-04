@@ -59,7 +59,7 @@ external dependencies**: no GCP credentials, no Datastore emulator, no internet 
 
 ## Frontend (`ui/`)
 
-Angular 19 + Material:
+Angular 22 + Material:
 
 ```
 cd portal/deploy-info-portal/ui

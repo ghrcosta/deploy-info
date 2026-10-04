@@ -1,4 +1,4 @@
-import { Component, inject, Renderer2 } from '@angular/core';
+import { Component, inject, Renderer2, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HighlightLoader } from 'ngx-highlightjs';
@@ -11,6 +11,7 @@ import { HomeService } from '../home.component'
         MatIconModule,
     ],
     templateUrl: './top-bar.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     styleUrl: './top-bar.component.scss'
 })
 export class TopBarComponent {

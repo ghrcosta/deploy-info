@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -21,6 +21,7 @@ import highlightGitLanguage from '../../highlightjs/git.js';
         MatTabsModule,
     ],
     templateUrl: './file-viewer.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     styleUrl: './file-viewer.component.scss'
 })
 export class FileViewerComponent {

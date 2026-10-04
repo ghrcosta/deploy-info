@@ -1,4 +1,4 @@
-import { Component, ElementRef } from '@angular/core';
+import { Component, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTreeModule } from '@angular/material/tree';
@@ -12,6 +12,7 @@ const VERSION_NODE_CLASS = 'version-node';
   selector: 'deploy-navigator',
   templateUrl: './deploy-navigator.component.html',
   styleUrl: './deploy-navigator.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     MatButtonModule,
     MatExpansionModule,

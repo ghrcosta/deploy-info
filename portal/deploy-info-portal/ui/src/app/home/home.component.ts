@@ -1,4 +1,4 @@
-import { Component, Injectable } from '@angular/core';
+import { Component, Injectable, ChangeDetectionStrategy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TopBarComponent } from "./top-bar/top-bar.component";
 import { DeployViewerComponent } from '../deploy-viewer/deploy-viewer.component';
@@ -8,6 +8,7 @@ import { SettingsComponent } from '../settings/settings.component'
     selector: 'app-home',
     templateUrl: './home.component.html',
     styleUrl: './home.component.scss',
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         TopBarComponent,
         DeployViewerComponent,
