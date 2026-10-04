@@ -33,7 +33,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 1. Portal backend core (first — the contract depends on it)
 
-- [ ] Datastore model + repository for the deploy link (project, deployType/service/version as identifier — design decided here, storage folder, email, timestamp)
+- [x] Datastore model + repository for the deploy link (project, deployType/service/version/location as identifier, storage folder, email, timestamp) — see [`portal/deploy-info-portal/documentation/deploy-link.md`](portal/deploy-info-portal/documentation/deploy-link.md)
 - [x] GCP deploy-listing client for App Engine (list services/versions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [x] GCP deploy-listing client for Cloud Run (list services/revisions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [x] Impersonation: generate an access token for each configured project's service account to call the listing APIs — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)

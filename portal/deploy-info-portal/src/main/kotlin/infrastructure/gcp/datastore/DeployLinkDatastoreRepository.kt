@@ -1,0 +1,42 @@
+package infrastructure.gcp.datastore
+
+import application.DeployLinkRepository
+import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
+import domain.DeployLink
+import domain.DeployType
+import org.springframework.stereotype.Repository
+import java.time.Instant
+
+@Repository
+class DeployLinkDatastoreRepository(
+    private val datastoreTemplate: DatastoreTemplate,
+) : DeployLinkRepository {
+
+    override fun get(projectName: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): DeployLink? =
+        datastoreTemplate.findById(keyName(projectName, deployType, location, serviceId, versionId), DeployLinkEntity::class.java)?.toModel()
+
+    override fun getAllFor(projectName: String, deployType: DeployType): List<DeployLink> =
+        datastoreTemplate.findAll(DeployLinkEntity::class.java)
+            .filter { it.projectName == projectName && it.deployType == deployType }
+            .map { it.toModel() }
+
+    override fun save(deployLink: DeployLink) {
+        datastoreTemplate.save(DeployLinkEntity(deployLink))
+    }
+
+    override fun delete(deployLink: DeployLink) {
+        datastoreTemplate.deleteById(deployLink.keyName, DeployLinkEntity::class.java)
+    }
+
+    private fun keyName(projectName: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): String =
+        DeployLink(
+            projectName = projectName,
+            deployType = deployType,
+            serviceId = serviceId,
+            versionId = versionId,
+            location = location,
+            storageFolder = "",
+            userEmail = "",
+            collectTimestamp = Instant.EPOCH,
+        ).keyName
+}
