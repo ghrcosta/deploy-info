@@ -2,6 +2,7 @@ package tests.application.linking
 
 import application.linking.CreateDeployLinkUseCase
 import domain.DeployType
+import domain.InvalidDirectoryNameException
 import domain.Project
 import org.junit.jupiter.api.Test
 import tests.fakes.*
@@ -10,19 +11,22 @@ import java.time.Instant
 import kotlin.test.*
 
 private const val PROJECT_NAME = "testProject"
-private val COLLECT_TIME: Instant = Instant.ofEpochSecond(1_000_000)
+private const val OTHER_PROJECT_NAME = "otherProject"
+private val COLLECT_TIME: Instant = Instant.ofEpochMilli(1_735_689_600_000)
 private val RETRY_DELAY_TOLERANCE: Duration = Duration.ofHours(1)
 
 private fun input(
+    directoryName: String? = null,
+    projects: List<String> = listOf(PROJECT_NAME),
     deployType: DeployType = DeployType.GAE,
     userEmail: String = "deployer@example.com",
     collectTimestamp: Instant = COLLECT_TIME,
 ) = CreateDeployLinkUseCase.Input(
-    projectName = PROJECT_NAME,
+    // The directory name encodes the collect timestamp: <user>_<deployType>_<epochMillis>
+    directoryName = directoryName ?: "deployer_${deployType.name}_${collectTimestamp.toEpochMilli()}",
+    projects = projects,
     deployType = deployType,
-    storageFolder = "uploads/2026-01-01T00-00-00Z",
     userEmail = userEmail,
-    collectTimestamp = collectTimestamp,
 )
 
 class CreateDeployLinkUseCaseTests {
@@ -79,7 +83,7 @@ class CreateDeployLinkUseCaseTests {
         assertEquals("web", created.deployLink.serviceId)
         assertEquals("v42", created.deployLink.versionId)
         assertNull(created.deployLink.location)
-        assertEquals("uploads/2026-01-01T00-00-00Z", created.deployLink.storageFolder)
+        assertEquals("deployer_GAE_1735689600000", created.deployLink.storageFolder)
         assertEquals("deployer@example.com", created.deployLink.userEmail)
         assertEquals(COLLECT_TIME, created.deployLink.collectTimestamp)
         assertEquals(created.deployLink, fakeDeployLinkRepository.get(PROJECT_NAME, DeployType.GAE, null, "web", "v42"))
@@ -155,7 +159,7 @@ class CreateDeployLinkUseCaseTests {
 
         assertIs<CreateDeployLinkUseCase.Output.NotLinked>(output)
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
-        assertTrue(fakeStorageCleaner.deletedFolders.contains(input().storageFolder))
+        assertTrue(fakeStorageCleaner.deletedFolders.contains(input().directoryName))
     }
 
     @Test
@@ -206,7 +210,7 @@ class CreateDeployLinkUseCaseTests {
 
         assertIs<CreateDeployLinkUseCase.Output.NotLinked>(output)
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
-        assertEquals(listOf(input().storageFolder), fakeStorageCleaner.deletedFolders)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
     }
 
     @Test
@@ -239,12 +243,12 @@ class CreateDeployLinkUseCaseTests {
 
     @Test
     fun `Unknown project - not linked and the upload is deleted after the retry`() {
-        val output = useCase.execute(input().copy(projectName = "not-configured"))
+        val output = useCase.execute(input(projects = listOf("not-configured")))
 
         assertIs<CreateDeployLinkUseCase.Output.UnknownProject>(output)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
-        assertEquals(listOf(input().storageFolder), fakeStorageCleaner.deletedFolders)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
     }
 
     @Test
@@ -256,9 +260,9 @@ class CreateDeployLinkUseCaseTests {
         assertIs<CreateDeployLinkUseCase.Output.NotLinked>(output)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
-        assertEquals(listOf(input().storageFolder), fakeStorageCleaner.deletedFolders)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
-        assertEquals(listOf(input().storageFolder), fakeStorageCleaner.deletedFolders)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
     }
 
     @Test
@@ -285,7 +289,7 @@ class CreateDeployLinkUseCaseTests {
         useCase.execute(input())
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
 
-        assertEquals(listOf(input().storageFolder), fakeStorageCleaner.deletedFolders)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
     }
 
     @Test
@@ -314,6 +318,96 @@ class CreateDeployLinkUseCaseTests {
         assertIs<CreateDeployLinkUseCase.Output.NotLinked>(output)
         fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
 
-        assertEquals(listOf(input().storageFolder), fakeStorageCleaner.deletedFolders)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
+    }
+
+    @Test
+    fun `Multi-project - the winner is chosen globally across projects, not per project`() {
+        fakeProjectRepository.save(Project(name = OTHER_PROJECT_NAME, group = null, serviceAccount = "sa@other.iam.gserviceaccount.com"))
+        fakeAppEngineLister.seed(
+            PROJECT_NAME,
+            listOf(FakeAppEngineLister.deploy(PROJECT_NAME, "web", "older", COLLECT_TIME.minusSeconds(600), "deployer@example.com")),
+        )
+        fakeAppEngineLister.seed(
+            OTHER_PROJECT_NAME,
+            listOf(FakeAppEngineLister.deploy(OTHER_PROJECT_NAME, "web", "closest", COLLECT_TIME.minusSeconds(10), "deployer@example.com")),
+        )
+
+        val output = useCase.execute(input(projects = listOf(PROJECT_NAME, OTHER_PROJECT_NAME)))
+
+        val created = assertIs<CreateDeployLinkUseCase.Output.Created>(output)
+        assertEquals(OTHER_PROJECT_NAME, created.deployLink.projectName)
+        assertEquals("closest", created.deployLink.versionId)
+        assertEquals(
+            created.deployLink,
+            fakeDeployLinkRepository.get(OTHER_PROJECT_NAME, DeployType.GAE, null, "web", "closest"),
+        )
+    }
+
+    @Test
+    fun `Multi-project - a mix of configured and unknown projects still matches in the configured ones`() {
+        fakeAppEngineLister.seed(
+            PROJECT_NAME,
+            listOf(FakeAppEngineLister.deploy(PROJECT_NAME, "web", "v1", COLLECT_TIME.minusSeconds(60), "deployer@example.com")),
+        )
+
+        val output = useCase.execute(input(projects = listOf("not-configured", PROJECT_NAME)))
+
+        assertIs<CreateDeployLinkUseCase.Output.Created>(output)
+    }
+
+    @Test
+    fun `Multi-project - a deploy outside the window in one project is rejected even when listed`() {
+        fakeProjectRepository.save(Project(name = OTHER_PROJECT_NAME, group = null, serviceAccount = "sa@other.iam.gserviceaccount.com"))
+        fakeAppEngineLister.seed(
+            OTHER_PROJECT_NAME,
+            listOf(FakeAppEngineLister.deploy(OTHER_PROJECT_NAME, "web", "old", COLLECT_TIME.minus(window).minusSeconds(1), "deployer@example.com")),
+        )
+
+        val output = useCase.execute(input(projects = listOf(OTHER_PROJECT_NAME)))
+
+        assertIs<CreateDeployLinkUseCase.Output.NotLinked>(output)
+        fakeRetryScheduler.advanceBy(RETRY_DELAY_TOLERANCE)
+        assertEquals(listOf(input().directoryName), fakeStorageCleaner.deletedFolders)
+    }
+
+    @Test
+    fun `Directory name - the collection timestamp is parsed from the directory name and forwarded to the linking`() {
+        fakeAppEngineLister.seed(
+            PROJECT_NAME,
+            listOf(FakeAppEngineLister.deploy(PROJECT_NAME, "web", "v1", COLLECT_TIME.minusSeconds(60), "deployer@example.com")),
+        )
+
+        val output = useCase.execute(input())
+
+        assertEquals(COLLECT_TIME, assertIs<CreateDeployLinkUseCase.Output.Created>(output).deployLink.collectTimestamp)
+    }
+
+    @Test
+    fun `Directory name - a name with a mismatched deploy type is rejected`() {
+        assertFailsWith<InvalidDirectoryNameException> {
+            useCase.execute(input(directoryName = "deployer_RUN_${COLLECT_TIME.toEpochMilli()}"))
+        }
+    }
+
+    @Test
+    fun `Directory name - a name with a non-numeric timestamp is rejected`() {
+        assertFailsWith<InvalidDirectoryNameException> {
+            useCase.execute(input(directoryName = "deployer_GAE_not-a-number"))
+        }
+    }
+
+    @Test
+    fun `Directory name - a name that is too short is rejected`() {
+        assertFailsWith<InvalidDirectoryNameException> {
+            useCase.execute(input(directoryName = "only-two_parts"))
+        }
+    }
+
+    @Test
+    fun `Directory name - a name whose user part has an invalid character is rejected`() {
+        assertFailsWith<InvalidDirectoryNameException> {
+            useCase.execute(input(directoryName = "depl oy er_GAE_${COLLECT_TIME.toEpochMilli()}"))
+        }
     }
 }
