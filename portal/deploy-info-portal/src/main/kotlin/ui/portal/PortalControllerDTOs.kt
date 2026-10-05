@@ -6,7 +6,7 @@ import domain.ContentFile
 import domain.DeployContent
 import domain.GitContent
 
-/** Response of `GET /portal/tree` (see `docs/api.md`): the navigator tree, group level. */
+/** Response of `GET /portal/tree` (see `documentation/api.md`): the navigator tree, group level. */
 data class GroupDTO(
     val name: String,
     val projects: List<ProjectDTO>,
@@ -65,7 +65,7 @@ data class VersionDTO(
     )
 }
 
-/** Response of `GET /portal/deploy/content` (see `docs/api.md`): the collected files. */
+/** Response of `GET /portal/deploy/content` (see `documentation/api.md`): the collected files. */
 data class DeployContentDTO(
     val git: GitDTO?,
     val extras: List<ContentFileDTO>,

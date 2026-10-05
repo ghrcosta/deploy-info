@@ -2,7 +2,7 @@
 
 Documentation of how the Gradle collector plugin (`collector-java/deploy-info-collector`) works internally.
 For how to use it, see the plugin's own [README](../README.md).
-For how to run the whole project locally, see [local-development.md](../../../docs/local-development.md).
+For how to run the whole project locally, see [local-development.md](../../../documentation/local-development.md).
 
 Plugin id: `io.github.ghrcosta.deploy-info-collector` · version `0.0.1` · Kotlin 2.1.10 · JVM toolchain 17.
 
@@ -75,7 +75,7 @@ Singleton holding the state for one run:
 
 1. Creates `build/collector/` (cleared first via `createEmptyDirectory`).
 2. Runs `gcloud config get-value account` to get the authenticated gcloud email (throws if it fails — so the user **must** have `gcloud` installed and logged in before running the collector).
-3. Output dir name: `<email-part-before-@>_<deployType>_<now-epoch-ms>`, e.g. `john.doe_GAE_1746322088662`.
+3. Output dir name: `<email-part-before-@>_<deployType>_<now-epoch-ms>`, e.g. `johndoe_GAE_1746322088662`.
 4. Writes `collector.properties` into the output dir with three keys: `email`, `deploy` (`GAE`/`RUN`), `timestamp` (epoch millis). This file is uploaded along with everything else so the portal can identify who collected what and when.
    *(Phase 1 note: once `PortalTrigger` sends this info in the request body, this file becomes redundant and may be removed.)*
 
@@ -129,7 +129,7 @@ class PortalTrigger {
 }
 ```
 
-Nothing is sent to the portal yet — the upload is the only integration point today. In Phase 1/2 this must POST the trigger request (output dir name, user email, configured projects, deploy type) to the portal backend per the API contract defined in Phase 1 (`docs/api.md`). Cross-platform command execution (`gcloud.cmd` on Windows via `SystemUtils`, `CommandUtils`) applies to everything except this component, which will be plain HTTP.
+Nothing is sent to the portal yet — the upload is the only integration point today. In Phase 1/2 this must POST the trigger request (output dir name, user email, configured projects, deploy type) to the portal backend per the API contract defined in Phase 1 (`documentation/api.md`). Cross-platform command execution (`gcloud.cmd` on Windows via `SystemUtils`, `CommandUtils`) applies to everything except this component, which will be plain HTTP.
 
 ## 8. Resulting Cloud Storage folder layout
 

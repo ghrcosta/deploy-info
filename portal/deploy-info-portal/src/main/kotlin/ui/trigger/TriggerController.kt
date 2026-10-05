@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*
 
 /**
  * Trigger contract: the collector calls this after uploading its output directory to Cloud Storage
- * (see `docs/api.md`).
+ * (see `documentation/api.md`).
  */
 @RestController
 @RequestMapping("trigger")

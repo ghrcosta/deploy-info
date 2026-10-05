@@ -1,7 +1,7 @@
 # Running the portal locally
 
 How to run the portal backend and frontend on a local machine. For the overall project context see
-the root [README](../../../README.md) and [local-development.md](../../../docs/local-development.md).
+the root [README](../../../README.md) and [local-development.md](../../../documentation/local-development.md).
 
 ## Backend
 

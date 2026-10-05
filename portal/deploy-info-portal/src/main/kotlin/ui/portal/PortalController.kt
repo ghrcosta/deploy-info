@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Main-screen contracts (see `docs/api.md`): the navigator tree and the collected file content of
+ * Main-screen contracts (see `documentation/api.md`): the navigator tree and the collected file content of
  * an upload folder.
  */
 @RestController

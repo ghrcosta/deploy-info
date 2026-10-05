@@ -26,7 +26,7 @@ each component's `documentation/` folder:
 
 Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`util/SystemUtils.kt`), so plain `gcloud` commands work on both OSes.
 
-## 2. Component docs
+## 2. Component documentation
 
 - **Portal backend** (`portal/deploy-info-portal`): run instructions, profiles, Datastore emulator,
   unit tests and the Cloud Storage known gap —
@@ -43,7 +43,7 @@ Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`ut
    Datastore emulator, no internet needed).
 3. `.\gradlew.bat bootRun` in `portal/deploy-info-portal` — backend up on 8080 with Datastore emulator
    on 8090. ⚠️ Requires ADC (`gcloud auth application-default login`) or the storage-starter
-   workaround, otherwise startup fails (see the known gap in the portal docs).
+   workaround, otherwise startup fails (see the known gap in the portal documentation).
 4. `npm start` in `ui` — UI up on 4200; Settings screen lists/adds/edits/deletes projects against the
    backend.
 5. Publish + apply the collector to a sample project; run `deployInfoCollect`; inspect

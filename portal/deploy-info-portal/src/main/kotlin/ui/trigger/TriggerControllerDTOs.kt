@@ -2,7 +2,7 @@ package ui.trigger
 
 import domain.DeployType
 
-/** Request body of `POST /trigger/handleNewDirectory` (see `docs/api.md`). */
+/** Request body of `POST /trigger/handleNewDirectory` (see `documentation/api.md`). */
 data class TriggerRequest(
     /** The collector's output directory name, `<user>_<deployType>_<epochMillis>`. */
     val directoryName: String,
@@ -14,7 +14,7 @@ data class TriggerRequest(
     val userEmail: String,
 )
 
-/** Response body of `POST /trigger/handleNewDirectory` (see `docs/api.md`). */
+/** Response body of `POST /trigger/handleNewDirectory` (see `documentation/api.md`). */
 data class TriggerResponse(
     /** `created`, `already-linked`, `pending` or `unknown-project`. */
     val status: String,

@@ -26,7 +26,7 @@
 - `Context`: creates `build/collector/<user>_<deployType>_<timestamp>/`, gets gcloud account email, writes `collector.properties` (email, deploy, timestamp).
 - Cross-platform command execution (gcloud.cmd on Windows), logging, file utils (binary/large detection).
 - Unit tests exist for GitCollector, ExtraFilesCollector, Uploader, Context.
-- `README.md` with usage docs; published via `com.gradle.plugin-publish`.
+- `README.md` with usage documentation; published via `com.gradle.plugin-publish`.
 
 **Missing / incomplete:**
 
@@ -106,7 +106,7 @@
 - "Update libraries": portal was updated recently (Spring Boot 3.5.9, Spring Cloud GCP 7.4.1, per commit `83f91c1`). Collector: Kotlin 2.1.10 / mockk 1.14.0 — verify these are current at implementation time.
 - **Missing entirely (not in TODO.md but required):**
   - Deployment config for the portal itself: no `app.yaml`, no Dockerfile, no App Engine/Cloud Run deploy task in `portal/deploy-info-portal/build.gradle.kts` (e.g., app-gradle-plugin), no UI build integration.
-  - GCP infrastructure setup docs/scripts: bucket creation, Datastore, service accounts + IAM roles (deployInfo project SA needs permission to impersonate each configured project's SA; each SA needs App Engine Viewer / Cloud Run Viewer), Cloud Storage lifecycle rule for cleanup would be a sensible addition.
+  - GCP infrastructure setup documentation/scripts: bucket creation, Datastore, service accounts + IAM roles (deployInfo project SA needs permission to impersonate each configured project's SA; each SA needs App Engine Viewer / Cloud Run Viewer), Cloud Storage lifecycle rule for cleanup would be a sensible addition.
   - Top-level documentation (root `README.md` is just `# deploy-info`).
   - CI (no GitHub Actions or similar anywhere).
 
