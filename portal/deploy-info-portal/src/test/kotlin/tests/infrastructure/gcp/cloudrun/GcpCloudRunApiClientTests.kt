@@ -45,10 +45,12 @@ class GcpCloudRunApiClientTests {
                 revision(
                     name = "projects/${PROJECT_ID}/locations/europe-west1/services/web-api/revisions/rev-2",
                     createTime = epoch(20),
+                    creator = "deployer@example.com",
                 ),
                 revision(
                     name = "projects/${PROJECT_ID}/locations/europe-west1/services/web-api/revisions/rev-1",
                     createTime = epoch(10),
+                    creator = "",
                 ),
             )
             on { listRevisions("projects/${PROJECT_ID}/locations/us-central1/services/worker") } doReturn listOf(
@@ -69,7 +71,8 @@ class GcpCloudRunApiClientTests {
             listOf(instant(30), instant(20), instant(10)),
             deploys.map { it.createTime },
         )
-        assertEquals(listOf<String?>(null, "https://web-api.example.com", "https://web-api.example.com"), deploys.map { it.url })
+        assertEquals(listOf(null, "https://web-api.example.com", "https://web-api.example.com"), deploys.map { it.url })
+        assertEquals(listOf(null, "deployer@example.com", null), deploys.map { it.createdBy })
     }
 
     @Test
@@ -109,8 +112,13 @@ class GcpCloudRunApiClientTests {
     private fun service(name: String, uri: String): Service =
         Service.newBuilder().setName(name).setUri(uri).build()
 
-    private fun revision(name: String, createTime: com.google.protobuf.Timestamp): Revision =
-        Revision.newBuilder().setName(name).setCreateTime(createTime).build()
+    private fun revision(name: String, createTime: com.google.protobuf.Timestamp, creator: String? = null): Revision {
+        val builder = Revision.newBuilder().setName(name)
+        if (creator != null) {
+            builder.creator = creator
+        }
+        return builder.setCreateTime(createTime).build()
+    }
 
     private fun epoch(seconds: Long): com.google.protobuf.Timestamp =
         com.google.protobuf.Timestamp.newBuilder().setSeconds(seconds).build()

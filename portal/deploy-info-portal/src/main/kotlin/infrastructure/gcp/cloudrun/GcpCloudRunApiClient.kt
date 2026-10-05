@@ -76,6 +76,7 @@ class GcpCloudRunApiClient(
             revisionId = revisionName.revision,
             createTime = createTime.toInstant(project.name, serviceId, revisionName.revision),
             url = url,
+            createdBy = creator.takeIf { it.isNotEmpty() },
         )
     }
 

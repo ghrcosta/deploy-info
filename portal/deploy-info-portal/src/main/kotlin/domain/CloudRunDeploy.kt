@@ -10,4 +10,5 @@ data class CloudRunDeploy(
     val revisionId: String,
     val createTime: Instant,
     val url: String? = null,
+    val createdBy: String? = null,
 )

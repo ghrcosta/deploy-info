@@ -39,16 +39,20 @@ The backend follows a Clean Architecture folder structure:
   - The name of each element (constants, variables, functions, files, etc.) must make it clear what its contents and/or
     purpose is.
   - Avoid creating lines of code with more than 120 characters. Split lines to respect this limit.
+  - Only use fully qualified names when required to avoid conflicts. In every other case, add import statements.
+  - Remove unused import statements.
 
 #### Kotlin-specific rules
 
-- Variables in String literals must always be surrounded by `{}`. Example: use "var=${myVar}" instead of "var=$myVar".
+- Variables in String literals must always be surrounded by `{}`. Example: use `var=${myVar}` instead of `var=$myVar`.
 
 ### Verification / Unit test rules
 
 - A change is only considered complete when:
   - New unit tests have been created or existing ones were updated to reflect the code changes.
   - All unit tests pass.
+  - Code and documentation (if it exists) match.
+  - No unused elements (constants, variables, functions, etc.) left behind in the code.
 - When refactoring code, avoid leaving behind old functions that are only called by unit tests.
 - NEVER rebuild / restart the Docker containers yourself.
 

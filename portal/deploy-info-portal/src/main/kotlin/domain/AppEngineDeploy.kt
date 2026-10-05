@@ -9,4 +9,5 @@ data class AppEngineDeploy(
     val versionId: String,
     val createTime: Instant,
     val url: String? = null,
+    val createdBy: String? = null,
 )

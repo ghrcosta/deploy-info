@@ -34,8 +34,8 @@ class GcpAppEngineApiClientTests {
                 service(id = "web"), service(id = "worker"),
             )
             on { listVersions(PROJECT_ID, "web") } doReturn listOf(
-                version(id = "2", createTime = epoch(20), versionUrl = "https://web-2.example.com"),
-                version(id = "1", createTime = epoch(10), versionUrl = ""),
+                version(id = "2", createTime = epoch(20), versionUrl = "https://web-2.example.com", createdBy = "deployer@example.com"),
+                version(id = "1", createTime = epoch(10), versionUrl = "", createdBy = ""),
             )
             on { listVersions(PROJECT_ID, "worker") } doReturn listOf(
                 version(id = "1", createTime = epoch(30), versionUrl = null),
@@ -51,7 +51,8 @@ class GcpAppEngineApiClientTests {
             listOf(instant(30), instant(20), instant(10)),
             deploys.map { it.createTime },
         )
-        assertEquals(listOf<String?>(null, "https://web-2.example.com", null), deploys.map { it.url })
+        assertEquals(listOf(null, "https://web-2.example.com", null), deploys.map { it.url })
+        assertEquals(listOf(null, "deployer@example.com", null), deploys.map { it.createdBy })
     }
 
     @Test
@@ -91,10 +92,13 @@ class GcpAppEngineApiClientTests {
     private fun service(id: String): com.google.appengine.v1.Service =
         com.google.appengine.v1.Service.newBuilder().setId(id).build()
 
-    private fun version(id: String, createTime: com.google.protobuf.Timestamp, versionUrl: String?): Version {
+    private fun version(id: String, createTime: com.google.protobuf.Timestamp, versionUrl: String?, createdBy: String? = null): Version {
         val builder = Version.newBuilder().setId(id)
         if (versionUrl != null) {
             builder.versionUrl = versionUrl
+        }
+        if (createdBy != null) {
+            builder.createdBy = createdBy
         }
         return builder.setCreateTime(createTime).build()
     }

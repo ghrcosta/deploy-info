@@ -62,6 +62,7 @@ class GcpAppEngineApiClient(
             versionId = id,
             createTime = createTime.toInstant(project.name, serviceId, id),
             url = versionUrl.takeIf { it.isNotEmpty() },
+            createdBy = createdBy.takeIf { it.isNotEmpty() },
         )
 
     private fun Timestamp.toInstant(projectId: String, serviceId: String, versionId: String): Instant {

@@ -1,4 +1,4 @@
-package tests.infrastructure.gcp.cloudrun
+package tests.fakes
 
 import application.GcpCloudRunLister
 import domain.CloudRunDeploy
@@ -8,7 +8,7 @@ import java.time.Instant
 /**
  * In-memory [GcpCloudRunLister] used in unit tests (and later by the `local` profile) instead of
  * calling the real GCP Cloud Run Admin API. Deploys are returned newest first, matching the
- * contract of [GcpCloudRunApiClient].
+ * contract of [infrastructure.gcp.cloudrun.GcpCloudRunApiClient].
  */
 class FakeCloudRunLister(
     private var deploysByProject: MutableMap<String, List<CloudRunDeploy>> = mutableMapOf(),
@@ -28,12 +28,14 @@ class FakeCloudRunLister(
             serviceId: String,
             revisionId: String,
             createTime: Instant,
+            createdBy: String? = null,
         ) = CloudRunDeploy(
             projectId = projectId,
             location = location,
             serviceId = serviceId,
             revisionId = revisionId,
             createTime = createTime,
+            createdBy = createdBy,
         )
     }
 }
