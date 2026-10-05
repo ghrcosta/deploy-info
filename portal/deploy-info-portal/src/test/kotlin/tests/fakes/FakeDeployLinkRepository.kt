@@ -22,6 +22,8 @@ class FakeDeployLinkRepository(
                 it.location == location
         }
 
+    override fun getAll(): List<DeployLink> = deployLinks.toList()
+
     override fun getAllFor(projectName: String, deployType: DeployType): List<DeployLink> =
         deployLinks.filter { it.projectName == projectName && it.deployType == deployType }
 

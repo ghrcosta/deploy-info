@@ -43,10 +43,10 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 2. Define the API contracts (based on the working core)
 
-- [ ] Trigger contract: `POST /trigger/handleNewDirectory` request/response — body fields (output dir name, user email, projects list, deploy type) derived from what the backend core actually needs
-- [ ] Main-screen contracts: tree endpoint (group > project > service > version), file-content endpoint(s)
-  — when implementing the tree endpoint, also decide whether the validity/cleanup logic (Phase 1.1)
-  should additionally be executed on tree requests or not
+- [x] Trigger contract: `POST /trigger/handleNewDirectory` request/response — body fields (output dir name, user email, projects list, deploy type) derived from what the backend core actually needs — see [`docs/api.md`](docs/api.md)
+- [x] Main-screen contracts: tree endpoint (group > project > service > version), file-content endpoint(s) — see [`docs/api.md`](docs/api.md) and [`portal/deploy-info-portal/documentation/main-screen.md`](portal/deploy-info-portal/documentation/main-screen.md)
+  - Decision: the validity/cleanup sweep (Phase 1.1) runs **on tree requests** when due, not on a schedule — App Engine Standard kills idle instances, so a fixed scheduler either never fires or keeps an instance alive forever; concurrent sweeps from multiple instances are accepted as redundant (idempotent deletes) and no claim/lock is used (see `portal/deploy-info-portal/documentation/deploy-cleanup.md`)
+  - Decision: the tree carries the upload's `storageFolder` on each version node, so the file-content endpoint touches Cloud Storage only, never Datastore
 - [ ] Document the contracts (e.g. `docs/api.md`) as the reference for both collectors and the frontend
 
 ### 3. Collector plugin (adapt to the contract)

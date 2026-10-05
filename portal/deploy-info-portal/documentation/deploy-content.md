@@ -31,18 +31,20 @@ Field names mirror the frontend's `DeployData` (`git.gitlog`, `git.gitstatus`, `
 ## Interface (`application/FileContentReader.kt`)
 
 `readText(storageFolder, fileName): String?` — the text of one file in the folder, null when the
-file does not exist, `domain/StorageReadException` when the storage backend fails. The bucket is an
-infrastructure concern; the interface works with the folder name only.
+file does not exist, `domain/StorageReadException` when the storage backend fails. Plus
+`listFileNames(storageFolder): List<String>` — the folder's file names (empty when the folder is
+absent/empty), used to detect an upload folder that is gone. The bucket is an infrastructure
+concern; the interface works with the folder name only.
 
 ## Use case (`application/content/GetDeployContentUseCase.kt`)
 
-- Input: the deploy identity. Looks up the `DeployLink` via `DeployLinkRepository.get` — no link →
-  `Output.LinkNotFound`.
-- Reads the folder through `FileContentReader`: the two git files plus both uuid maps; each uuid
-  file's content is resolved back to its original path. Entries referencing files that are missing
-  from the folder are skipped (partial uploads must not fail the whole read).
-- Output: `Content(DeployContent)` / `LinkNotFound` / `StorageError` (portal-issue failure, mirrors
-  how the linking logic surfaces `GcpListingException`).
+- Input: the upload's `storageFolder` (carried by the tree's version nodes — this capability touches
+  Cloud Storage only, never Datastore; the identity → folder mapping lives in the tree + Datastore).
+- Reads the folder through `FileContentReader`: first `listFileNames` (an absent/empty folder →
+  `Output.FolderNotFound`, e.g. the cleanup sweep removed it), then the two git files plus both uuid
+  maps; each uuid file's content is resolved back to its original path. Entries referencing files
+  that are missing from the folder are skipped (partial uploads must not fail the whole read).
+- Output: `Content(DeployContent)` / `FolderNotFound` / `StorageError` (portal-issue failure).
 - Single-response design: log, status, all changes and all extras come back in one `DeployContent`,
   matching the frontend's single fetch per deploy click (files are size-capped by the collector's
   `maxFileSize`, so the payload stays bounded).
@@ -62,11 +64,10 @@ existing `storageBucket` property — no new configuration.
 
 `tests/fakes/FakeFileContentReader.kt` (in-memory, with a fail-all-reads switch) and
 `tests/application/content/GetDeployContentUseCaseTests.kt`: full folder (paths from the uuid maps),
-Cloud Run identity lookup with location, no-git folder, empty folder, status-only folder, uuid-map
-entry with a missing file, unknown link, and reader failure. No emulator, credentials, or internet
-access required.
+no-git folder, empty/absent folder, status-only folder, uuid-map entry with a missing file, reader
+failure. No emulator, credentials, or internet access required.
 
 ## Explicitly out of scope
 
-The `PortalController` REST endpoint and its DTO mapping (Phase 1 §4) and the frontend wiring
-(§5) — this capability is the core those layers build on.
+The frontend wiring (§5) — this capability is the core the REST layer (`PortalController`, Phase
+1.2, see `main-screen.md`) and the frontend build on.

@@ -5,7 +5,7 @@ import java.time.Duration
 
 /**
  * Binds the `deploy-info.*` configuration properties used by the linking logic (bucket name of the
- * collector uploads, matching window).
+ * collector uploads, matching window) and the validity/cleanup logic.
  */
 @ConfigurationProperties("deploy-info")
 data class DeployInfoProperties(
@@ -20,10 +20,10 @@ data class DeployInfoProperties(
     )
 
     data class Cleanup(
-        /** Whether the periodic validity/cleanup sweep is scheduled at all (`deploy-info.cleanup.enabled`). */
+        /** Whether the on-request cleanup trigger is active (`deploy-info.cleanup.enabled`). */
         val enabled: Boolean,
 
-        /** How often the validity/cleanup sweep runs. */
+        /** How long after a completed sweep the on-request trigger may start the next one. */
         val interval: Duration,
 
         /**

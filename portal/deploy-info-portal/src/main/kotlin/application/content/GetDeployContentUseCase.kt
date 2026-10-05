@@ -1,13 +1,16 @@
 package application.content
 
-import application.DeployLinkRepository
 import application.FileContentReader
-import domain.*
+import domain.ContentFile
+import domain.DeployContent
+import domain.GitContent
+import domain.StorageReadException
 import java.util.*
 
 /**
  * Reads the file content (GIT section and extras) of a collector upload's Cloud Storage folder,
- * resolved through the deploy link matching the given deploy identity.
+ * identified by the folder name the tree endpoint carries on its version nodes — so this use case
+ * touches Cloud Storage only, never Datastore.
  *
  * The folder layout is the one produced by the collector (see the collector plugin documentation):
  * `git-log.txt` / `git-status.txt` at the top level, uuid-named files with their `uuid → path`
@@ -18,36 +21,31 @@ import java.util.*
  * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
  */
 class GetDeployContentUseCase(
-    private val deployLinkRepository: DeployLinkRepository,
     private val fileContentReader: FileContentReader,
 ) {
 
-    /** The deploy-link identity of the version whose collected files should be read. */
+    /** The upload folder whose collected files should be read (the tree's version-node value). */
     data class Input(
-        val projectName: String,
-        val deployType: DeployType,
-        val location: String?,
-        val serviceId: String,
-        val versionId: String,
+        val storageFolder: String,
     )
 
     sealed class Output {
-        /** The collected file content of the linked upload folder. */
+        /** The collected file content of the upload folder. */
         data class Content(val deployContent: DeployContent) : Output()
 
-        /** No deploy link exists for the given identity. */
-        data object LinkNotFound : Output()
+        /** The upload folder does not exist (or is empty) — e.g. deleted by the cleanup sweep. */
+        data object FolderNotFound : Output()
 
         /** The Cloud Storage folder could not be read (a portal issue, not a user issue). */
         data object StorageError : Output()
     }
 
     fun execute(input: Input): Output {
-        val link = deployLinkRepository.get(
-            input.projectName, input.deployType, input.location, input.serviceId, input.versionId,
-        ) ?: return Output.LinkNotFound
         return try {
-            Output.Content(readContent(link.storageFolder))
+            if (fileContentReader.listFileNames(input.storageFolder).isEmpty()) {
+                return Output.FolderNotFound
+            }
+            Output.Content(readContent(input.storageFolder))
         } catch (_: StorageReadException) {
             Output.StorageError
         }

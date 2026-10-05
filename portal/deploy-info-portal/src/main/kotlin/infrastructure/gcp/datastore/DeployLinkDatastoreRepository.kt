@@ -20,6 +20,9 @@ class DeployLinkDatastoreRepository(
             .filter { it.projectName == projectName && it.deployType == deployType }
             .map { it.toModel() }
 
+    override fun getAll(): List<DeployLink> =
+        datastoreTemplate.findAll(DeployLinkEntity::class.java).map { it.toModel() }
+
     override fun save(deployLink: DeployLink) {
         datastoreTemplate.save(DeployLinkEntity(deployLink))
     }

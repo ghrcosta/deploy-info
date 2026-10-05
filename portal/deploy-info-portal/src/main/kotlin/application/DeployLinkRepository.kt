@@ -8,6 +8,9 @@ interface DeployLinkRepository {
 
     fun getAllFor(projectName: String, deployType: DeployType): List<DeployLink>
 
+    /** Returns every deploy link of every project and deploy type (the lookup the tree uses). */
+    fun getAll(): List<DeployLink>
+
     fun save(deployLink: DeployLink)
 
     fun delete(deployLink: DeployLink)

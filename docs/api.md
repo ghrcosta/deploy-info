@@ -58,3 +58,97 @@ bucket. The portal then tries to link the upload to the GCP deploy it was built 
   "version": "v42"
 }
 ```
+
+## Main-screen contract — `GET /portal/tree`
+
+Called by the frontend navigator. **Side effect:** when the on-request cleanup trigger is enabled
+and due (see `portal/deploy-info-portal/documentation/deploy-cleanup.md`), the validity/cleanup
+sweep runs first — so the response is slower by the sweep's duration roughly once per cleanup
+interval; otherwise it is a pure Datastore read.
+
+### Response `200 OK`
+
+A list of groups. Projects without a group (and links of projects no longer configured in the
+portal) are under the `""` group, which is sorted last. Every level is sorted by name. Services are
+keyed by deploy type, so the same service name may appear once as a GAE and once as a RUN service.
+
+| Field (per level)                | Type           | Description |
+|----------------------------------|----------------|-------------|
+| `name` (group)                   | string         | The project group (`""` = ungrouped). |
+| `projects[].name`                | string         | The GCP project name. |
+| `projects[].services[].name`     | string         | The service id. |
+| `projects[].services[].type`     | string         | `GAE` or `RUN`. |
+| `versions[].id`                  | string         | The deploy identity key `<project>_<TYPE>_<location|->_<service>_<version>`. Stable identifier for the version node. |
+| `versions[].name`                | string         | The version id (the display name). |
+| `versions[].location`            | string\|null   | Cloud Run region; null for App Engine. |
+| `versions[].url`                 | string\|null   | The deploy's public URL, when known. |
+| `versions[].author`              | string         | The gcloud account that deployed and collected. |
+| `versions[].timestamp`           | number         | Epoch millis of the collection timestamp. |
+| `versions[].storageFolder`       | string         | The upload's storage folder name — pass it to the content endpoint. |
+
+```json
+[
+  {
+    "name": "PROD",
+    "projects": [
+      {
+        "name": "proj-qa",
+        "services": [
+          {
+            "name": "web",
+            "type": "GAE",
+            "versions": [
+              {
+                "id": "proj-qa_GAE_-_web_v42",
+                "name": "v42",
+                "type": "GAE",
+                "location": null,
+                "url": "https://v42-dot-web.proj-qa.appspot.com",
+                "author": "jdoe@example.com",
+                "timestamp": 1735689600000,
+                "storageFolder": "jdoe_GAE_1735689600000"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+## Main-screen contract — `GET /portal/deploy/content?folder=<storageFolder>`
+
+Returns the collected files (GIT section and extras) of one upload folder, exactly as carried by the
+version nodes of the tree — so this endpoint touches Cloud Storage only, never Datastore. The folder
+name is the collector's output directory name (e.g. `jdoe_GAE_1735689600000`).
+
+### Query parameter
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `folder`  | yes      | The `storageFolder` from the tree's version node. |
+
+### Responses
+
+| Status | Body | Meaning |
+|--------|------|---------|
+| `200 OK` | `DeployContent` (below) | The collected files. Every part is optional: `git` is null when the upload contains no git data; `extras` is empty when there are none. |
+| `404 Not Found` | (empty) | The folder does not exist (or is empty) — e.g. the cleanup sweep removed it after the tree was loaded. |
+| `502 Bad Gateway` | (empty) | Cloud Storage could not be read (a portal issue, not a user issue). |
+| `400 Bad Request` | (empty) | The `folder` parameter is missing. |
+
+```json
+{
+  "git": {
+    "gitlog": "commit 1a2b3c ...",
+    "gitstatus": "On branch main ...",
+    "changes": [
+      { "filepath": "/src/main.kt", "content": "diff --git a/src/main.kt ..." }
+    ]
+  },
+  "extras": [
+    { "filepath": "/docs/readme.md", "content": "# readme" }
+  ]
+}
+```
