@@ -53,6 +53,7 @@ The backend follows a Clean Architecture folder structure:
   - All unit tests pass.
   - Code and documentation (if it exists) match.
   - No unused elements (constants, variables, functions, etc.) left behind in the code.
+  - No unused import statements.
 - When refactoring code, avoid leaving behind old functions that are only called by unit tests.
 - NEVER rebuild / restart the Docker containers yourself.
 

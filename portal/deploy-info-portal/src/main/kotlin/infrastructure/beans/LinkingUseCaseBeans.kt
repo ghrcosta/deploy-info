@@ -1,9 +1,11 @@
 package infrastructure.beans
 
 import application.*
+import application.content.GetDeployContentUseCase
 import application.linking.CreateDeployLinkUseCase
 import com.google.cloud.storage.Storage
 import infrastructure.config.DeployInfoProperties
+import infrastructure.gcp.storage.GcsFileContentReader
 import infrastructure.gcp.storage.GcsStorageCleaner
 import infrastructure.scheduling.SimpleRetryScheduler
 import org.springframework.beans.factory.ObjectProvider
@@ -11,9 +13,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Wires the linking use case: the GCP listers, the Datastore-backed link repository, the Cloud
- * Storage cleaner (resolved lazily so the portal starts without Storage credentials), the retry
- * scheduler, and the matching window duration.
+ * Wires the linking use case and the file-content capability: the GCP listers, the Datastore-backed
+ * link repository, the Cloud Storage cleaner and file reader (both resolved lazily so the portal
+ * starts without Storage credentials), the retry scheduler, and the matching window duration.
  */
 @Configuration
 class LinkingUseCaseBeans(
@@ -44,5 +46,17 @@ class LinkingUseCaseBeans(
         storageCleaner = storageCleaner,
         retryScheduler = retryScheduler,
         window = properties.linking.window,
+    )
+
+    @Bean
+    fun fileContentReader(): FileContentReader =
+        GcsFileContentReader({ storageProvider.getObject() }, properties.storageBucket)
+
+    @Bean
+    fun getDeployContentUseCase(
+        fileContentReader: FileContentReader,
+    ): GetDeployContentUseCase = GetDeployContentUseCase(
+        deployLinkRepository = deployLinkRepository,
+        fileContentReader = fileContentReader,
     )
 }
