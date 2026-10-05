@@ -3,6 +3,17 @@
 Reference for both collectors (`collector-java`) and the portal frontend (`portal/deploy-info-portal/ui`).
 All bodies are JSON. Base URL depends on the environment (local vs. deployed portal).
 
+## Who uses which contract
+
+| Client         | Endpoints                                       |
+|----------------|--------------------------------------------------|
+| Collector (`collector-java`) | `POST /trigger/handleNewDirectory` |
+| Frontend (`portal/deploy-info-portal/ui`) | `GET /portal/tree`, `GET /portal/deploy/content` |
+
+Prerequisite: the folder the trigger points at must follow the upload folder layout documented in
+[`collector-java/deploy-info-collector/documentation/collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)
+(the Cloud Storage folder section) — the content contract depends on it.
+
 ## Trigger contract — `POST /trigger/handleNewDirectory`
 
 Called by the collector after it has uploaded its output directory to the portal's Cloud Storage
@@ -31,7 +42,7 @@ bucket. The portal then tries to link the upload to the GCP deploy it was built 
 
 - Only deploys created by `userEmail` (case-insensitive) are candidates.
 - The deploy must have been created at (or before) the collection timestamp, and within the
-  configured window (`deploy-info.linking.window`, default 15 minutes) before it.
+  configured window (`deploy-info.linking.window`, 15 minutes in every environment's configuration) before it.
 - Among the surviving candidates of **all** listed projects, the one with the newest creation time
   (i.e. the closest below the collection timestamp) wins. Ties on the exact same creation time are
   broken by listing order.

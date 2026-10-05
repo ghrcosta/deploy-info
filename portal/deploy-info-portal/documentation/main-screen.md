@@ -1,6 +1,8 @@
 # Main Screen — Navigator Tree & File Content (Phase 1.2 item 2)
 
-The REST contracts the deploy-viewer screen (navigator tree + file viewer) is built on. The core
+The REST contracts the deploy-viewer screen (navigator tree + file viewer) is built on. The wire-level
+shapes (paths, request/response bodies, status codes) are the shared reference in
+[`docs/api.md`](../../docs/api.md); this doc covers the design decisions behind them. The core
 capabilities behind them already existed (the tree's data sources, `GetDeployContentUseCase`); this
 feature adds the tree use case and the `PortalController` endpoints that expose both, plus the
 on-request cleanup trigger wired into the tree endpoint (see `deploy-cleanup.md`).

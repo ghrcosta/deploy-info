@@ -37,7 +37,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [x] GCP deploy-listing client for App Engine (list services/versions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [x] GCP deploy-listing client for Cloud Run (list services/revisions) — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
 - [x] Impersonation: generate an access token for each configured project's service account to call the listing APIs — see [`portal/deploy-info-portal/documentation/gcp-deploy-listing.md`](portal/deploy-info-portal/documentation/gcp-deploy-listing.md)
-- [x] Core linking logic: given a collector upload, find the most recent deploy of the given type; if < 5 min old and not yet linked, create the link record
+- [x] Core linking logic: given a collector upload, find the most recent deploy of the given type; if created within the configured 15-minute window before the collection timestamp and not yet linked, create the link record
 - [x] File-content capability: read `git-log.txt`, `git-status.txt`, per-changed-file diffs (GIT section) and uuid-mapped extras (Extras section) from the Cloud Storage folder (structure per Phase 0 doc) — see [`portal/deploy-info-portal/documentation/deploy-content.md`](portal/deploy-info-portal/documentation/deploy-content.md)
 - [x] Validity/cleanup logic: detect deploys that no longer exist in GCP and delete Datastore entry + Storage folder — see [`portal/deploy-info-portal/documentation/deploy-cleanup.md`](portal/deploy-info-portal/documentation/deploy-cleanup.md)
 
@@ -47,7 +47,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [x] Main-screen contracts: tree endpoint (group > project > service > version), file-content endpoint(s) — see [`docs/api.md`](docs/api.md) and [`portal/deploy-info-portal/documentation/main-screen.md`](portal/deploy-info-portal/documentation/main-screen.md)
   - Decision: the validity/cleanup sweep (Phase 1.1) runs **on tree requests** when due, not on a schedule — App Engine Standard kills idle instances, so a fixed scheduler either never fires or keeps an instance alive forever; concurrent sweeps from multiple instances are accepted as redundant (idempotent deletes) and no claim/lock is used (see `portal/deploy-info-portal/documentation/deploy-cleanup.md`)
   - Decision: the tree carries the upload's `storageFolder` on each version node, so the file-content endpoint touches Cloud Storage only, never Datastore
-- [ ] Document the contracts (e.g. `docs/api.md`) as the reference for both collectors and the frontend
+- [x] Document the contracts (`docs/api.md`) as the reference for both collectors and the frontend — consumer-side mapping of the trigger fields to the collector's task parameters, prerequisite link to the upload folder layout, cross-linked from the collector and frontend docs and the root README
 
 ### 3. Collector plugin (adapt to the contract)
 

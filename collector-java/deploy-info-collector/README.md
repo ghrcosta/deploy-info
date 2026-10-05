@@ -2,6 +2,10 @@
 
 Gradle plugin to collect files and make them available to the portal.
 
+After uploading the collected files to Cloud Storage, the plugin POSTs the trigger contract
+([`docs/api.md`](../../docs/api.md)) to the portal backend, which links the upload to the GCP deploy
+it was built for.
+
 
 ## Usage
 
