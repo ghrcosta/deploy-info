@@ -71,7 +71,7 @@
    `portal/deploy-info-portal/documentation/gcp-deploy-listing.md`.
 4. **`AddProjectUseCase`:** `issueServiceAccountError` is hardcoded `false` with `// TODO: Test if name + serviceAccount are working` — service-account permission validation not implemented (same presumably needed for Edit).
 5. **`PortalController` is an empty stub** (`GET /portal/` returning nothing). Needs:
-   - Main-screen data endpoint: tree of project > service > version, with validity check (delete Datastore entry + Storage folder if deploy no longer exists in GCP).
+   - Main-screen data endpoint: tree of project > service > version, with validity check (delete Datastore entry + Storage folder if deploy no longer exists in GCP). The validity/cleanup sweep itself is now implemented as a scheduled job (`CleanupInvalidDeployLinksUseCase` + `CleanupScheduler`, off by default via `deploy-info.cleanup.enabled=false`) — see `portal/deploy-info-portal/documentation/deploy-cleanup.md`; the tree endpoint must still decide whether to additionally run it on requests (see TODO.md Phase 1.2).
    - File-content endpoint(s): serve `git-log.txt`, `git-status.txt`, uuid-mapped files ("GIT" and "Extras" sections) from the Cloud Storage folder.
 6. **No login/auth at all** — no Spring Security dependency, no auth of any kind. TODO: check user permissions on the deployInfo project via the AppEngine service account. Also the trigger endpoint has no authentication (anyone could POST).
 7. **`application-prod.properties` is empty** — no prod config (project id, bucket name, etc.).

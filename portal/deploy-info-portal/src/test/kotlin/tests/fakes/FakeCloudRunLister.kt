@@ -2,6 +2,7 @@ package tests.fakes
 
 import application.GcpCloudRunLister
 import domain.CloudRunDeploy
+import domain.GcpListingException
 import domain.Project
 import java.time.Instant
 
@@ -14,8 +15,15 @@ class FakeCloudRunLister(
     private var deploysByProject: MutableMap<String, List<CloudRunDeploy>> = mutableMapOf(),
 ) : GcpCloudRunLister {
 
-    override fun listAllDeploys(project: Project): List<CloudRunDeploy> =
-        deploysByProject[project.name].orEmpty().sortedByDescending { it.createTime }
+    /** When true, the next (and every subsequent) listing throws instead of returning deploys. */
+    var throwOnEveryList: Boolean = false
+
+    override fun listAllDeploys(project: Project): List<CloudRunDeploy> {
+        if (throwOnEveryList) {
+            throw GcpListingException("transient listing failure")
+        }
+        return deploysByProject[project.name].orEmpty().sortedByDescending { it.createTime }
+    }
 
     fun seed(projectId: String, deploys: List<CloudRunDeploy>) {
         deploysByProject[projectId] = deploys

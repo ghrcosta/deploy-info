@@ -11,10 +11,26 @@ import java.time.Duration
 data class DeployInfoProperties(
     val storageBucket: String,
     val linking: Linking,
+    val cleanup: Cleanup,
 ) {
 
     data class Linking(
         /** How far back from the collect timestamp a deploy may still be matched. */
         val window: Duration,
+    )
+
+    data class Cleanup(
+        /** Whether the periodic validity/cleanup sweep is scheduled at all (`deploy-info.cleanup.enabled`). */
+        val enabled: Boolean,
+
+        /** How often the validity/cleanup sweep runs. */
+        val interval: Duration,
+
+        /**
+         * How old a deploy link must be before the sweep may judge it stale — protects a link that
+         * was created after the sweep's listing snapshot was taken (its deploy is of course live,
+         * but it is not in the snapshot) from being deleted by that same sweep.
+         */
+        val gracePeriod: Duration,
     )
 }

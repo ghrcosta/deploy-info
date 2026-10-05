@@ -18,10 +18,13 @@ class FakeAppEngineLister(
     /** When true, the next (and every subsequent) listing throws instead of returning deploys. */
     var throwOnEveryList: Boolean = false
 
+    /** When set, listings for the projects matching this predicate throw instead of returning deploys. */
+    var throwOnProject: ((String) -> Boolean)? = null
+
     private var throwOnNextList: Boolean = false
 
     override fun listAllDeploys(project: Project): List<AppEngineDeploy> {
-        if (throwOnEveryList || throwOnNextList) {
+        if (throwOnEveryList || throwOnNextList || throwOnProject?.invoke(project.name) == true) {
             throwOnNextList = false
             throw GcpListingException("transient listing failure")
         }
