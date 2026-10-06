@@ -119,6 +119,34 @@ tasks.deployInfoCollect {
 
 </td>
 </tr>
+
+<tr>
+<td>portalUrl</td>
+<td>REQUIRED. URL of the portal backend.</td>
+<td>
+
+```kotlin
+tasks.deployInfoCollect {
+    portalUrl.set("https://deploy-info-portal.example.com")
+}
+```
+
+</td>
+</tr>
+
+<tr>
+<td>projects</td>
+<td>REQUIRED. List of GCP projects where the code may have been deployed. Must contain at least one non-empty value.</td>
+<td>
+
+```kotlin
+tasks.deployInfoCollect {
+    projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
+}
+```
+
+</td>
+</tr>
 </table>
 
 

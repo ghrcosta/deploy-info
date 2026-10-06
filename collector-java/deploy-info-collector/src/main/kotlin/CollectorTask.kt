@@ -7,6 +7,7 @@ import io.github.ghrcosta.action.Uploader
 import io.github.ghrcosta.util.Context
 import io.github.ghrcosta.util.Logger
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -14,7 +15,9 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Executes external tools (git, gcloud) and uploads data; not cacheable")
 abstract class CollectorTask : DefaultTask() {
     init {
         description = "Execute collector"
@@ -62,8 +65,21 @@ abstract class CollectorTask : DefaultTask() {
     abstract val deployType: Property<DeployType>
     @Suppress("unused") enum class DeployType { GAE, RUN }
 
+    @get:Input
+    @get:Option(
+        description = "URL of the portal backend."
+    )
+    abstract val portalUrl: Property<String>
+
+    @get:Input
+    @get:Option(
+        description = "List of GCP projects where the code may have been deployed."
+    )
+    abstract val projects: ListProperty<String>
+
     @TaskAction
     fun run() {
+        validateProjects()
         TaskImpl(
             project = project,
             maxFileSize = maxFileSize.orNull,
@@ -71,7 +87,18 @@ abstract class CollectorTask : DefaultTask() {
             extraFilesToCollect = extraFilesToCollect.orNull,
             storageBucketName = storageBucket.get(),
             deployType = deployType.get(),
+            portalUrl = portalUrl.get(),
+            projects = projects.get(),
         ).run()
+    }
+
+    private fun validateProjects() {
+        val projectList = projects.get()
+        if (projectList.isEmpty())
+            throw GradleException("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
+        projectList.find { it.isBlank() }?.let {
+            throw GradleException("'projects' must not contain empty values.")
+        }
     }
 
     class TaskImpl(
@@ -81,6 +108,8 @@ abstract class CollectorTask : DefaultTask() {
         private val extraFilesToCollect: List<String>?,
         private val storageBucketName: String,
         private val deployType: DeployType,
+        private val portalUrl: String,
+        private val projects: List<String>,
     ) {
         fun run() {
             Logger.init(project)

@@ -23,13 +23,13 @@ project.tasks.register(CollectorTask.TASK_NAME, CollectorTask::class.java)
 A `DefaultTask` named **`deployInfoCollect`**, registered under task **group `deployInfo`**
 (description: "Execute collector"). Parameters:
 
-| Parameter | Type | Required | Default | Meaning |
-|---|---|---|---|---|
-| `storageBucket` | `Property<String>` | required | — | Name of the Cloud Storage bucket the output directory is uploaded to (`gs://<storageBucket>`). |
-| `deployType` | `Property<DeployType>` | required | — | Type of deploy being collected. Enum `CollectorTask.DeployType` with values `GAE` (App Engine) and `RUN` (Cloud Run). Used in the output directory name and `collector.properties`. |
-| `maxFileSize` | `Property<Int>` | optional | `50 * 1024` (50KB) | Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder. |
-| `collectGitStatus` | `Property<Boolean>` | optional | `true` | Whether git-related data is collected at all. |
-| `extraFilesToCollect` | `ListProperty<String>` | optional | empty | Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the file is collected without its parent dirs, so same-name files collide. |
+| Parameter             | Type                   | Required | Default            | Meaning                                                                                                                                                                              |
+|-----------------------|------------------------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `storageBucket`       | `Property<String>`     | required | —                  | Name of the Cloud Storage bucket the output directory is uploaded to (`gs://<storageBucket>`).                                                                                       |
+| `deployType`          | `Property<DeployType>` | required | —                  | Type of deploy being collected. Enum `CollectorTask.DeployType` with values `GAE` (App Engine) and `RUN` (Cloud Run). Used in the output directory name and `collector.properties`.  |
+| `maxFileSize`         | `Property<Int>`        | optional | `50 * 1024` (50KB) | Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder.                                                                             |
+| `collectGitStatus`    | `Property<Boolean>`    | optional | `true`             | Whether git-related data is collected at all.                                                                                                                                        |
+| `extraFilesToCollect` | `ListProperty<String>` | optional | empty              | Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the file is collected without its parent dirs, so same-name files collide. |
 
 All parameters are also exposed as command-line `@Option`s (e.g. `./gradlew deployInfoCollect --deploy-type=GAE`).
 
@@ -62,14 +62,14 @@ Then logs "Done!". Errors in the upload step (§6) throw and fail the task.
 
 Singleton holding the state for one run:
 
-| Field | Meaning |
-|---|---|
-| `baseDir` | `<project>/build/collector/` — base collector dir; also the cwd/temp-dir for commands. |
-| `outputDir` | `baseDir/<user>_<DEPLOYTYPE>_<epochMillis>/` — everything collected here is what gets uploaded. |
-| `projectRootDir` | The Gradle project root; base for resolving git/extra file paths. |
-| `maxFileSize` | `maxFileSize` task param, or 50KB. |
-| `gitUuidMap` | uuid → filepath for files collected by `GitCollector`. |
-| `extraUuidMap` | uuid → filepath for files collected by `ExtraFilesCollector`. |
+| Field            | Meaning                                                                                         |
+|------------------|-------------------------------------------------------------------------------------------------|
+| `baseDir`        | `<project>/build/collector/` — base collector dir; also the cwd/temp-dir for commands.          |
+| `outputDir`      | `baseDir/<user>_<DEPLOYTYPE>_<epochMillis>/` — everything collected here is what gets uploaded. |
+| `projectRootDir` | The Gradle project root; base for resolving git/extra file paths.                               |
+| `maxFileSize`    | `maxFileSize` task param, or 50KB.                                                              |
+| `gitUuidMap`     | uuid → filepath for files collected by `GitCollector`.                                          |
+| `extraUuidMap`   | uuid → filepath for files collected by `ExtraFilesCollector`.                                   |
 
 `Context.init(project, deployType, maxFileSize)`:
 
