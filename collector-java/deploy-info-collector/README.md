@@ -4,7 +4,8 @@ Gradle plugin to collect files and make them available to the portal.
 
 After uploading the collected files to Cloud Storage, the plugin POSTs the trigger contract
 ([`documentation/api.md`](../../documentation/api.md)) to the portal backend, which links the upload to the GCP deploy
-it was built for.
+it was built for. The upload bucket is not configured on the collector: it is resolved from the portal via
+`GET /collector/bucket`.
 
 
 ## Usage
@@ -18,7 +19,6 @@ plugins {
 
 // Configure the task
 tasks.deployInfoCollect {
-    storageBucket.set("my-bucket-name")
     deployType.set(CollectorTask.DeployType.GAE)
     portalUrl.set("https://deploy-info-portal.example.com")
     projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
@@ -90,20 +90,6 @@ tasks.deployInfoCollect {
 </tr>
 
 <tr>
-<td>storageBucket</td>
-<td>REQUIRED. Name of the Cloud Storage bucket where files will be stored.</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    storageBucket.set("my-bucket-name")
-}
-```
-
-</td>
-</tr>
-
-<tr>
 <td>deployType</td>
 <td>
 
@@ -124,7 +110,10 @@ tasks.deployInfoCollect {
 
 <tr>
 <td>portalUrl</td>
-<td>REQUIRED. URL of the portal backend.</td>
+<td>
+REQUIRED. URL of the portal backend. The upload bucket is resolved from the portal via
+<code>GET /collector/bucket</code>, so the portal must be reachable before the upload starts.
+</td>
 <td>
 
 ```kotlin
@@ -176,7 +165,6 @@ tasks.deployInfoCollect {
       }
 
       tasks.deployInfoCollect {
-          storageBucket.set("my-bucket-name")
           deployType.set(CollectorTask.DeployType.GAE)
           portalUrl.set("https://deploy-info-portal.example.com")
           projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))

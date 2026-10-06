@@ -1,5 +1,6 @@
 package io.github.ghrcosta
 
+import io.github.ghrcosta.action.BucketLookup
 import io.github.ghrcosta.action.ExtraFilesCollector
 import io.github.ghrcosta.action.GitCollector
 import io.github.ghrcosta.action.PortalTrigger
@@ -54,12 +55,6 @@ abstract class CollectorTask : DefaultTask() {
 
     @get:Input
     @get:Option(
-        description = "Name of the Cloud Storage bucket where files will be stored."
-    )
-    abstract val storageBucket: Property<String>
-
-    @get:Input
-    @get:Option(
         description = "Type of deploy. Supported values are 'GAE' and 'RUN'."
     )
     abstract val deployType: Property<DeployType>
@@ -67,7 +62,7 @@ abstract class CollectorTask : DefaultTask() {
 
     @get:Input
     @get:Option(
-        description = "URL of the portal backend."
+        description = "URL of the portal backend, from which the upload bucket is resolved."
     )
     abstract val portalUrl: Property<String>
 
@@ -85,14 +80,14 @@ abstract class CollectorTask : DefaultTask() {
             maxFileSize = maxFileSize.orNull,
             collectGitStatus = collectGitStatus.getOrElse(true),
             extraFilesToCollect = extraFilesToCollect.orNull,
-            storageBucketName = storageBucket.get(),
+            portalUrl = portalUrl.get(),
             deployType = deployType.get(),
         ).run()
     }
 
     private fun validateParameters() {
-        if (storageBucket.get().isBlank())
-            throw GradleException("'storageBucket' must not be empty.")
+        if (portalUrl.get().isBlank())
+            throw GradleException("'portalUrl' must not be empty.")
         val projectList = projects.get()
         if (projectList.isEmpty())
             throw GradleException("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
@@ -106,7 +101,7 @@ abstract class CollectorTask : DefaultTask() {
         private val maxFileSize: Int?,
         private val collectGitStatus: Boolean,
         private val extraFilesToCollect: List<String>?,
-        private val storageBucketName: String,
+        private val portalUrl: String,
         private val deployType: DeployType,
     ) {
         fun run() {
@@ -115,7 +110,8 @@ abstract class CollectorTask : DefaultTask() {
 
             collectGitStatusData()
             collectExtraFiles()
-            uploadFiles()
+            val bucketName = lookupBucket()
+            uploadFiles(bucketName)
             triggerPortalProcessing()
 
             Logger.i("Done!")
@@ -133,8 +129,14 @@ abstract class CollectorTask : DefaultTask() {
             }
         }
 
-        private fun uploadFiles() {
-            Uploader(storageBucketName).execute()
+        private fun lookupBucket(): String {
+            val bucketName = BucketLookup(portalUrl).execute()
+            Logger.i("Uploads will go to Cloud Storage bucket '$bucketName' (resolved from the portal at $portalUrl).")
+            return bucketName
+        }
+
+        private fun uploadFiles(bucketName: String) {
+            Uploader(bucketName).execute()
         }
 
         private fun triggerPortalProcessing() {

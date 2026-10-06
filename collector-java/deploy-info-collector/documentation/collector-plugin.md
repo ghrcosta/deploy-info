@@ -25,8 +25,8 @@ A `DefaultTask` named **`deployInfoCollect`**, registered under task **group `de
 
 | Parameter             | Type                   | Required | Default            | Meaning                                                                                                                                                                              |
 |-----------------------|------------------------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `storageBucket`       | `Property<String>`     | required | —                  | Name of the Cloud Storage bucket the output directory is uploaded to (`gs://<storageBucket>`).                                                                                       |
 | `deployType`          | `Property<DeployType>` | required | —                  | Type of deploy being collected. Enum `CollectorTask.DeployType` with values `GAE` (App Engine) and `RUN` (Cloud Run). Used in the output directory name and `collector.properties`.  |
+| `portalUrl`           | `Property<String>`     | required | —                  | URL of the portal backend. |
 | `maxFileSize`         | `Property<Int>`        | optional | `50 * 1024` (50KB) | Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder.                                                                             |
 | `collectGitStatus`    | `Property<Boolean>`    | optional | `true`             | Whether git-related data is collected at all.                                                                                                                                        |
 | `extraFilesToCollect` | `ListProperty<String>` | optional | empty              | Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the file is collected without its parent dirs, so same-name files collide. |
@@ -37,15 +37,16 @@ Every parameter is an `@get:Input`, so Gradle's up-to-date checking takes them i
 
 ### Execution flow (`CollectorTask.TaskImpl.run()`)
 
-When `deployInfoCollect` runs, five steps execute in order:
+When `deployInfoCollect` runs, six steps execute in order:
 
 1. **`Context.init(...)`** — creates output directories, detects the gcloud account, writes `collector.properties` (see §3).
 2. **`GitCollector`** — if `collectGitStatus == true`, collects git data (see §4).
 3. **`ExtraFilesCollector`** — if `extraFilesToCollect` is set, copies those files (see §5).
-4. **`Uploader`** — writes the uuid-map property files and runs `gcloud storage cp` (see §6).
-5. **`PortalTrigger`** — currently a stub, no-op (see §7).
+4. **`BucketLookup`** — resolves the upload bucket from the portal via `GET /collector/bucket` (see §6).
+5. **`Uploader`** — writes the uuid-map property files and runs `gcloud storage cp` (see §7).
+6. **`PortalTrigger`** — currently a stub, no-op (see §8).
 
-Then logs "Done!". Errors in the upload step (§6) throw and fail the task.
+Then logs "Done!". Errors in the bucket-lookup step (§6) or the upload step (§7) throw and fail the task.
 
 ---
 
@@ -101,23 +102,37 @@ Executed with the `extraFilesToCollect` list. Each entry is normalized to `/path
 - skipped (with an error log) if: doesn't exist, is not a regular file, is binary, or is larger than `maxFileSize`.
 - otherwise copied verbatim into `Context.outputDir` under a fresh **UUID** filename, with `uuid → "/path"` recorded in `Context.extraUuidMap`.
 
-## 6. `Uploader`
+## 6. `BucketLookup`
 
-Executed with the configured bucket name:
+Executed once per task run, right before the upload; no caching. It resolves the upload bucket from the portal
+(contract: [`documentation/api.md`](../../documentation/api.md)):
+
+1. Sends `GET {portalUrl}/collector/bucket` using plain `java.net.HttpURLConnection` — no HTTP client dependency is
+   added to the published plugin jar. Connect and read timeouts are set (10 s connect, 30 s read).
+2. A `200 OK` response body `{"bucket": "<name>"}` is parsed and the bucket name returned.
+3. Any failure — invalid `portalUrl`, non-200 status, malformed response body, network failure or timeout — throws a
+   `GradleException` naming the portal URL, failing the Gradle task before anything is uploaded.
+
+The URL-opening is a constructor-injected seam (`(URL) -> HttpURLConnection`), which makes the action unit-testable
+with mockk without touching the network (`action/BucketLookupTests.kt`).
+
+## 7. `Uploader`
+
+Executed with the bucket name resolved by `BucketLookup` (§6):
 
 1. If `gitUuidMap` is non-empty, writes **`uuid-git.properties`** into the output dir (Java `Properties` format: `<uuid>=<path>`).
 2. If `extraUuidMap` is non-empty, writes **`uuid-extra.properties`** the same way.
 3. Runs:
 
 ```
-gcloud storage cp --recursive <outputDir> gs://<storageBucket>
+gcloud storage cp --recursive <outputDir> gs://<bucketName>
 ```
 
 Since the dir name is unique (`<user>_<type>_<timestamp>`), this creates a new **top-level folder in the bucket** with that name — the folder the portal later reads.
 
 4. Inspects the command's **stderr** for lines starting with `ERROR` (deduplicated); if any, throws a `RuntimeException` listing them, failing the Gradle task. (Exit code is not checked; only stderr `ERROR` lines.)
 
-## 7. `PortalTrigger` (stub)
+## 8. `PortalTrigger` (stub)
 
 Currently:
 
@@ -131,12 +146,12 @@ class PortalTrigger {
 
 Nothing is sent to the portal yet — the upload is the only integration point today. In Phase 1/2 this must POST the trigger request (output dir name, user email, configured projects, deploy type) to the portal backend per the API contract defined in Phase 1 (`documentation/api.md`). Cross-platform command execution (`gcloud.cmd` on Windows via `SystemUtils`, `CommandUtils`) applies to everything except this component, which will be plain HTTP.
 
-## 8. Resulting Cloud Storage folder layout
+## 9. Resulting Cloud Storage folder layout
 
 The upload creates a new top-level folder per collection run:
 
 ```
-gs://<storageBucket>/
+gs://<bucketName>/
 └── <user>_<DEPLOYTYPE>_<epochMillis>/      # e.g. john.doe_GAE_1746322088662
     ├── collector.properties               # email=... , deploy=GAE|RUN , timestamp=<epoch ms>
     ├── git-status.txt                     # `git status --long --branch` output

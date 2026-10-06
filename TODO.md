@@ -8,7 +8,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### A. How the Gradle collector plugin works
 
-- [x] Document the plugin/task entry points: `CollectorPlugin.kt`, `CollectorTask.kt` — registration, task group, all parameters (`storageBucket`, `deployType`, `maxFileSize`, `collectGitStatus`, `extraFilesToCollect`) with types, defaults, meaning
+- [x] Document the plugin/task entry points: `CollectorPlugin.kt`, `CollectorTask.kt` — registration, task group, all parameters (`deployType`, `portalUrl`, `maxFileSize`, `collectGitStatus`, `extraFilesToCollect`) with types, defaults, meaning
 - [x] Document the execution flow end to end: what happens when `deployInfoCollect` runs, and which components are invoked (`Context`, `GitCollector`, `ExtraFilesCollector`, `Uploader`, `PortalTrigger`)
 - [x] Document `Context`: local output directory creation (`build/collector/<user>_<deployType>_<timestamp>/`), gcloud account email detection, `collector.properties` content (email, deploy, timestamp)
 - [x] Document `GitCollector`: what is collected (`git-status.txt`, `git-log.txt`, per-changed-file diffs, full content for untracked files), binary/large-file handling, UUID naming + `gitUuidMap`
@@ -53,7 +53,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 - [x] Add `portalUrl` parameter to `CollectorTask`
 - [x] Add "list of projects where the code may be deployed" parameter to `CollectorTask`
-- [ ] Resolve the upload bucket from the portal: the collector asks the portal (via `portalUrl`) for its configured bucket name. Requires a new bucket-lookup endpoint on the portal; document it in `documentation/api.md` when the endpoint is implemented.
+- [x] Resolve the upload bucket from the portal: the collector asks the portal (via `portalUrl`) for its configured bucket name. Requires a new bucket-lookup endpoint on the portal; document it in `documentation/api.md` when the endpoint is implemented.
 - [ ] Implement `PortalTrigger` per the documented contract
 - [ ] Remove `collector.properties` from `Context.createPropertiesFile` if the contract makes it redundant
 - [x] Update `README.md` parameter table with the two new parameters

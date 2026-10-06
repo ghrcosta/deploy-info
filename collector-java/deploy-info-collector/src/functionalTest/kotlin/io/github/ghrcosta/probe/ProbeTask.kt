@@ -58,12 +58,6 @@ abstract class ProbeTask : DefaultTask() {
 
     @get:Input
     @get:Option(
-        description = "Name of the Cloud Storage bucket where files will be stored."
-    )
-    abstract val storageBucket: Property<String>
-
-    @get:Input
-    @get:Option(
         description = "Type of deploy. Supported values are 'GAE' and 'RUN'."
     )
     abstract val deployType: Property<DeployType>
@@ -89,14 +83,14 @@ abstract class ProbeTask : DefaultTask() {
         // Only reads the configured properties and logs. No external commands, no network, no file writes.
         logger.lifecycle(
             "deployInfoProbe OK: maxFileSize=${maxFileSize.orNull}, collectGitStatus=${collectGitStatus.getOrElse(true)}, " +
-                    "extraFilesToCollect=${extraFilesToCollect.orNull}, storageBucket=${storageBucket.get()}, " +
+                    "extraFilesToCollect=${extraFilesToCollect.orNull}, " +
                     "deployType=${deployType.get()}, portalUrl=${portalUrl.orNull}, projects=${projects.get()}"
         )
     }
 
     private fun validate() {
-        if (storageBucket.get().isBlank())
-            throw GradleException("'storageBucket' must not be empty.")
+        if (portalUrl.get().isBlank())
+            throw GradleException("'portalUrl' must not be empty.")
         if (projects.get().isEmpty())
             throw GradleException("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
         projects.get().find { it.isBlank() }?.let {

@@ -19,7 +19,7 @@
 **Implemented and functional:**
 
 - Plugin class + `deployInfoCollect` task registered under group `deployInfo` (`CollectorPlugin.kt`, `CollectorTask.kt`).
-- Parameters: `storageBucket`, `deployType` (GAE/RUN), plus optional `maxFileSize` (default 50KB), `collectGitStatus`, `extraFilesToCollect`.
+- Parameters: `portalUrl` (the upload bucket is resolved from the portal via `GET /collector/bucket`), `deployType` (GAE/RUN), plus optional `maxFileSize` (default 50KB), `collectGitStatus`, `extraFilesToCollect`.
 - `GitCollector`: saves `git-status.txt`, `git-log.txt`, and per-changed-file diffs (or full content for untracked files) into UUID-named files with a `gitUuidMap` (uuid → filepath).
 - `ExtraFilesCollector`: copies extra files (skips binary/large/missing) with `extraUuidMap`, writes `uuid-extra.properties` / `uuid-git.properties` at upload time (`Uploader`).
 - `Uploader`: `gcloud storage cp --recursive` of the output dir to the bucket, with stderr error check.
@@ -59,7 +59,7 @@
 
 **Missing / stubs:**
 
-1. **`TriggerController.handleNewDirectory()` is empty** — the core of the system. Needed:
+1. **`CollectorController.handleNewDirectory()` is empty** — the core of the system. Needed:
    - Request body: output directory name, user email, list of possible projects, deploy type.
    - Search all versions/services of the configured projects (via GCP APIs using each project's service account) to find the most recent deploy of that type.
    - Linking logic: if most recent deploy < 5 min old and not yet linked, create the Datastore link record (project, deploy type+service+version as identifier, Cloud Storage folder, email, timestamp).
@@ -116,7 +116,7 @@
 
 1. **Define the trigger contract** (endpoint + request body) — it unblocks both collectors.
 2. Collector plugin: add `portalUrl` + projects-list params, implement `PortalTrigger`, remove `collector.properties`.
-3. Portal: implement `TriggerController` — GCP listing clients (GAE + Cloud Run via impersonated SAs), 5-minute linking rule, Datastore link entity + repository.
+3. Portal: implement `CollectorController` — GCP listing clients (GAE + Cloud Run via impersonated SAs), 5-minute linking rule, Datastore link entity + repository.
 4. Portal: implement `PortalController` — tree data + file content from Storage, cleanup of deleted deploys.
 5. Frontend: replace mock data with real endpoints; logout.
 6. Auth: login/permission checks; secure the trigger endpoint.

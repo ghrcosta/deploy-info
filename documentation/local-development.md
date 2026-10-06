@@ -49,6 +49,11 @@ Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`ut
 5. Publish + apply the collector to a sample project; run `deployInfoCollect`; inspect
    `build/collector/<user>_<type>_<ts>/`, then verify the same folder appears in `gs://<bucket>`.
 
+   Note: the collector now resolves its upload bucket from the portal first (`GET /collector/bucket`,
+   see [`documentation/api.md`](api.md)) — so the portal backend must be reachable (step 3) before
+   `deployInfoCollect` can run; the bucket name comes from the portal's `deploy-info.storage-bucket`
+   property.
+
 Gaps found during validation (and what changes once the backend core exists) should be fed back into
 `TODO.md` / `STATUS_REPORT.md`.
 

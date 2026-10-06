@@ -50,7 +50,6 @@ class CompatibilityTest {
             }
 
             tasks.deployInfoProbe {
-                storageBucket = 'test-bucket'
                 deployType = ProbeTask.DeployType.GAE
                 portalUrl = 'https://deploy-info-portal.example.com'
                 projects = ['proj-a', 'proj-b']
