@@ -20,6 +20,8 @@ plugins {
 tasks.deployInfoCollect {
     storageBucket.set("my-bucket-name")
     deployType.set(CollectorTask.DeployType.GAE)
+    portalUrl.set("https://deploy-info-portal.example.com")
+    projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
 }
 
 // Automate task execution after deploy
@@ -176,6 +178,8 @@ tasks.deployInfoCollect {
       tasks.deployInfoCollect {
           storageBucket.set("my-bucket-name")
           deployType.set(CollectorTask.DeployType.GAE)
+          portalUrl.set("https://deploy-info-portal.example.com")
+          projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
       }
       tasks.appengineDeploy {
           finalizedBy("deployInfoCollect")

@@ -51,11 +51,12 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 3. Collector plugin (adapt to the contract)
 
-- [ ] Add `portalUrl` parameter to `CollectorTask`
-- [ ] Add "list of projects where the code may be deployed" parameter to `CollectorTask`
+- [x] Add `portalUrl` parameter to `CollectorTask`
+- [x] Add "list of projects where the code may be deployed" parameter to `CollectorTask`
+- [ ] Resolve the upload bucket from the portal: the collector asks the portal (via `portalUrl`) for its configured bucket name. Requires a new bucket-lookup endpoint on the portal; document it in `documentation/api.md` when the endpoint is implemented.
 - [ ] Implement `PortalTrigger` per the documented contract
 - [ ] Remove `collector.properties` from `Context.createPropertiesFile` if the contract makes it redundant
-- [ ] Update `README.md` parameter table with the two new parameters
+- [x] Update `README.md` parameter table with the two new parameters
 - [ ] Unit tests for `PortalTrigger` (mock HTTP)
 
 ### 4. Portal REST layer

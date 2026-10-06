@@ -79,7 +79,7 @@ abstract class CollectorTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        validateProjects()
+        validateParameters()
         TaskImpl(
             project = project,
             maxFileSize = maxFileSize.orNull,
@@ -87,12 +87,12 @@ abstract class CollectorTask : DefaultTask() {
             extraFilesToCollect = extraFilesToCollect.orNull,
             storageBucketName = storageBucket.get(),
             deployType = deployType.get(),
-            portalUrl = portalUrl.get(),
-            projects = projects.get(),
         ).run()
     }
 
-    private fun validateProjects() {
+    private fun validateParameters() {
+        if (storageBucket.get().isBlank())
+            throw GradleException("'storageBucket' must not be empty.")
         val projectList = projects.get()
         if (projectList.isEmpty())
             throw GradleException("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
@@ -108,8 +108,6 @@ abstract class CollectorTask : DefaultTask() {
         private val extraFilesToCollect: List<String>?,
         private val storageBucketName: String,
         private val deployType: DeployType,
-        private val portalUrl: String,
-        private val projects: List<String>,
     ) {
         fun run() {
             Logger.init(project)
