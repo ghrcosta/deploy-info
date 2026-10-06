@@ -55,10 +55,13 @@ Reads blobs with the Cloud Storage client from the Spring Cloud GCP Storage star
 `Storage`-provider pattern as `GcsStorageCleaner` (the portal starts without Storage credentials).
 All GCS failures are wrapped in `StorageReadException`.
 
-## Spring wiring (`infrastructure/beans/LinkingUseCaseBeans.kt`)
+## Spring wiring (`infrastructure/beans/PortalUseCaseBeans.kt`)
 
-`fileContentReader` and `getDeployContentUseCase` beans alongside the linking ones; reuses the
-existing `storageBucket` property — no new configuration.
+`fileContentReader` and `getDeployContentUseCase` beans in `PortalUseCaseBeans` (the linking beans
+live in `CollectorUseCaseBeans`); reuses the existing `storageBucket` property — no new
+configuration. The same property is exposed to the collector via the `GET /collector/bucket`
+endpoint (see `documentation/api.md` in the repository root), so the collector resolves its upload
+target from the portal.
 
 ## Testing
 

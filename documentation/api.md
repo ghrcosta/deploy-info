@@ -7,14 +7,14 @@ All bodies are JSON. Base URL depends on the environment (local vs. deployed por
 
 | Client         | Endpoints                                       |
 |----------------|--------------------------------------------------|
-| Collector (`collector-java`) | `POST /trigger/handleNewDirectory` |
+| Collector (`collector-java`) | `POST /collector/handleNewDirectory`, `GET /collector/bucket` |
 | Frontend (`portal/deploy-info-portal/ui`) | `GET /portal/tree`, `GET /portal/deploy/content` |
 
-Prerequisite: the folder the trigger points at must follow the upload folder layout documented in
+Prerequisite: the folder the deploy-link endpoint points at must follow the upload folder layout documented in
 [`collector-java/deploy-info-collector/documentation/collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)
 (the Cloud Storage folder section) — the content contract depends on it.
 
-## Trigger contract — `POST /trigger/handleNewDirectory`
+## Collector contract — `POST /collector/handleNewDirectory`
 
 Called by the collector after it has uploaded its output directory to the portal's Cloud Storage
 bucket. The portal then tries to link the upload to the GCP deploy it was built for (see
@@ -67,6 +67,25 @@ bucket. The portal then tries to link the upload to the GCP deploy it was built 
   "project": "proj-qa",
   "service": "web",
   "version": "v42"
+}
+```
+
+## Collector contract — `GET /collector/bucket`
+
+Called by the collector **before** it uploads: it asks the portal which Cloud Storage bucket its
+uploads go to, so the portal's configuration stays the single source of truth (the collector has no
+bucket parameter of its own).
+
+### Responses
+
+| Status | Body | Meaning |
+|--------|------|---------|
+| `200 OK` | `{"bucket":"<name>"}` | The configured bucket name (`deploy-info.storage-bucket`); uploads go to `gs://<name>`. |
+| `500 Internal Server Error` | (empty) | The bucket is not configured in the portal — a server misconfiguration, not a caller error. The collector must not attempt any upload. |
+
+```json
+{
+  "bucket": "deploy-info-uploads"
 }
 ```
 

@@ -1,7 +1,8 @@
 package infrastructure.beans
 
 import application.*
-import application.linking.CreateDeployLinkUseCase
+import application.collector.CreateDeployLinkUseCase
+import application.collector.GetStorageBucketUseCase
 import com.google.cloud.storage.Storage
 import infrastructure.config.DeployInfoProperties
 import infrastructure.gcp.storage.GcsStorageCleaner
@@ -11,13 +12,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Wires the linking use case: the GCP listers, the Datastore-backed link repository, the Cloud
- * Storage cleaner (resolved lazily so the portal starts without Storage credentials), the retry
- * scheduler, and the matching window duration. The file-content reader and use case live in
- * `PortalUseCaseBeans`.
+ * Wires the collector-facing capabilities: the storage-bucket lookup and the deploy-link creation —
+ * the GCP listers, the Datastore-backed link repository, the Cloud Storage cleaner (resolved lazily
+ * so the portal starts without Storage credentials), and the retry scheduler. The file-content
+ * reader and use case live in `PortalUseCaseBeans`.
  */
 @Configuration
-class LinkingUseCaseBeans(
+class CollectorUseCaseBeans(
     private val projectRepository: ProjectRepository,
     private val appEngineLister: GcpAppEngineLister,
     private val cloudRunLister: GcpCloudRunLister,
@@ -25,6 +26,9 @@ class LinkingUseCaseBeans(
     private val storageProvider: ObjectProvider<Storage>,
     private val properties: DeployInfoProperties,
 ) {
+
+    @Bean
+    fun getStorageBucketUseCase(): GetStorageBucketUseCase = GetStorageBucketUseCase(properties)
 
     @Bean
     fun storageCleaner(): StorageCleaner =

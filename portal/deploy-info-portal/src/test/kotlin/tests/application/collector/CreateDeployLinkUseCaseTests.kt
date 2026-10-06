@@ -1,6 +1,6 @@
-package tests.application.linking
+package tests.application.collector
 
-import application.linking.CreateDeployLinkUseCase
+import application.collector.CreateDeployLinkUseCase
 import domain.DeployType
 import domain.InvalidDirectoryNameException
 import domain.Project

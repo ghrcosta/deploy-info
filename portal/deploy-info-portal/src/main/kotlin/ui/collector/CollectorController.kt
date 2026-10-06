@@ -1,45 +1,54 @@
-package ui.trigger
+package ui.collector
 
-import application.linking.CreateDeployLinkUseCase
+import application.collector.CreateDeployLinkUseCase
+import application.collector.GetStorageBucketUseCase
 import domain.InvalidDirectoryNameException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 /**
- * Trigger contract: the collector calls this after uploading its output directory to Cloud Storage
- * (see `documentation/api.md`).
+ * Collector contract: the collector calls these endpoints (see `documentation/api.md`).
  */
 @RestController
-@RequestMapping("trigger")
-class TriggerController(
+@RequestMapping("collector")
+class CollectorController(
     private val createDeployLinkUseCase: CreateDeployLinkUseCase,
+    private val getStorageBucketUseCase: GetStorageBucketUseCase,
 ) {
 
     @PostMapping("/handleNewDirectory")
-    fun handleNewDirectory(@RequestBody request: TriggerRequest): ResponseEntity<TriggerResponse> =
+    fun handleNewDirectory(@RequestBody request: CollectorRequest): ResponseEntity<CollectorResponse> =
         when (val output = createDeployLinkUseCase.execute(request.toUseCaseInput())) {
             is CreateDeployLinkUseCase.Output.Created ->
                 ResponseEntity.ok(
-                    TriggerResponse.created(
+                    CollectorResponse.created(
                         output.deployLink.projectName, output.deployLink.serviceId, output.deployLink.versionId,
                     )
                 )
             is CreateDeployLinkUseCase.Output.AlreadyLinked ->
                 ResponseEntity.ok(
-                    TriggerResponse.alreadyLinked(
+                    CollectorResponse.alreadyLinked(
                         output.existing.projectName, output.existing.serviceId, output.existing.versionId,
                     )
                 )
-            is CreateDeployLinkUseCase.Output.NotLinked -> ResponseEntity.accepted().body(TriggerResponse.PENDING)
+            is CreateDeployLinkUseCase.Output.NotLinked -> ResponseEntity.accepted().body(CollectorResponse.PENDING)
             is CreateDeployLinkUseCase.Output.UnknownProject ->
-                ResponseEntity.unprocessableContent().body(TriggerResponse.UNKNOWN_PROJECT)
+                ResponseEntity.unprocessableContent().body(CollectorResponse.UNKNOWN_PROJECT)
+        }
+
+    /** Bucket lookup: tells the collector which Cloud Storage bucket its uploads go to. */
+    @GetMapping("/bucket")
+    fun bucket(): ResponseEntity<BucketResponse> =
+        when (val output = getStorageBucketUseCase.execute()) {
+            is GetStorageBucketUseCase.Output.Bucket -> ResponseEntity.ok(BucketResponse(output.name))
+            is GetStorageBucketUseCase.Output.NotConfigured -> ResponseEntity.internalServerError().build()
         }
 
     /** The directory name does not follow the collector convention — a caller error, not a server error. */
     @ExceptionHandler(InvalidDirectoryNameException::class)
     fun onInvalidDirectoryName(): ResponseEntity<Void> = ResponseEntity.badRequest().build()
 
-    private fun TriggerRequest.toUseCaseInput() = CreateDeployLinkUseCase.Input(
+    private fun CollectorRequest.toUseCaseInput() = CreateDeployLinkUseCase.Input(
         directoryName = directoryName,
         projects = projects,
         deployType = deployType,

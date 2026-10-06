@@ -1,9 +1,9 @@
-package ui.trigger
+package ui.collector
 
 import domain.DeployType
 
-/** Request body of `POST /trigger/handleNewDirectory` (see `documentation/api.md`). */
-data class TriggerRequest(
+/** Request body of `POST /collector/handleNewDirectory` (see `documentation/api.md`). */
+data class CollectorRequest(
     /** The collector's output directory name, `<user>_<deployType>_<epochMillis>`. */
     val directoryName: String,
     /** Candidate GCP projects the code may have been deployed to. */
@@ -14,8 +14,8 @@ data class TriggerRequest(
     val userEmail: String,
 )
 
-/** Response body of `POST /trigger/handleNewDirectory` (see `documentation/api.md`). */
-data class TriggerResponse(
+/** Response body of `POST /collector/handleNewDirectory` (see `documentation/api.md`). */
+data class CollectorResponse(
     /** `created`, `already-linked`, `pending` or `unknown-project`. */
     val status: String,
     val project: String? = null,
@@ -24,12 +24,18 @@ data class TriggerResponse(
 ) {
     companion object {
         fun created(project: String, service: String, version: String) =
-            TriggerResponse("created", project, service, version)
+            CollectorResponse("created", project, service, version)
 
         fun alreadyLinked(project: String, service: String, version: String) =
-            TriggerResponse("already-linked", project, service, version)
+            CollectorResponse("already-linked", project, service, version)
 
-        val PENDING = TriggerResponse("pending")
-        val UNKNOWN_PROJECT = TriggerResponse("unknown-project")
+        val PENDING = CollectorResponse("pending")
+        val UNKNOWN_PROJECT = CollectorResponse("unknown-project")
     }
 }
+
+/** Response body of `GET /collector/bucket` (see `documentation/api.md`). */
+data class BucketResponse(
+    /** The Cloud Storage bucket the collector uploads go to. */
+    val bucket: String,
+)

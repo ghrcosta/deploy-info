@@ -43,7 +43,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 2. Define the API contracts (based on the working core)
 
-- [x] Trigger contract: `POST /trigger/handleNewDirectory` request/response — body fields (output dir name, user email, projects list, deploy type) derived from what the backend core actually needs — see [`documentation/api.md`](documentation/api.md)
+- [x] Trigger contract: `POST /collector/handleNewDirectory` request/response — body fields (output dir name, user email, projects list, deploy type) derived from what the backend core actually needs — see [`documentation/api.md`](documentation/api.md)
 - [x] Main-screen contracts: tree endpoint (group > project > service > version), file-content endpoint(s) — see [`documentation/api.md`](documentation/api.md) and [`portal/deploy-info-portal/documentation/main-screen.md`](portal/deploy-info-portal/documentation/main-screen.md)
   - Decision: the validity/cleanup sweep (Phase 1.1) runs **on tree requests** when due, not on a schedule — App Engine Standard kills idle instances, so a fixed scheduler either never fires or keeps an instance alive forever; concurrent sweeps from multiple instances are accepted as redundant (idempotent deletes) and no claim/lock is used (see `portal/deploy-info-portal/documentation/deploy-cleanup.md`)
   - Decision: the tree carries the upload's `storageFolder` on each version node, so the file-content endpoint touches Cloud Storage only, never Datastore
@@ -61,7 +61,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 4. Portal REST layer
 
-- [ ] `TriggerController.handleNewDirectory()`: wire request DTO ? core linking logic
+- [ ] `CollectorController.handleNewDirectory()`: wire request DTO ? core linking logic
 - [ ] `PortalController`: tree endpoint + file-content endpoints, backed by the core
 
 ### 5. Frontend integration (`portal/deploy-info-portal/ui`)

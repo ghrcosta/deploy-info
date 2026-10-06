@@ -1,4 +1,4 @@
-package application.linking
+package application.collector
 
 import application.*
 import domain.*
