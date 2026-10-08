@@ -66,9 +66,9 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 5. Frontend integration (`portal/deploy-info-portal/ui`)
 
-- [ ] Network service for the navigator tree; replace `EXAMPLE_DATA_*` mocks
-- [ ] Network service for the file viewer; replace fake `DeployData` + `delay(1000)` simulation; remove `// TODO: Get data`
-- [ ] Wire deploy header (link, author, timestamp) to real data
+- [x] Network service for the navigator tree; replace `EXAMPLE_DATA_*` mocks — see `ui/src/app/deploy-viewer/deploy-tree.network.service.ts` + `tree-model.ts` (wire shapes of `GET /portal/tree`)
+- [x] Network service for the file viewer; replace fake `DeployData` + `delay(1000)` simulation; remove `// TODO: Get data` — see `ui/src/app/deploy-viewer/deploy-content.network.service.ts` + `content-model.ts` (wire shapes of `GET /portal/deploy/content`); version clicks now carry the whole selection (`DeploySelection` in `deploy-viewer.component.ts`)
+- [x] Wire deploy header (link, author, timestamp) to real data — fed straight from the clicked tree version node (`tree-model.ts`'s `VersionEntry`), so no extra endpoint was needed; a null `url` hides the link row
 - [ ] Wire configuration icon; logout can stay a no-op until Phase 2 auth
 - [ ] CORS: make the allowed origin configurable (keep localhost:4200 for dev)
 

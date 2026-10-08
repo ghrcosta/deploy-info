@@ -54,7 +54,18 @@ resolved `FileContentReader`) and `infrastructure/beans/CleanupBeans.kt` (sweep 
 - `tests/application/cleanup/RunCleanupIfDueUseCaseTests.kt` — the trigger timing rules (see
   `deploy-cleanup.md`).
 
-## Explicitly out of scope
+## Explicitly out of scope / Frontend wiring
 
-The frontend wiring (Phase 1 §5) — replacing the `EXAMPLE_DATA_*` mocks and the fake `DeployData`
-simulation in `ui/src/app/deploy-viewer/` — is the next item and consumes exactly these contracts.
+The frontend wiring (Phase 1 §5) consumes exactly these contracts, and is done:
+`ui/src/app/deploy-viewer/deploy-tree.network.service.ts` fetches `GET /portal/tree` and
+`deploy-navigator.component.ts` renders it (`tree-model.ts` mirrors the wire shapes); the
+`EXAMPLE_DATA_*` mocks are gone. A version-node click now carries the whole selection
+(`DeploySelection` in `deploy-viewer.component.ts`: project/service names from the tree path plus
+the version node) to `file-viewer.component.ts`, which renders the header straight from it and
+fetches the content via `deploy-content.network.service.ts` (`content-model.ts` mirrors the
+`GET /portal/deploy/content` wire shapes); the fake `DeployData` + `delay(1000)` simulation is gone.
+The endpoint's 404 (folder cleaned up after the tree was loaded) and 502 (storage failure) surface
+as dedicated file-viewer states, and a null `url` hides the link row.
+
+Note: the component no longer re-sorts the tree client-side; sorting (and the ungrouped-last rule)
+is guaranteed by the backend per `documentation/api.md`.

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { DeployNavigatorComponent } from './deploy-navigator.component';
 import { DeployTreeNetworkService } from '../deploy-tree.network.service';
+import { DeployViewerService } from '../deploy-viewer.component';
 import { GroupEntry } from '../tree-model';
 import { of } from 'rxjs';
 
@@ -73,5 +74,31 @@ describe('DeployNavigatorComponent', () => {
     expect(component.groupList[0].name).toEqual('PROD');
     expect(component.groupList[0].projects[0].services[0].children!.length).toEqual(2);
     expect(component.groupList[1].name).toEqual('');
+  });
+
+  it('should carry the file-viewer selection (project, service, version) on the version nodes', () => {
+    const serviceNode = component.groupList[0].projects[0].services[0];
+    expect(serviceNode.children![0].selection).toEqual({
+      project: 'Project C',
+      service: 'web',
+      version: TEST_TREE[0].projects[0].services[0].versions[0],
+    });
+    expect(serviceNode.children![1].selection!.version).toEqual(TEST_TREE[0].projects[0].services[0].versions[1]);
+    expect(component.groupList[1].projects[0].services[0].children![0].selection).toEqual({
+      project: 'Project D',
+      service: 'worker',
+      version: TEST_TREE[1].projects[0].services[0].versions[0],
+    });
+  });
+
+  it('should emit the selection when a version node is clicked', () => {
+    const selections: unknown[] = [];
+    TestBed.inject(DeployViewerService).deployClickedEventObservable.subscribe(selection => selections.push(selection));
+
+    // The tree renders expanded, so the version nodes are not in the DOM; invoke the handler directly
+    const node = component.groupList[0].projects[0].services[0].children![0];
+    component.onDeployClicked({ currentTarget: document.createElement('div') } as unknown as MouseEvent, node);
+
+    expect(selections).toEqual([node.selection]);
   });
 });

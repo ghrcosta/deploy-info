@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTreeModule } from '@angular/material/tree';
 import { MatIconModule } from '@angular/material/icon';
-import { DeployViewerService } from '../deploy-viewer.component'
+import { DeployViewerService, DeploySelection } from '../deploy-viewer.component'
 import { DeployTreeNetworkService } from '../deploy-tree.network.service';
 import { GroupEntry } from '../tree-model';
 
@@ -37,8 +37,10 @@ export class DeployNavigatorComponent {
             this.groupList = this.convertDataToNodes(entries);
         });
     }
-    onDeployClicked = (event: MouseEvent, deployId: string) => {
-        this.deployViewerService.newDeployClickedEvent(deployId);
+    onDeployClicked = (event: MouseEvent, node: TreeNode) => {
+        if (node.selection) {
+            this.deployViewerService.newDeployClickedEvent(node.selection);
+        }
 
         const newVersionClicked = event.currentTarget as HTMLElement;
         if (!newVersionClicked.classList.contains(VERSION_NODE_HIGHLIGHTED_CLASS)) {
@@ -65,6 +67,11 @@ export class DeployNavigatorComponent {
                         versionNodes.push({
                             id: version.id,
                             name: version.name,
+                            selection: {
+                                project: project.name,
+                                service: service.name,
+                                version: version,
+                            },
                         });
                     }
 
@@ -110,4 +117,6 @@ interface TreeNode {
     name: string;
     icon?: string;
     children?: TreeNode[];
+    /** The file-viewer selection this node represents; only set on version nodes. */
+    selection?: DeploySelection;
 }

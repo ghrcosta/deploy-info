@@ -24,7 +24,7 @@
                             <!-- Version format -->
                             <mat-tree-node *matTreeNodeDef="let node"
                                            [attr.id]="node.id" class="version-node"
-                                           (click)="onDeployClicked($event, node.id)">
+                                           (click)="onDeployClicked($event, node)">
                                 <div class="version-entry">
                                     <mat-icon svgIcon="deployed_code" aria-label="Deploy" class="icon"/>
                                     <span>{{node.name}}</span>

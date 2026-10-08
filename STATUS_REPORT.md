@@ -90,17 +90,16 @@
 
 - App shell with routing (`/`, `/settings`); dark/light themes, styles.
 - **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; logout/configuration icons present but their actions go nowhere.
-- **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, but **fed by hardcoded `EXAMPLE_DATA_*` constants**; note it already implements a "group" level above project which TODO.md doesn't mention.
-- **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes) and Extras, syntax highlighting incl. custom `git` language — but **fed by fake `DeployData` example objects with a `delay(1000)` simulation** and `// TODO: Get data`.
+- **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, now fed by the real `GET /portal/tree` (`deploy-tree.network.service.ts`); note it already implements a "group" level above project which TODO.md doesn't mention.
+- **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes) and Extras, syntax highlighting incl. custom `git` language — now fed by real data: the header comes from the clicked tree version node, the content from `GET /portal/deploy/content` (`deploy-content.network.service.ts`); the fake `DeployData` + `delay(1000)` simulation is gone.
 - **Settings screen** — fully wired to real backend (get/add/edit/delete projects, dialogs).
 - `environment.ts` uses `@url@` placeholder (so the TODO "deploy script that sets @url@ and copies files" is half-prepared).
 
 **Missing:**
 
-1. Network service for the main screen (navigator + file viewer) and the file-content endpoints; replace all mock data.
-2. Logout icon behavior / login flow entirely.
-3. Deploy script that replaces `@url@` and copies the built UI into the backend's static resources (no such script exists; also the Spring Boot app doesn't currently serve the UI).
-4. The `.spec.ts` test files are all default Angular scaffolding — no meaningful frontend tests.
+1. Logout icon behavior / login flow entirely.
+2. Deploy script that replaces `@url@` and copies the built UI into the backend's static resources (no such script exists; also the Spring Boot app doesn't currently serve the UI).
+3. The navigator and file-viewer `.spec.ts` files now have meaningful tests; the remaining `.spec.ts` files are still default Angular scaffolding.
 
 ---
 
