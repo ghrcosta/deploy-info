@@ -23,13 +23,13 @@ project.tasks.register(CollectorTask.TASK_NAME, CollectorTask::class.java)
 A `DefaultTask` named **`deployInfoCollect`**, registered under task **group `deployInfo`**
 (description: "Execute collector"). Parameters:
 
-| Parameter             | Type                   | Required | Default            | Meaning                                                                                                                                                                              |
-|-----------------------|------------------------|----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `deployType`          | `Property<DeployType>` | required | —                  | Type of deploy being collected. Enum `CollectorTask.DeployType` with values `GAE` (App Engine) and `RUN` (Cloud Run). Used in the output directory name and `collector.properties`.  |
-| `portalUrl`           | `Property<String>`     | required | —                  | URL of the portal backend. |
-| `maxFileSize`         | `Property<Int>`        | optional | `50 * 1024` (50KB) | Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder.                                                                             |
-| `collectGitStatus`    | `Property<Boolean>`    | optional | `true`             | Whether git-related data is collected at all.                                                                                                                                        |
-| `extraFilesToCollect` | `ListProperty<String>` | optional | empty              | Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the file is collected without its parent dirs, so same-name files collide. |
+| Parameter             | Type                   | Required | Default            | Meaning                                                                                                                                                                                            |
+|-----------------------|------------------------|----------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `deployType`          | `Property<DeployType>` | required | —                  | Type of deploy being collected. Enum `CollectorTask.DeployType` with values `GAE` (App Engine) and `RUN` (Cloud Run). Used in the output directory name and sent to the portal by `PortalTrigger`. |
+| `portalUrl`           | `Property<String>`     | required | —                  | URL of the portal backend.                                                                                                                                                                         |
+| `maxFileSize`         | `Property<Int>`        | optional | `50 * 1024` (50KB) | Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder.                                                                                           |
+| `collectGitStatus`    | `Property<Boolean>`    | optional | `true`             | Whether git-related data is collected at all.                                                                                                                                                      |
+| `extraFilesToCollect` | `ListProperty<String>` | optional | empty              | Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the file is collected without its parent dirs, so same-name files collide.               |
 
 All parameters are also exposed as command-line `@Option`s (e.g. `./gradlew deployInfoCollect --deploy-type=GAE`).
 
@@ -39,7 +39,7 @@ Every parameter is an `@get:Input`, so Gradle's up-to-date checking takes them i
 
 When `deployInfoCollect` runs, six steps execute in order:
 
-1. **`Context.init(...)`** — creates output directories, detects the gcloud account, writes `collector.properties` (see §3).
+1. **`Context.init(...)`** — creates output directories and detects the gcloud account (see §3).
 2. **`GitCollector`** — if `collectGitStatus == true`, collects git data (see §4).
 3. **`ExtraFilesCollector`** — if `extraFilesToCollect` is set, copies those files (see §5).
 4. **`BucketLookup`** — resolves the upload bucket from the portal via `GET /collector/bucket` (see §6).
@@ -76,9 +76,7 @@ Singleton holding the state for one run:
 
 1. Creates `build/collector/` (cleared first via `createEmptyDirectory`).
 2. Runs `gcloud config get-value account` to get the authenticated gcloud email (throws if it fails — so the user **must** have `gcloud` installed and logged in before running the collector).
-3. Output dir name: `<email-part-before-@>_<deployType>_<now-epoch-ms>`, e.g. `johndoe_GAE_1746322088662`.
-4. Writes `collector.properties` into the output dir with three keys: `email`, `deploy` (`GAE`/`RUN`), `timestamp` (epoch millis). This file is uploaded along with everything else so the portal can identify who collected what and when.
-   *(Phase 1 note: once `PortalTrigger` sends this info in the request body, this file becomes redundant and may be removed.)*
+3. Output dir name: `<email-part-before-@>_<deployType>_<now-epoch-ms>`, e.g. `johndoe_GAE_1746322088662`. The directory name is the sole carrier of who/what/when: `PortalTrigger` sends it (plus `deployType` and `userEmail`) to the portal, and the portal derives the collection timestamp from the epoch-millis suffix — no metadata file is written into the output directory.
 
 ## 4. `GitCollector`
 
@@ -105,7 +103,7 @@ Executed with the `extraFilesToCollect` list. Each entry is normalized to `/path
 ## 6. `BucketLookup`
 
 Executed once per task run, right before the upload; no caching. It resolves the upload bucket from the portal
-(contract: [`documentation/api.md`](../../documentation/api.md)):
+(contract: [`documentation/api.md`](../../../documentation/api.md)):
 
 1. Sends `GET {portalUrl}/collector/bucket` using plain `java.net.HttpURLConnection` — no HTTP client dependency is
    added to the published plugin jar. Connect and read timeouts are set (10 s connect, 30 s read).
@@ -114,7 +112,7 @@ Executed once per task run, right before the upload; no caching. It resolves the
    `GradleException` naming the portal URL, failing the Gradle task before anything is uploaded.
 
 The URL-opening is a constructor-injected seam (`(URL) -> HttpURLConnection`), which makes the action unit-testable
-with mockk without touching the network (`action/BucketLookupTests.kt`).
+with mockK without touching the network (`action/BucketLookupTests.kt`).
 
 ## 7. `Uploader`
 
@@ -165,7 +163,6 @@ The upload creates a new top-level folder per collection run:
 ```
 gs://<bucketName>/
 └── <user>_<DEPLOYTYPE>_<epochMillis>/      # e.g. john.doe_GAE_1746322088662
-    ├── collector.properties               # email=... , deploy=GAE|RUN , timestamp=<epoch ms>
     ├── git-status.txt                     # `git status --long --branch` output
     ├── git-log.txt                        # `git log --oneline` output
     ├── <uuid>                             # diff or full content of one changed file
@@ -178,5 +175,5 @@ gs://<bucketName>/
     └── error.txt                          # only when GitCollector hit an IOException
 ```
 
-`git-status.txt` / `git-log.txt` are absent when `collectGitStatus=false`, and uuid files / maps only exist when something was actually collected. The backend file-content serving (Phase 1) relies on exactly this contract: directory name encodes user/deployType/timestamp, `collector.properties` carries the same data, and file paths for uuid files come from the two properties files.
+`git-status.txt` / `git-log.txt` are absent when `collectGitStatus=false`, and uuid files / maps only exist when something was actually collected. The backend file-content serving (Phase 1) relies on exactly this contract: the directory name encodes user/deployType/timestamp (the portal receives the rest of the metadata — projects, deployType, userEmail — via the trigger request body, see `documentation/api.md`), and file paths for uuid files come from the two properties files.
 

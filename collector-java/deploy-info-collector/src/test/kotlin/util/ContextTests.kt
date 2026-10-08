@@ -9,9 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import org.gradle.api.Project
-import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.File
-import java.util.Properties
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 import kotlin.test.AfterTest
@@ -49,7 +47,7 @@ class ContextTests {
     }
 
     @Test
-    fun `Context is initialized and base properties file is created`() {
+    fun `Context is initialized without writing a collector properties file`() {
         val userEmail = "user@email.com"
         val deployType = CollectorTask.DeployType.GAE
         every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
@@ -59,13 +57,6 @@ class ContextTests {
 
         assertNotNull(Context.get())
         assertEquals(userEmail, Context.get().userEmail)
-        val propertiesFile = File(Context.get().outputDir, "collector.properties")
-        assert(propertiesFile.isFile)
-        val properties = Properties().also { properties ->
-            propertiesFile.reader().use { properties.load(it) }
-        }
-        assertEquals(userEmail, properties["email"])
-        assertEquals(deployType.name, properties["deploy"])
-        assertDoesNotThrow { (properties["timestamp"] as String).toLong() }
+        assert(!File(Context.get().outputDir, "collector.properties").exists())
     }
 }

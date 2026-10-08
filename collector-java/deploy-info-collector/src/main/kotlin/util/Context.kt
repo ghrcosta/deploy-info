@@ -3,9 +3,7 @@ package io.github.ghrcosta.util
 import io.github.ghrcosta.CollectorTask
 import org.gradle.api.Project
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.*
 
 class Context(
     /** Base collector directory */
@@ -37,8 +35,6 @@ class Context(
 
             val outputDir = createOutputDirectory(baseDir, deployType, gcloudEmail, now)
 
-            createPropertiesFile(outputDir, deployType, gcloudEmail, now)
-
             instance = Context(
                 baseDir = baseDir,
                 outputDir = outputDir,
@@ -62,21 +58,6 @@ class Context(
             return createEmptyDirectory(dirName, baseDir)
         }
 
-        private fun createPropertiesFile(
-            outputDir: File,
-            deployType: CollectorTask.DeployType,
-            gcloudEmail: String,
-            now: Long,
-        ) {
-            val properties = Properties().apply {
-                set("email", gcloudEmail)
-                set("deploy", deployType.name)
-                set("timestamp", now.toString())
-            }
-            val propertiesFile = createEmptyFile("collector.properties", outputDir)
-            propertiesFile.writer(StandardCharsets.UTF_8).use {
-                properties.store(it, null)
-            }
-        }
+
     }
 }

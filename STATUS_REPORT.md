@@ -23,7 +23,7 @@
 - `GitCollector`: saves `git-status.txt`, `git-log.txt`, and per-changed-file diffs (or full content for untracked files) into UUID-named files with a `gitUuidMap` (uuid → filepath).
 - `ExtraFilesCollector`: copies extra files (skips binary/large/missing) with `extraUuidMap`, writes `uuid-extra.properties` / `uuid-git.properties` at upload time (`Uploader`).
 - `Uploader`: `gcloud storage cp --recursive` of the output dir to the bucket, with stderr error check.
-- `Context`: creates `build/collector/<user>_<deployType>_<timestamp>/`, gets gcloud account email, writes `collector.properties` (email, deploy, timestamp).
+- `Context`: creates `build/collector/<user>_<deployType>_<timestamp>/`, gets gcloud account email. (`collector.properties` has been removed — the portal gets all metadata from the `PortalTrigger` request body.)
 - Cross-platform command execution (gcloud.cmd on Windows), logging, file utils (binary/large detection).
 - Unit tests exist for GitCollector, ExtraFilesCollector, Uploader, Context.
 - `README.md` with usage documentation; published via `com.gradle.plugin-publish`.
@@ -33,7 +33,7 @@
 1. **`PortalTrigger` is a stub** — `action/PortalTrigger.kt` is literally `// TODO: Send request to portal`. Nothing calls the portal.
 2. **New parameters (TODO):** `portalUrl` and the list of projects where the code may be deployed. Neither exists in `CollectorTask`.
 3. **Portal trigger body (TODO):** output directory name, user email, list of projects, deploy type — none of this is sent anywhere.
-4. **Delete `collector.properties`** (TODO: "Context — Delete collector.properties") — it's still written in `Context.createPropertiesFile`. Once the portal trigger carries email/type/timestamp in the request body, the properties file becomes redundant. (Open question: should the info move entirely into the trigger request, or stay in the file *and* the request?)
+4. **`collector.properties` has been removed** (TODO: "Remove collector.properties") — `Context.createPropertiesFile` was deleted once the portal trigger carried email/type/timestamp in the request body. Resolved: the info moved entirely into the trigger request; the portal never read the file.
 5. Documentation debt: `README.md` parameter table will need the two new parameters added.
 
 ---
@@ -133,7 +133,7 @@
 ## 8. Open questions to resolve (no guessing)
 
 1. TODO's "version toml" — collector, portal, or both? (Portal looks already done.)
-2. Should `collector.properties` be removed entirely, or kept in the uploaded folder for traceability while the trigger also sends the data?
+2. ~~Should `collector.properties` be removed entirely, or kept in the uploaded folder for traceability while the trigger also sends the data?~~ **Resolved: removed** — the portal never read it; the trigger request body and the directory name carry all metadata.
 3. Link table identifier (deploy type + service + version): TODO asks "Separate columns? Single column?" — still undecided.
 4. For the Python collector: expected distribution (pip package vs standalone script) and arg style?
 5. Is the "group" level in the frontend navigator an intended feature (beyond TODO's project > service > version), backed by `Project.group`? Backend already has the `group` field, so likely yes — but the navigator needs data to populate it.
