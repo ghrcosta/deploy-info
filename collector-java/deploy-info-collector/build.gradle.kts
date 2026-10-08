@@ -39,6 +39,7 @@ repositories {
 dependencies {
     @Suppress("AvoidDuplicateDependencies") testImplementation(kotlin("test"))
     testImplementation("io.mockk:mockk:1.14.11")
+    implementation("com.google.code.gson:gson:2.14.0")
 }
 
 tasks.test {

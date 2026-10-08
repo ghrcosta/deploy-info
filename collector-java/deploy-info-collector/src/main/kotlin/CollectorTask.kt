@@ -82,6 +82,7 @@ abstract class CollectorTask : DefaultTask() {
             extraFilesToCollect = extraFilesToCollect.orNull,
             portalUrl = portalUrl.get(),
             deployType = deployType.get(),
+            projects = projects.get(),
         ).run()
     }
 
@@ -103,6 +104,7 @@ abstract class CollectorTask : DefaultTask() {
         private val extraFilesToCollect: List<String>?,
         private val portalUrl: String,
         private val deployType: DeployType,
+        private val projects: List<String>,
     ) {
         fun run() {
             Logger.init(project)
@@ -140,7 +142,14 @@ abstract class CollectorTask : DefaultTask() {
         }
 
         private fun triggerPortalProcessing() {
-            PortalTrigger().execute()
+            val context = Context.get()
+            PortalTrigger(
+                portalUrl = portalUrl,
+                directoryName = context.outputDir.name,
+                projects = projects,
+                deployType = deployType.name,
+                userEmail = context.userEmail,
+            ).execute()
         }
     }
 }

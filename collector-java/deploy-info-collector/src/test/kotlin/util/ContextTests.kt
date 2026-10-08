@@ -58,6 +58,7 @@ class ContextTests {
         Context.init(project, deployType)
 
         assertNotNull(Context.get())
+        assertEquals(userEmail, Context.get().userEmail)
         val propertiesFile = File(Context.get().outputDir, "collector.properties")
         assert(propertiesFile.isFile)
         val properties = Properties().also { properties ->

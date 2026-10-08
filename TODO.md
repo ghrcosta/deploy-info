@@ -54,15 +54,15 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [x] Add `portalUrl` parameter to `CollectorTask`
 - [x] Add "list of projects where the code may be deployed" parameter to `CollectorTask`
 - [x] Resolve the upload bucket from the portal: the collector asks the portal (via `portalUrl`) for its configured bucket name. Requires a new bucket-lookup endpoint on the portal; document it in `documentation/api.md` when the endpoint is implemented.
-- [ ] Implement `PortalTrigger` per the documented contract
+- [x] Implement `PortalTrigger` per the documented contract
 - [ ] Remove `collector.properties` from `Context.createPropertiesFile` if the contract makes it redundant
 - [x] Update `README.md` parameter table with the two new parameters
-- [ ] Unit tests for `PortalTrigger` (mock HTTP)
+- [x] Unit tests for `PortalTrigger` (mock HTTP)
 
 ### 4. Portal REST layer
 
-- [ ] `CollectorController.handleNewDirectory()`: wire request DTO ? core linking logic
-- [ ] `PortalController`: tree endpoint + file-content endpoints, backed by the core
+- [x] `CollectorController.handleNewDirectory()`: wire request DTO ? core linking logic
+- [x] `PortalController`: tree endpoint + file-content endpoints, backed by the core
 
 ### 5. Frontend integration (`portal/deploy-info-portal/ui`)
 

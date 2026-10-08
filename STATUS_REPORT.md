@@ -59,20 +59,24 @@
 
 **Missing / stubs:**
 
-1. **`CollectorController.handleNewDirectory()` is empty** — the core of the system. Needed:
-   - Request body: output directory name, user email, list of possible projects, deploy type.
-   - Search all versions/services of the configured projects (via GCP APIs using each project's service account) to find the most recent deploy of that type.
-   - Linking logic: if most recent deploy < 5 min old and not yet linked, create the Datastore link record (project, deploy type+service+version as identifier, Cloud Storage folder, email, timestamp).
-2. **No Datastore model/repository for the deploy link** — only `Project` exists.
+1. **`CollectorController.handleNewDirectory()` is now implemented** (request DTO, response DTOs,
+   mapping to `CreateDeployLinkUseCase` outcomes: 200 created/already-linked, 202 pending,
+   422 unknown-project; `GET /collector/bucket` also added). See
+   `portal/deploy-info-portal/src/main/kotlin/ui/collector/CollectorController.kt`.
+2. ~~No Datastore model/repository for the deploy link~~ — the deploy-link entity + repository and
+   the `CreateDeployLinkUseCase` linking logic exist now (see
+   `portal/deploy-info-portal/documentation/deploy-link.md`).
 3. **GCP deploy-listing clients now exist** (`application/GcpAppEngineLister` / `GcpCloudRunLister` +
    `infrastructure/gcp/...` implementations, unit-tested without any external dependency) —
    impersonation (access tokens per project's service account, via the Google auth library) is
-   implemented; no endpoint exposes the listing yet. See
+   implemented. See
    `portal/deploy-info-portal/documentation/gcp-deploy-listing.md`.
 4. **`AddProjectUseCase`:** `issueServiceAccountError` is hardcoded `false` with `// TODO: Test if name + serviceAccount are working` — service-account permission validation not implemented (same presumably needed for Edit).
-5. **`PortalController` is an empty stub** (`GET /portal/` returning nothing). Needs:
-   - Main-screen data endpoint: tree of project > service > version, with validity check (delete Datastore entry + Storage folder if deploy no longer exists in GCP). The validity/cleanup sweep itself is now implemented as a scheduled job (`CleanupInvalidDeployLinksUseCase` + `CleanupScheduler`, off by default via `deploy-info.cleanup.enabled=false`) — see `portal/deploy-info-portal/documentation/deploy-cleanup.md`; the tree endpoint must still decide whether to additionally run it on requests (see TODO.md Phase 1.2).
-   - File-content endpoint(s): serve `git-log.txt`, `git-status.txt`, uuid-mapped files ("GIT" and "Extras" sections) from the Cloud Storage folder.
+5. **`PortalController` is now implemented**: `GET /portal/tree` (group > project > service > version,
+   running the cleanup sweep on request when due — `deploy-info.cleanup.enabled=false` refers to the
+   standalone scheduler option, see `portal/deploy-info-portal/documentation/deploy-cleanup.md`) and
+   `GET /portal/deploy/content?folder=…` (GIT/Extras file content from Cloud Storage, backed by
+   `GetDeployContentUseCase`). See `portal/deploy-info-portal/src/main/kotlin/ui/portal/PortalController.kt`.
 6. **No login/auth at all** — no Spring Security dependency, no auth of any kind. TODO: check user permissions on the deployInfo project via the AppEngine service account. Also the trigger endpoint has no authentication (anyone could POST).
 7. **`application-prod.properties` is empty** — no prod config (project id, bucket name, etc.).
 8. Minor: `CorsConfiguration` hardcodes `http://localhost:4200` (won't work in prod).

@@ -16,6 +16,8 @@ class Context(
     val projectRootDir: File,
     /** Files larger than this size will not be collected */
     val maxFileSize: Int,
+    /** The gcloud account that performed the deploy and the collection */
+    val userEmail: String,
     /** Map of UUID for files collected by [io.github.ghrcosta.action.GitCollector] and their real path */
     val gitUuidMap: MutableMap<String,String> = mutableMapOf(),
     /** Map of UUID for files collected by [io.github.ghrcosta.action.ExtraFilesCollector] and their real path */
@@ -41,7 +43,8 @@ class Context(
                 baseDir = baseDir,
                 outputDir = outputDir,
                 projectRootDir = project.rootDir,
-                maxFileSize = maxFileSize ?: (50 * 1024) // 50KB
+                maxFileSize = maxFileSize ?: (50 * 1024), // 50KB
+                userEmail = gcloudEmail
             )
         }
 

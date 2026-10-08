@@ -44,9 +44,9 @@ When `deployInfoCollect` runs, six steps execute in order:
 3. **`ExtraFilesCollector`** — if `extraFilesToCollect` is set, copies those files (see §5).
 4. **`BucketLookup`** — resolves the upload bucket from the portal via `GET /collector/bucket` (see §6).
 5. **`Uploader`** — writes the uuid-map property files and runs `gcloud storage cp` (see §7).
-6. **`PortalTrigger`** — currently a stub, no-op (see §8).
+6. **`PortalTrigger`** — notifies the portal that the upload is complete so it can link the deploy (see §8).
 
-Then logs "Done!". Errors in the bucket-lookup step (§6) or the upload step (§7) throw and fail the task.
+Then logs "Done!". Errors in the bucket-lookup step (§6), the upload step (§7) or the trigger step (§8) throw and fail the task.
 
 ---
 
@@ -132,19 +132,31 @@ Since the dir name is unique (`<user>_<type>_<timestamp>`), this creates a new *
 
 4. Inspects the command's **stderr** for lines starting with `ERROR` (deduplicated); if any, throws a `RuntimeException` listing them, failing the Gradle task. (Exit code is not checked; only stderr `ERROR` lines.)
 
-## 8. `PortalTrigger` (stub)
+## 8. `PortalTrigger`
 
-Currently:
+Executed after the upload, as the last step of the task. It notifies the portal that a collection
+output directory has landed in the bucket, so the portal can link the upload to the GCP deploy it
+was built for.
 
-```kotlin
-class PortalTrigger {
-    fun execute() {
-        // TODO: Send request to portal
-    }
-}
-```
+It calls `POST {portalUrl}/collector/handleNewDirectory` (the contract is documented in
+`documentation/api.md`) with a JSON body of `directoryName` (the output directory name,
+`<user>_<deployType>_<epochMillis>`), `projects` (the task's project list), `deployType` and
+`userEmail` (the gcloud account). The body is serialized from `PortalTriggerDTOs.kt`'s
+`TriggerRequest` with **Gson** (the only third-party runtime dependency of the plugin); the HTTP
+call itself uses plain `java.net.HttpURLConnection` so that no HTTP client dependency is added,
+mirroring `BucketLookup` (same test seam, timeouts of 10s/30s).
 
-Nothing is sent to the portal yet — the upload is the only integration point today. In Phase 1/2 this must POST the trigger request (output dir name, user email, configured projects, deploy type) to the portal backend per the API contract defined in Phase 1 (`documentation/api.md`). Cross-platform command execution (`gcloud.cmd` on Windows via `SystemUtils`, `CommandUtils`) applies to everything except this component, which will be plain HTTP.
+Response handling:
+
+- `200` with `created` / `already-linked` — logs the link (project/service/version).
+- `202` with `pending` — logged only; the portal owns the matching and its 5-minute retry, so this
+  does not fail the build (the portal may still link the upload or delete its folder later).
+- `422` `unknown-project` — fails the task: none of the listed projects is configured in the portal.
+- `400` or any other HTTP status, connection/timeout, unwritable request or unreadable/malformed
+  response — fails the task with an error naming the portal URL.
+
+The response is deserialized from `TriggerResponse` with Gson; a non-JSON or empty body fails the
+task.
 
 ## 9. Resulting Cloud Storage folder layout
 
