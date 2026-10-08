@@ -69,7 +69,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [x] Network service for the navigator tree; replace `EXAMPLE_DATA_*` mocks — see `ui/src/app/deploy-viewer/deploy-tree.network.service.ts` + `tree-model.ts` (wire shapes of `GET /portal/tree`)
 - [x] Network service for the file viewer; replace fake `DeployData` + `delay(1000)` simulation; remove `// TODO: Get data` — see `ui/src/app/deploy-viewer/deploy-content.network.service.ts` + `content-model.ts` (wire shapes of `GET /portal/deploy/content`); version clicks now carry the whole selection (`DeploySelection` in `deploy-viewer.component.ts`)
 - [x] Wire deploy header (link, author, timestamp) to real data — fed straight from the clicked tree version node (`tree-model.ts`'s `VersionEntry`), so no extra endpoint was needed; a null `url` hides the link row
-- [ ] Wire configuration icon; logout can stay a no-op until Phase 2 auth
+- [x] Wire configuration icon; logout can stay a no-op until Phase 2 auth — see `ui/src/app/home/home.service.ts` (`BehaviorSubject` toggle consumed by `home.component.ts` + `top-bar.component.ts`); the dead standalone `/settings` route was removed from `app.routes.ts` (it rendered the screen without the top bar and no way back)
 - [ ] CORS: make the allowed origin configurable (keep localhost:4200 for dev)
 
 ### 6. POC validation (end-to-end)

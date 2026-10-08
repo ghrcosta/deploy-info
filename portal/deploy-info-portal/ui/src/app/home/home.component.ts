@@ -1,8 +1,8 @@
-import { Component, Injectable, ChangeDetectionStrategy } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TopBarComponent } from "./top-bar/top-bar.component";
 import { DeployViewerComponent } from '../deploy-viewer/deploy-viewer.component';
 import { SettingsComponent } from '../settings/settings.component'
+import { HomeService } from './home.service';
 
 @Component({
     selector: 'app-home',
@@ -26,17 +26,5 @@ export class HomeComponent {
         this.homeService.showSettingsEventObservable.subscribe(showSettings => {
             this.showSettings = showSettings;
         })
-    }
-}
-
-@Injectable({
-    providedIn: 'root'
-})
-export class HomeService {
-    private _showSettingsSubject = new Subject<boolean>();
-    showSettingsEventObservable = this._showSettingsSubject.asObservable();
-
-    showSettingsClickedEvent(showSettings: boolean) {
-        this._showSettingsSubject.next(showSettings);
     }
 }

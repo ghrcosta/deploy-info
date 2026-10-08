@@ -89,7 +89,7 @@
 **Implemented (Angular 19 + Material):**
 
 - App shell with routing (`/`, `/settings`); dark/light themes, styles.
-- **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; logout/configuration icons present but their actions go nowhere.
+- **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; the configuration icon is wired (in-place toggle to the Settings screen via `HomeService`'s `BehaviorSubject`, now in its own `home.service.ts` to break a circular import); logout intentionally remains a no-op until Phase 2 auth. The dead standalone `/settings` route was removed.
 - **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, now fed by the real `GET /portal/tree` (`deploy-tree.network.service.ts`); note it already implements a "group" level above project which TODO.md doesn't mention.
 - **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes) and Extras, syntax highlighting incl. custom `git` language — now fed by real data: the header comes from the clicked tree version node, the content from `GET /portal/deploy/content` (`deploy-content.network.service.ts`); the fake `DeployData` + `delay(1000)` simulation is gone.
 - **Settings screen** — fully wired to real backend (get/add/edit/delete projects, dialogs).

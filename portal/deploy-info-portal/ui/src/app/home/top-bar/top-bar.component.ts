@@ -2,7 +2,7 @@ import { Component, inject, Renderer2, ChangeDetectionStrategy } from '@angular/
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HighlightLoader } from 'ngx-highlightjs';
-import { HomeService } from '../home.component'
+import { HomeService } from '../home.service'
 
 @Component({
     selector: 'top-bar',
