@@ -76,9 +76,14 @@ There is **no Angular proxy** — the frontend calls the backend directly at an 
 - prod `environment.ts` still has the `@url@` placeholder (to be replaced by the Phase 10 deploy script)
 
 Because it's a cross-origin call, the **backend CORS config matters**:
-`infrastructure/security/CorsConfiguration.kt` hardcodes `http://localhost:4200` as the only allowed
-origin (with credentials). So the dev pairing of backend 8080 + UI 4200 works out of the box; any
-other origin will be rejected until CORS is made configurable (Phase 1, item 5.5).
+`infrastructure/security/CorsConfiguration.kt` reads
+`deploy-info.cors.allowed-origins` (comma-separated; `DeployInfoProperties.Cors`). The base
+`application.properties` sets `http://localhost:4200`, so the dev pairing of backend 8080 + UI 4200
+works out of the box. An **empty list disables CORS processing entirely** — this is what the
+production deploy needs, because there the UI is built into the same jar and served from the same
+origin, and browsers still send an `Origin` header on non-GET requests: any registered CORS mapping
+would reject those requests (`deploy-info.cors.allowed-origins` is therefore intentionally absent
+from `application-prod.properties`). Add the key to a profile only if the UI runs on another origin.
 
 Current UI status: the Settings screen is fully wired to the backend; the deploy navigator and file
 viewer still use `EXAMPLE_DATA_*` mocks and a simulated `delay(1000)`.

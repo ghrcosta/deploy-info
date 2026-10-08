@@ -5,13 +5,14 @@ import java.time.Duration
 
 /**
  * Binds the `deploy-info.*` configuration properties used by the linking logic (bucket name of the
- * collector uploads, matching window) and the validity/cleanup logic.
+ * collector uploads, matching window), the validity/cleanup logic and CORS.
  */
 @ConfigurationProperties("deploy-info")
 data class DeployInfoProperties(
     val storageBucket: String,
     val linking: Linking,
     val cleanup: Cleanup,
+    val cors: Cors,
 ) {
 
     data class Linking(
@@ -32,5 +33,16 @@ data class DeployInfoProperties(
          * but it is not in the snapshot) from being deleted by that same sweep.
          */
         val gracePeriod: Duration,
+    )
+
+    /**
+     * CORS origins (`deploy-info.cors.allowed-origins`) allowed to call the API cross-origin — only
+     * relevant when the UI runs on a different origin than the backend (local dev: 4200 → 8080).
+     * An empty list disables CORS processing entirely, which is what the same-origin production
+     * serving (UI built into the same jar) needs: browsers send an `Origin` header even on
+     * same-origin non-GET requests, and any request carrying an unlisted origin would be rejected.
+     */
+    data class Cors(
+        val allowedOrigins: List<String>,
     )
 }
