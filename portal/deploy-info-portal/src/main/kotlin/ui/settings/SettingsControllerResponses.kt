@@ -13,13 +13,20 @@ fun GetAllProjectsUseCase.Output.toResponse(): ResponseEntity<List<ProjectDTO>> 
         ResponseEntity.ok(projectsInRepository.map { ProjectDTO(it) })
     }
 
-fun AddProjectUseCase.Output.toResponse(): ResponseEntity<AddProjectResultDTO> =
+/**
+ * [portalServiceAccount] is resolved lazily (the portal's own service account email), so it is only
+ * looked up when the response actually reports a service-account issue and needs it for the
+ * remediation instructions shown to the user.
+ */
+fun AddProjectUseCase.Output.toResponse(portalServiceAccount: () -> String?): ResponseEntity<AddProjectResultDTO> =
     if (issuesFound()) {
         ResponseEntity.ok(
             AddProjectResultDTO(
                 issues = AddProjectResultDTO.IssuesDTO(
                     issueNameConflict = issueNameConflict,
                     issueServiceAccountError = issueServiceAccountError,
+                    serviceAccountIssue = serviceAccountIssue.name.takeIf { issueServiceAccountError },
+                    portalServiceAccount = portalServiceAccount().takeIf { issueServiceAccountError },
                 )
             )
         )
@@ -31,13 +38,15 @@ fun AddProjectUseCase.Output.toResponse(): ResponseEntity<AddProjectResultDTO> =
         )
     }
 
-fun EditProjectUseCase.Output.toResponse(): ResponseEntity<EditProjectResultDTO> =
+fun EditProjectUseCase.Output.toResponse(portalServiceAccount: () -> String?): ResponseEntity<EditProjectResultDTO> =
     if (issuesFound()) {
         ResponseEntity.ok(
             EditProjectResultDTO(
                 issues = EditProjectResultDTO.IssuesDTO(
                     issueProjectNotFound = issueProjectNotFound,
                     issueServiceAccountError = issueServiceAccountError,
+                    serviceAccountIssue = serviceAccountIssue.name.takeIf { issueServiceAccountError },
+                    portalServiceAccount = portalServiceAccount().takeIf { issueServiceAccountError },
                 )
             )
         )

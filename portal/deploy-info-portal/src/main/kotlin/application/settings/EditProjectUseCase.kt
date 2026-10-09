@@ -1,24 +1,29 @@
 package application.settings
 
 import application.ProjectRepository
+import application.ServiceAccountIssue
+import application.ServiceAccountValidator
 import domain.Project
 
 class EditProjectUseCase(
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val serviceAccountValidator: ServiceAccountValidator,
 ) {
     fun execute(modifiedProject: Project): Output {
         val existingProject = projectRepository.get(modifiedProject.name)
 
         var issueProjectNotFound = false
-        var issueServiceAccountError = false
+        var serviceAccountIssue = ServiceAccountIssue.NONE
         var projectsInDatabase: List<Project> = emptyList()
 
         if (existingProject != null) {
+            // Validation is only needed when the target service account changed — an unchanged one
+            // was already validated when the project was added or last edited.
             if (existingProject.serviceAccount != modifiedProject.serviceAccount) {
-                // TODO: Test if name + serviceAccount are working
+                serviceAccountIssue = serviceAccountValidator.validate(modifiedProject)
             }
 
-            if (!issueServiceAccountError) {
+            if (serviceAccountIssue == ServiceAccountIssue.NONE) {
                 projectRepository.save(modifiedProject)
                 projectsInDatabase = projectRepository.getAll()
             }
@@ -28,7 +33,8 @@ class EditProjectUseCase(
 
         return Output(
             issueProjectNotFound = issueProjectNotFound,
-            issueServiceAccountError = issueServiceAccountError,
+            issueServiceAccountError = serviceAccountIssue != ServiceAccountIssue.NONE,
+            serviceAccountIssue = serviceAccountIssue,
             projectsInRepository = projectsInDatabase
         )
     }
@@ -36,6 +42,7 @@ class EditProjectUseCase(
     class Output(
         val issueProjectNotFound: Boolean,
         val issueServiceAccountError: Boolean,
+        val serviceAccountIssue: ServiceAccountIssue = ServiceAccountIssue.NONE,
         val projectsInRepository: List<Project>
     ) {
         fun issuesFound() = issueProjectNotFound || issueServiceAccountError

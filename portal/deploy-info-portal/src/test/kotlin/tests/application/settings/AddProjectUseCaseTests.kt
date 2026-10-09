@@ -1,22 +1,26 @@
 package tests.application.settings
 
+import application.ServiceAccountIssue
 import application.settings.AddProjectUseCase
 import domain.Project
 import tests.fakes.FakeProjectRepository
+import tests.fakes.FakeServiceAccountValidator
 import kotlin.test.*
 
 
 class AddProjectUseCaseTests {
 
     private lateinit var fakeProjectRepository: FakeProjectRepository
+    private lateinit var fakeServiceAccountValidator: FakeServiceAccountValidator
 
     private lateinit var addProjectUseCase: AddProjectUseCase
 
     @BeforeTest
     fun setup() {
         fakeProjectRepository = FakeProjectRepository()
+        fakeServiceAccountValidator = FakeServiceAccountValidator()
 
-        addProjectUseCase = AddProjectUseCase(fakeProjectRepository)
+        addProjectUseCase = AddProjectUseCase(fakeProjectRepository, fakeServiceAccountValidator)
     }
 
 
@@ -25,7 +29,11 @@ class AddProjectUseCaseTests {
         val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = addProjectUseCase.execute(newProject1)
         assertFalse(output.issuesFound())
+        assertFalse(output.issueServiceAccountError)
+        assertEquals(ServiceAccountIssue.NONE, output.serviceAccountIssue)
         assertEquals(1, output.projectsInRepository.size)
+        // The new project's service account was validated before the save.
+        assertEquals(listOf(newProject1), fakeServiceAccountValidator.validatedProjects)
     }
 
     @Test
@@ -38,16 +46,21 @@ class AddProjectUseCaseTests {
         assertTrue(output.issuesFound())
         assertTrue(output.issueNameConflict)
         assert(output.projectsInRepository.isEmpty())
+        // The name conflict is reported without even trying the service account.
+        assert(fakeServiceAccountValidator.validatedProjects.isEmpty())
     }
 
     @Test
-    fun `Do not report service account issue while validation is not implemented`() {
-        // TODO: update when Phase 2 (Settings hardening) implements the service-account validation.
+    fun `Skip the save and report the issue when the service account cannot be validated`() {
+        fakeServiceAccountValidator.issue = ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION
         val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
 
         val output = addProjectUseCase.execute(newProject1)
-        assertFalse(output.issuesFound())
-        assertFalse(output.issueServiceAccountError)
-        assertEquals(1, output.projectsInRepository.size)
+
+        assertTrue(output.issuesFound())
+        assertTrue(output.issueServiceAccountError)
+        assertEquals(ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION, output.serviceAccountIssue)
+        assert(output.projectsInRepository.isEmpty())
+        assert(fakeProjectRepository.getAll().isEmpty())
     }
 }

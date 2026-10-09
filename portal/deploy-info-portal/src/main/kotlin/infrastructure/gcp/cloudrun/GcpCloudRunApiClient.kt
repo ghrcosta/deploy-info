@@ -58,7 +58,9 @@ class GcpCloudRunApiClient(
             listing()
         } catch (e: ApiException) {
             throw GcpListingException(
-                "GCP Cloud Run API returned ${e.statusCode.code} for project ${project.name}", e
+                "GCP Cloud Run API returned ${e.statusCode.code} for project ${project.name}",
+                e,
+                e.statusCode.code.toString(),
             )
         }
 

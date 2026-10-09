@@ -1,5 +1,7 @@
 package tests.ui.settings
 
+import application.PortalIdentityResolver
+import application.ServiceAccountIssue
 import application.settings.AddProjectUseCase
 import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import com.google.gson.Gson
@@ -35,6 +37,9 @@ class AddProjectUseCaseEndpointTests {
 
     @MockitoBean
     private lateinit var useCase: AddProjectUseCase
+
+    @MockitoBean
+    private lateinit var portalIdentityResolver: PortalIdentityResolver
 
     private val uri = "/settings/project"
 
@@ -83,6 +88,7 @@ class AddProjectUseCaseEndpointTests {
         assertEquals(HttpStatus.OK.value(), result.response.status)
         val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueNameConflict)
+        assertNull(dto.issues?.serviceAccountIssue)
         assertNull(dto.projects)
     }
 
@@ -92,9 +98,11 @@ class AddProjectUseCaseEndpointTests {
         val output = AddProjectUseCase.Output(
             issueNameConflict = false,
             issueServiceAccountError = true,
+            serviceAccountIssue = ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION,
             projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
+        whenever(portalIdentityResolver.resolve()).thenReturn("portal@test.iam.gserviceaccount.com")
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
@@ -106,6 +114,8 @@ class AddProjectUseCaseEndpointTests {
         assertEquals(HttpStatus.OK.value(), result.response.status)
         val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueServiceAccountError)
+        assertEquals("MISSING_IMPERSONATION_PERMISSION", dto.issues?.serviceAccountIssue)
+        assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)
         assertNull(dto.projects)
     }
 }

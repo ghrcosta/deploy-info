@@ -1,5 +1,7 @@
 package tests.ui.settings
 
+import application.PortalIdentityResolver
+import application.ServiceAccountIssue
 import application.settings.EditProjectUseCase
 import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import com.google.gson.Gson
@@ -35,6 +37,9 @@ class EditProjectUseCaseEndpointTests {
 
     @MockitoBean
     private lateinit var useCase: EditProjectUseCase
+
+    @MockitoBean
+    private lateinit var portalIdentityResolver: PortalIdentityResolver
 
     private val uri = "/settings/project"
 
@@ -83,6 +88,7 @@ class EditProjectUseCaseEndpointTests {
         assertEquals(HttpStatus.OK.value(), result.response.status)
         val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueProjectNotFound)
+        assertNull(dto.issues?.serviceAccountIssue)
         assertNull(dto.projects)
     }
 
@@ -92,9 +98,11 @@ class EditProjectUseCaseEndpointTests {
         val output = EditProjectUseCase.Output(
             issueProjectNotFound = false,
             issueServiceAccountError = true,
+            serviceAccountIssue = ServiceAccountIssue.MISSING_LISTING_PERMISSION,
             projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
+        whenever(portalIdentityResolver.resolve()).thenReturn("portal@test.iam.gserviceaccount.com")
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
@@ -106,6 +114,8 @@ class EditProjectUseCaseEndpointTests {
         assertEquals(HttpStatus.OK.value(), result.response.status)
         val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueServiceAccountError)
+        assertEquals("MISSING_LISTING_PERMISSION", dto.issues?.serviceAccountIssue)
+        assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)
         assertNull(dto.projects)
     }
 }

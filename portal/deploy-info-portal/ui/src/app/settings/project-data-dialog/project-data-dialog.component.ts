@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
 import { FormsModule, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Project } from "../settings.component";
 import { ProjectDataDialogNetworkService } from './project-data-dialog.network.service';
+import { ServiceAccountErrorDialogComponent, ServiceAccountErrorDialogData } from './service-account-error-dialog.component';
 
 @Component({
     selector: 'project-data-dialog',
@@ -29,6 +30,7 @@ import { ProjectDataDialogNetworkService } from './project-data-dialog.network.s
 export class ProjectDataDialogComponent {
     readonly dialogRef = inject(MatDialogRef<ProjectDataDialogComponent>);
     readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+    readonly dialog = inject(MatDialog);
     readonly network = inject(ProjectDataDialogNetworkService)
     readonly snackBar = inject(MatSnackBar);
 
@@ -88,15 +90,16 @@ export class ProjectDataDialogComponent {
         this.network.addProject(project).subscribe({
             next: result => {
                 if (result.issues) {
-                    let issuesText = [];
-                    if (result.issues.issueNameConflict) {
-                        issuesText.push('A project with this name already exists.');
-                    }
                     if (result.issues.issueServiceAccountError) {
-                        issuesText.push('Failed to validate service account.');
+                        this.openServiceAccountErrorDialog(result.issues.serviceAccountIssue, result.issues.portalServiceAccount);
+                    } else {
+                        let issuesText = [];
+                        if (result.issues.issueNameConflict) {
+                            issuesText.push('A project with this name already exists.');
+                        }
+                        let text = issuesText.join('\n\n');
+                        this.openSnackBar(text);
                     }
-                    let text = issuesText.join('\n\n');
-                    this.openSnackBar(text);
                 } else {
                     this.dialogRef.close(result.projects);
                 }
@@ -119,15 +122,16 @@ export class ProjectDataDialogComponent {
         this.network.editProject(project).subscribe({
             next: result => {
                 if (result.issues) {
-                    let issuesText = [];
-                    if (result.issues.issueProjectNotFound) {
-                        issuesText.push('Project not found.');
-                    }
                     if (result.issues.issueServiceAccountError) {
-                        issuesText.push('Failed to validate service account.');
+                        this.openServiceAccountErrorDialog(result.issues.serviceAccountIssue, result.issues.portalServiceAccount);
+                    } else {
+                        let issuesText = [];
+                        if (result.issues.issueProjectNotFound) {
+                            issuesText.push('Project not found.');
+                        }
+                        let text = issuesText.join('\n\n');
+                        this.openSnackBar(text);
                     }
-                    let text = issuesText.join('\n\n');
-                    this.openSnackBar(text);
                 } else {
                     this.dialogRef.close(result.projects);
                 }
@@ -153,6 +157,33 @@ export class ProjectDataDialogComponent {
                 this.isRequestOngoing = false;
             }
         })
+    }
+
+    /**
+     * Error dialog for a failed service-account validation, naming the missing permission with
+     * expandable grant instructions. 'Try again' closes the dialog with 'retry' and re-submits the
+     * form, so the user can retry right after fixing IAM in another tab.
+     */
+    openServiceAccountErrorDialog(serviceAccountIssue: string | undefined, portalServiceAccount: string | undefined) {
+        const dialogRef = this.dialog.open(ServiceAccountErrorDialogComponent, {
+            disableClose: true,
+            panelClass: 'service-account-error-dialog',
+            data: {
+                serviceAccountIssue: serviceAccountIssue ?? '',
+                projectName: this.nameFormControl.value ?? this.data.project?.name ?? '',
+                serviceAccount: this.serviceAccountFormControl.value ?? this.data.project?.serviceAccount ?? '',
+                portalServiceAccount: portalServiceAccount
+            } as ServiceAccountErrorDialogData
+        });
+        dialogRef.afterClosed().subscribe(result => {
+            if (result == 'retry') {
+                if (this.isActionAdd()) {
+                    this.addProject();
+                } else if (this.isActionEdit()) {
+                    this.editProject();
+                }
+            }
+        });
     }
 
     onCancelClicked = () => {
@@ -185,6 +216,10 @@ export interface AddProjectResult {
 export interface AddProjectIssues {
     issueNameConflict: boolean;
     issueServiceAccountError: boolean;
+    /** Issue code from the backend (`ServiceAccountIssue`), set only when `issueServiceAccountError`. */
+    serviceAccountIssue?: string;
+    /** Portal's own service account email, set only when `issueServiceAccountError`. */
+    portalServiceAccount?: string;
 }
 
 export interface EditProjectResult {
@@ -194,4 +229,8 @@ export interface EditProjectResult {
 export interface EditProjectIssues {
     issueProjectNotFound: boolean;
     issueServiceAccountError: boolean;
+    /** Issue code from the backend (`ServiceAccountIssue`), set only when `issueServiceAccountError`. */
+    serviceAccountIssue?: string;
+    /** Portal's own service account email, set only when `issueServiceAccountError`. */
+    portalServiceAccount?: string;
 }

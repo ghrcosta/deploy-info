@@ -71,7 +71,7 @@
    impersonation (access tokens per project's service account, via the Google auth library) is
    implemented. See
    `portal/deploy-info-portal/documentation/gcp-deploy-listing.md`.
-4. **`AddProjectUseCase`:** `issueServiceAccountError` is hardcoded `false` with `// TODO: Test if name + serviceAccount are working` — service-account permission validation not implemented (same presumably needed for Edit).
+4. ~~`AddProjectUseCase` service-account validation~~ — **now implemented**: both `AddProjectUseCase` and `EditProjectUseCase` validate the project's service account via `ServiceAccountValidator` (impersonation + GAE/Cloud Run listing permission checks); on failure the save is skipped and the UI shows a dialog naming the missing permission with grant instructions. See `portal/deploy-info-portal/documentation/plan-service-account-validation.md`.
 5. **`PortalController` is now implemented**: `GET /portal/tree` (group > project > service > version,
    running the cleanup sweep on request when due — `deploy-info.cleanup.enabled=false` refers to the
    standalone scheduler option, see `portal/deploy-info-portal/documentation/deploy-cleanup.md`) and

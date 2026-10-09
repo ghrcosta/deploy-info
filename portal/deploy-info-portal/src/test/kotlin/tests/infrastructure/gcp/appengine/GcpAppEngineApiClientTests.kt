@@ -15,6 +15,7 @@ import org.mockito.kotlin.mock
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 private const val PROJECT_ID = "testProject"
 
@@ -81,6 +82,8 @@ class GcpAppEngineApiClientTests {
             "GCP App Engine API returned PERMISSION_DENIED for project ${PROJECT_ID}",
             exception.message,
         )
+        assertEquals("PERMISSION_DENIED", exception.statusCode)
+        assertTrue(exception.isPermissionDenied)
     }
 
     @Suppress("SameParameterValue")

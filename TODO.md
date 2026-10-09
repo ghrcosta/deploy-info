@@ -91,8 +91,8 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 8. Settings hardening
 
-- [ ] `AddProjectUseCase`: implement service-account validation (token generation + list permission) — replace hardcoded `issueServiceAccountError = false`
-- [ ] Same validation in the Edit project use case
+- [x] `AddProjectUseCase`: implement service-account validation (token generation + list permission) — see [`portal/deploy-info-portal/documentation/plan-service-account-validation.md`](portal/deploy-info-portal/documentation/plan-service-account-validation.md)
+- [x] Same validation in the Edit project use case
 
 ### 9. Python collector
 
