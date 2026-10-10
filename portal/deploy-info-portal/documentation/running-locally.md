@@ -69,11 +69,12 @@ npm start
 
 Serves on **http://localhost:4200** (`ng serve`, development configuration).
 
-There is **no Angular proxy** — the frontend calls the backend directly at an absolute URL from
+There is **no Angular proxy** — the frontend calls the backend directly at a URL from
 `src/environments/`:
 
 - dev build uses `environment.development.ts` → `url: 'http://localhost:8080'`
-- prod `environment.ts` still has the `@url@` placeholder (to be replaced by the Phase 10 deploy script)
+- prod build uses `environment.ts` → `url: ''` (same-origin relative URLs — the packaged jar serves
+  the UI itself, see below)
 
 Because it's a cross-origin call, the **backend CORS config matters**:
 `infrastructure/security/CorsConfiguration.kt` reads
@@ -84,6 +85,14 @@ production deploy needs, because there the UI is built into the same jar and ser
 origin, and browsers still send an `Origin` header on non-GET requests: any registered CORS mapping
 would reject those requests (`deploy-info.cors.allowed-origins` is therefore intentionally absent
 from `application-prod.properties`). Add the key to a profile only if the UI runs on another origin.
+
+### Serving the frontend from the fat jar
+
+`./gradlew bootJar` compiles the frontend (`npm ci` + `ng build`; `npm.cmd` on Windows, `npm`
+elsewhere) and embeds it into `BOOT-INF/classes/static`, so the jar serves the UI itself on the
+same origin as the API — with a frontend fallback (`infrastructure/frontend/`) for deep links and page
+refreshes. Details: [frontend-serving.md](frontend-serving.md). Only the frontend-embedding tasks need
+Node/npm: `test` and `bootRun` work without them.
 
 Current UI status: the Settings screen is fully wired to the backend; the deploy navigator and file
 viewer still use `EXAMPLE_DATA_*` mocks and a simulated `delay(1000)`.

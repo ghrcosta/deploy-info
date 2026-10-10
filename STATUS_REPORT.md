@@ -95,12 +95,12 @@
 - **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, now fed by the real `GET /portal/tree` (`deploy-tree.network.service.ts`); note it already implements a "group" level above project which TODO.md doesn't mention.
 - **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes) and Extras, syntax highlighting incl. custom `git` language — now fed by real data: the header comes from the clicked tree version node, the content from `GET /portal/deploy/content` (`deploy-content.network.service.ts`); the fake `DeployData` + `delay(1000)` simulation is gone.
 - **Settings screen** — fully wired to real backend (get/add/edit/delete projects, dialogs).
-- `environment.ts` uses `@url@` placeholder (so the TODO "deploy script that sets @url@ and copies files" is half-prepared).
+- ~~`environment.ts` uses `@url@` placeholder~~ — now `url: ''` (same-origin; the Gradle `bootJar` compiles and embeds the frontend, see `portal/deploy-info-portal/documentation/frontend-serving.md`).
 
 **Missing:**
 
 1. Logout icon behavior / login flow entirely.
-2. Deploy script that replaces `@url@` and copies the built UI into the backend's static resources (no such script exists; also the Spring Boot app doesn't currently serve the UI).
+2. ~~Deploy script that replaces `@url@` and copies the built UI into the backend's static resources~~ — done inside the Gradle build instead: `bootJar` compiles the frontend and embeds it into `BOOT-INF/classes/static`, and the backend serves it with a frontend fallback.
 3. The navigator and file-viewer `.spec.ts` files now have meaningful tests; the remaining `.spec.ts` files are still default Angular scaffolding.
 
 ---

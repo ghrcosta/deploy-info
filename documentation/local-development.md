@@ -45,7 +45,9 @@ Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`ut
    on 8090. ⚠️ Requires ADC (`gcloud auth application-default login`) or the storage-starter
    workaround, otherwise startup fails (see the known gap in the portal documentation).
 4. `npm start` in `ui` — UI up on 4200; Settings screen lists/adds/edits/deletes projects against the
-   backend.
+   backend. Alternatively, `.\gradlew.bat bootJar` in `portal/deploy-info-portal` compiles the
+   frontend, embeds it into the fat jar and serves it on 8080 from the same origin as the API (no
+   CORS involved; see the portal's `documentation/frontend-serving.md`).
 5. Publish + apply the collector to a sample project; run `deployInfoCollect`; inspect
    `build/collector/<user>_<type>_<ts>/`, then verify the same folder appears in `gs://<bucket>`.
 
