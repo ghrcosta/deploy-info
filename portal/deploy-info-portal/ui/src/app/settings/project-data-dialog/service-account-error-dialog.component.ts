@@ -34,13 +34,18 @@ export class ServiceAccountErrorDialogComponent {
         return this.data.serviceAccountIssue == ServiceAccountIssueCode.MISSING_LISTING_PERMISSION;
     }
 
+    isApisNotEnabled = () => {
+        return this.data.serviceAccountIssue == ServiceAccountIssueCode.APIS_NOT_ENABLED;
+    }
+
     isProjectNotFound = () => {
         return this.data.serviceAccountIssue == ServiceAccountIssueCode.PROJECT_NOT_FOUND;
     }
 
     /** Only the user-fixable issues come with instructions (and a retry button). */
     hasInstructions = () => {
-        return this.isMissingImpersonationPermission() || this.isMissingListingPermission() || this.isProjectNotFound();
+        return this.isMissingImpersonationPermission() || this.isMissingListingPermission() ||
+            this.isApisNotEnabled() || this.isProjectNotFound();
     }
 
     /**
@@ -56,6 +61,9 @@ export class ServiceAccountErrorDialogComponent {
                 `    --member="serviceAccount:${this.data.portalServiceAccount || 'PORTAL_SERVICE_ACCOUNT'}" \\`,
                 '    --role="roles/iam.serviceAccountTokenCreator"',
             ].join('\n');
+        }
+        if (this.isApisNotEnabled()) {
+            return `gcloud services enable appengine.googleapis.com run.googleapis.com --project=${this.data.projectId}`;
         }
         if (this.isProjectNotFound()) {
             return 'gcloud projects list';
@@ -85,6 +93,7 @@ export class ServiceAccountErrorDialogComponent {
 export enum ServiceAccountIssueCode {
     MISSING_IMPERSONATION_PERMISSION = 'MISSING_IMPERSONATION_PERMISSION',
     MISSING_LISTING_PERMISSION = 'MISSING_LISTING_PERMISSION',
+    APIS_NOT_ENABLED = 'APIS_NOT_ENABLED',
     PROJECT_NOT_FOUND = 'PROJECT_NOT_FOUND',
     PORTAL_ISSUE = 'PORTAL_ISSUE'
 }

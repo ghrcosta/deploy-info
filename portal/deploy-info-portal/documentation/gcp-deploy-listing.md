@@ -48,6 +48,21 @@ For each configured project, the portal's own service account needs the
 and each impersonated service account needs read access to the listing APIs (App Engine Viewer /
 Cloud Run Viewer).
 
+## Disabled listing APIs
+
+The listing APIs themselves are discrete services that can be disabled in the target project
+(`appengine.googleapis.com`, `run.googleapis.com`). A disabled API fails the listing with an
+`ApiException` of status `PERMISSION_DENIED` whose response body carries a `google.rpc.ErrorInfo`
+with reason `SERVICE_DISABLED` — the same status a missing IAM role produces, so it would otherwise
+masquerade as missing viewer roles. The gax client library does not expose `ErrorInfo` as a typed
+field, so `GcpAppEngineApiClient`/`GcpCloudRunApiClient` recover the reason out of the exception
+cause chain (`GcpListingException.errorInfoReason`) into `GcpListingException.reason`, and
+`GcpServiceAccountValidator` maps it to the user-fixable `APIS_NOT_ENABLED` issue before the
+generic `MISSING_LISTING_PERMISSION` check — the UI shows instructions for enabling the APIs.
+Detection is reactive (from the listing error itself), so it needs no extra GCP permissions — a
+proactive pre-check via Service Usage would require granting `serviceusage.services.list` on every
+target project.
+
 ## What is not implemented yet
 
 - **Endpoints:** no REST endpoint exposes the listing yet; it will be consumed by the trigger's core

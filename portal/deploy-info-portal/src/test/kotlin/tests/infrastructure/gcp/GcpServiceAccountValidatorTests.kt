@@ -112,6 +112,38 @@ class GcpServiceAccountValidatorTests {
     }
 
     @Test
+    fun `Report APIS_NOT_ENABLED when a listing API is not enabled in the project`() {
+        val appEngineLister = mock<GcpAppEngineLister> {
+            on { listAllDeploys(any()) } doThrow
+                GcpListingException(
+                    "GCP App Engine API returned PERMISSION_DENIED",
+                    statusCode = "PERMISSION_DENIED",
+                    reason = "SERVICE_DISABLED",
+                )
+        }
+
+        val issue = GcpServiceAccountValidator(okCredentialsProvider, appEngineLister, mock()).validate(project)
+
+        assertEquals(ServiceAccountIssue.APIS_NOT_ENABLED, issue)
+    }
+
+    @Test
+    fun `Report MISSING_LISTING_PERMISSION when a permission denial carries another ErrorInfo reason`() {
+        val cloudRunLister = mock<GcpCloudRunLister> {
+            on { listAllDeploys(any()) } doThrow
+                GcpListingException(
+                    "GCP Cloud Run API returned PERMISSION_DENIED",
+                    statusCode = "PERMISSION_DENIED",
+                    reason = "IAM_PERMISSION_DENIED",
+                )
+        }
+
+        val issue = GcpServiceAccountValidator(okCredentialsProvider, mock(), cloudRunLister).validate(project)
+
+        assertEquals(ServiceAccountIssue.MISSING_LISTING_PERMISSION, issue)
+    }
+
+    @Test
     fun `Report PORTAL_ISSUE when a listing fails for another reason`() {
         val appEngineLister = mock<GcpAppEngineLister> {
             on { listAllDeploys(any()) } doThrow GcpListingException("transient listing failure")

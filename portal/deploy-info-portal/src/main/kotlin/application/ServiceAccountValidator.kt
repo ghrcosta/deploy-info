@@ -24,6 +24,13 @@ enum class ServiceAccountIssue {
     MISSING_LISTING_PERMISSION,
 
     /**
+     * A listing API itself — the App Engine Admin API or the Cloud Run Admin API — is not enabled
+     * in the target project (the listing fails with the `google.rpc.ErrorInfo` reason
+     * `SERVICE_DISABLED`). Fixable by the user: enable the API(s) for the project.
+     */
+    APIS_NOT_ENABLED,
+
+    /**
      * The listing API cannot resolve the project — the id does not exist, cannot be reached, or is
      * not a valid project id. Fixable by the user: enter the exact GCP project ID (e.g. from
      * `gcloud projects list`), not the console display name.

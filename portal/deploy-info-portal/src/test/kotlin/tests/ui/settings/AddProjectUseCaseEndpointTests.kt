@@ -145,4 +145,31 @@ class AddProjectUseCaseEndpointTests {
         assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)
         assertNull(dto.projects)
     }
+
+    @Test
+    fun `Notify issue when adding project with a listing API not enabled`() {
+        val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val output = AddProjectUseCase.Output(
+            issueProjectIdConflict = false,
+            issueServiceAccountError = true,
+            serviceAccountIssue = ServiceAccountIssue.APIS_NOT_ENABLED,
+            projectsInRepository = emptyList()
+        )
+        whenever(useCase.execute(any())).thenReturn(output)
+        whenever(portalIdentityResolver.resolve()).thenReturn("portal@test.iam.gserviceaccount.com")
+
+        val body = Gson().toJson(project)
+        val result = mvc.perform(
+            post(uri)
+                .content(body)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andReturn()
+
+        assertEquals(HttpStatus.OK.value(), result.response.status)
+        val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
+        assertEquals(true, dto.issues?.issueServiceAccountError)
+        assertEquals("APIS_NOT_ENABLED", dto.issues?.serviceAccountIssue)
+        assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)
+        assertNull(dto.projects)
+    }
 }

@@ -7,11 +7,15 @@ package domain
  * [statusCode] carries the gax status code of the failed API call (e.g. `PERMISSION_DENIED`); it is
  * null when the failure was detected locally instead of returned by the API (e.g. a malformed
  * resource without a creation time).
+ *
+ * [reason] carries the reason of the server's error body when it could be extracted from the
+ * exception cause chain (e.g. `SERVICE_DISABLED` for a not-enabled listing API).
  */
 class GcpListingException(
     message: String,
     cause: Throwable? = null,
     val statusCode: String? = null,
+    val reason: String? = null,
 ) : RuntimeException(message, cause) {
 
     val isPermissionDenied: Boolean
@@ -40,5 +44,19 @@ class GcpListingException(
          */
         fun causeChainMessage(throwable: Throwable): String =
             generateSequence(throwable as Throwable?) { it.cause }.joinToString(" ") { it.message ?: "" }
+
+        /**
+         * Extracts the reason of the server's error body out of the cause-chain message.
+         */
+        fun errorInfoReason(throwable: Throwable): String? {
+            val message = causeChainMessage(throwable)
+            errorInfoReasonRegex.find(message)?.let { return it.groupValues[1] }
+            val lowerCaseMessage = message.lowercase()
+            return if (DISABLED_API_MARKERS.any { it in lowerCaseMessage }) "SERVICE_DISABLED" else null
+        }
+
+        private val errorInfoReasonRegex = Regex("\"reason\"\\s*:\\s*\"([A-Z_]+)\"")
+
+        private val DISABLED_API_MARKERS = listOf("has not been used in project", "or it is disabled")
     }
 }

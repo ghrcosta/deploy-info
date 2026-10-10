@@ -16,6 +16,7 @@ import org.mockito.kotlin.mock
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private const val PROJECT_ID = "testProject"
@@ -104,6 +105,7 @@ class GcpCloudRunApiClientTests {
         )
         assertEquals("PERMISSION_DENIED", exception.statusCode)
         assertTrue(exception.isPermissionDenied)
+        assertNull(exception.reason)
     }
 
     @Test
@@ -138,6 +140,28 @@ class GcpCloudRunApiClientTests {
         )
         assertEquals("INVALID_ARGUMENT", exception.statusCode)
         assertTrue(exception.isProjectNotFound)
+    }
+
+    @Test
+    fun `Throw GcpListingException with the ErrorInfo reason when the Cloud Run Admin API is not enabled`() {
+        val adminClient = mock<CloudRunAdminClient> {
+            on { listServices(PROJECT_ID) } doThrow ApiException(
+                RuntimeException(
+                    "403 Forbidden {\"error\":{\"code\":403,\"message\":\"Cloud Run Admin API has not been " +
+                        "used in project 123 before or it is disabled.\",\"status\":\"PERMISSION_DENIED\"," +
+                        "\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\"," +
+                        "\"reason\":\"SERVICE_DISABLED\",\"domain\":\"googleapis.com\"}]}}"
+                ),
+                statusCode(StatusCode.Code.PERMISSION_DENIED),
+                false,
+            )
+        }
+
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+
+        assertEquals("PERMISSION_DENIED", exception.statusCode)
+        assertTrue(exception.isPermissionDenied)
+        assertEquals("SERVICE_DISABLED", exception.reason)
     }
 
     @Suppress("SameParameterValue")

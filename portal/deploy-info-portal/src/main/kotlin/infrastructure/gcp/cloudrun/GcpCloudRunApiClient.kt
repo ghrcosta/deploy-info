@@ -60,14 +60,17 @@ class GcpCloudRunApiClient(
         } catch (e: ApiException) {
             // The server's error text (denied permission, resource, remediation link) lives only in
             // the cause chain — log it before it is discarded into the compact [GcpListingException].
+            val reason = GcpListingException.errorInfoReason(e)
             logger.warn(
                 "GCP Cloud Run listing failed: project=${project.projectId}, serviceAccount=${project.serviceAccount}, " +
-                    "statusCode=${e.statusCode.code}, causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+                    "statusCode=${e.statusCode.code}, reason=${reason}, " +
+                    "causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )
             throw GcpListingException(
                 "GCP Cloud Run API returned ${e.statusCode.code} for project ${project.projectId}",
                 e,
                 e.statusCode.code.toString(),
+                reason,
             )
         }
 

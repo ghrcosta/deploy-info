@@ -18,7 +18,10 @@ carries `issueServiceAccountError = true` plus:
 
 - `serviceAccountIssue` — the issue code: `MISSING_IMPERSONATION_PERMISSION` (the portal lacks
   `roles/iam.serviceAccountTokenCreator` on the target service account), `MISSING_LISTING_PERMISSION`
-  (the service account lacks the App Engine Viewer / Cloud Run Viewer roles), `PROJECT_NOT_FOUND`
+  (the service account lacks the App Engine Viewer / Cloud Run Viewer roles), `APIS_NOT_ENABLED`
+  (a listing API itself — the App Engine Admin API or the Cloud Run Admin API — is not enabled in
+  the project; detected reactively from the listing error's `google.rpc.ErrorInfo` reason
+  `SERVICE_DISABLED`, so no extra GCP permissions are needed for the detection), `PROJECT_NOT_FOUND`
   (the listing API cannot resolve the project at all — gax `NOT_FOUND`, or `INVALID_ARGUMENT` for a
   malformed id: the entered name is not the exact GCP project ID or the project does not exist) or
   `PORTAL_ISSUE` (a portal-side problem the user cannot fix). Caveat: the App Engine Admin API
@@ -33,7 +36,10 @@ The UI shows an error dialog naming the missing permission with an expandable ar
 grant instructions — via the GCP Console and via the gcloud CLI — and a "Retry" button that
 re-submits the form (see `documentation/plan-service-account-validation.md`). `PROJECT_NOT_FOUND`
 gets its own dialog text with instructions for finding the exact project ID (e.g. via
-`gcloud projects list` or the console project selector) and the same Retry button. The Add/Edit
+`gcloud projects list` or the console project selector) and the same Retry button;
+`APIS_NOT_ENABLED` gets its own dialog text with instructions for enabling the APIs (the console
+API Library, or `gcloud services enable appengine.googleapis.com run.googleapis.com`) and the same
+Retry button. The Add/Edit
 dialog labels the field "GCP project ID", with a hint that it is the exact project ID — not the
 console display name.
 
