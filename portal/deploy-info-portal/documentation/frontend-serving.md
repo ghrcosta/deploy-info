@@ -34,8 +34,9 @@ frontend-embedding tasks: `test` and `bootRun` keep working without them (the lo
 ## Same-origin (no CORS)
 
 Because the UI is served by the same origin as the API, no CORS configuration is needed in
-production — `deploy-info.cors.allowed-origins` is intentionally absent from
-`application-prod.properties`, and an empty origin list disables CORS processing entirely (browsers
+production — `deploy-info.cors.allowed-origins` is empty in `application-prod.properties` (the key
+is defined explicitly in every properties file, never in the base one, so each profile decides its
+value), and an empty origin list disables CORS processing entirely (browsers
 send an `Origin` header even on same-origin non-GET requests, and a registered CORS mapping would
 reject them; see `infrastructure/security/CorsConfiguration.kt`). Accordingly, the production
 frontend build uses relative URLs: `ui/src/environments/environment.ts` sets `url: ''`. The local

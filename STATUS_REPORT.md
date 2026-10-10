@@ -79,9 +79,11 @@
    `GetDeployContentUseCase`). See `portal/deploy-info-portal/src/main/kotlin/ui/portal/PortalController.kt`.
 6. **No login/auth at all** — no Spring Security dependency, no auth of any kind. TODO: check user permissions on the deployInfo project via the AppEngine service account. Also the trigger endpoint has no authentication (anyone could POST).
 7. **`application-prod.properties` is empty** — no prod config (project id, bucket name, etc.).
-   Note: the CORS origin is intentionally absent there — the UI will be served from the same deploy
-   (same origin), and an empty `deploy-info.cors.allowed-origins` list correctly disables CORS
-   processing so same-origin `POST`s carrying an `Origin` header are not rejected.
+   Note: `deploy-info.cors.allowed-origins` is intentionally empty there — the UI will be served
+   from the same deploy (same origin), and an empty `deploy-info.cors.allowed-origins` list
+   correctly disables CORS processing so same-origin `POST`s carrying an `Origin` header are not
+   rejected. The key is defined (possibly empty) in every properties file and never in the base
+   one, so a profile's value can never leak in from another profile.
 
 
 ---

@@ -161,7 +161,7 @@ export class ProjectDataDialogComponent {
 
     /**
      * Error dialog for a failed service-account validation, naming the missing permission with
-     * expandable grant instructions. 'Try again' closes the dialog with 'retry' and re-submits the
+     * expandable grant instructions. 'Retry' closes the dialog with 'retry' and re-submits the
      * form, so the user can retry right after fixing IAM in another tab.
      */
     openServiceAccountErrorDialog(serviceAccountIssue: string | undefined, portalServiceAccount: string | undefined) {

@@ -1,9 +1,9 @@
 package application.cleanup
 
+import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.logging.Logger
 
 /**
  * The on-request cleanup trigger: runs the validity/cleanup sweep from a tree request, but only
@@ -46,13 +46,13 @@ class RunCleanupIfDueUseCase(
         try {
             sweep.run()
         } catch (e: RuntimeException) {
-            logger.warning("Cleanup sweep failed: ${e.message}")
+            logger.warn("Cleanup sweep failed: ${e.message}")
             return
         }
         cleanupStateRepository.markCompleted(now)
     }
 
     companion object {
-        private val logger = Logger.getLogger(RunCleanupIfDueUseCase::class.java.name)
+        private val logger = LoggerFactory.getLogger(RunCleanupIfDueUseCase::class.java)
     }
 }

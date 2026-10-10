@@ -1,5 +1,6 @@
 [versions] # Use Spring Initializr (https://start.spring.io) to generate a project, use the versions set there
 kotlin = "2.4.20" # See Spring Initializr
+appengineGradlePlugin = "2.8.7" # https://github.com/GoogleCloudPlatform/appengine-plugins/releases (app-gradle-plugin)
 googleCloudAppengineAdmin = "2.99.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
 googleCloudRun = "0.93.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
 mockito = "5.24.0" # Use max(5.24.0, version supported by [mockitoKotlin]) -- agent required by Java 21
@@ -34,3 +35,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-dependencyManagement = { id = "io.spring.dependency-management", version.ref = "spring-dependencyManagement" }
+google-appengine = { id = "com.google.cloud.tools.appengine", version.ref = "appengineGradlePlugin" }

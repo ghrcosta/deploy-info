@@ -5,10 +5,10 @@ import domain.CloudRunDeploy
 import domain.CredentialsException
 import domain.DeployType
 import domain.GcpListingException
+import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.logging.Logger
 
 /**
  * The validity/cleanup logic: periodically detects deploy links whose deploy no longer exists in
@@ -74,7 +74,7 @@ class CleanupInvalidDeployLinksUseCase(
                     try {
                         storageCleaner.delete(link.storageFolder)
                     } catch (e: RuntimeException) {
-                        logger.warning(
+                        logger.warn(
                             "Deleted stale deploy link ${link.keyName} of ${project.name}, " +
                                 "but deleting its storage folder ${link.storageFolder} failed: ${e.message}",
                         )
@@ -108,6 +108,6 @@ class CleanupInvalidDeployLinksUseCase(
         "${location ?: "-"}|$serviceId|$versionId"
 
     companion object {
-        private val logger = Logger.getLogger(CleanupInvalidDeployLinksUseCase::class.java.name)
+        private val logger = LoggerFactory.getLogger(CleanupInvalidDeployLinksUseCase::class.java)
     }
 }

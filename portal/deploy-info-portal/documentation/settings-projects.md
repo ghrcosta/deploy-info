@@ -25,7 +25,7 @@ carries `issueServiceAccountError = true` plus:
   when it cannot be determined (e.g. the portal runs with user credentials).
 
 The UI shows an error dialog naming the missing permission with an expandable area of step-by-step
-grant instructions — via the GCP Console and via the gcloud CLI — and a "Try again" button that
+grant instructions — via the GCP Console and via the gcloud CLI — and a "Retry" button that
 re-submits the form (see `documentation/plan-service-account-validation.md`).
 
 ## Implementation

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logging pipeline of the portal — see documentation/logging.md.
+
+  `spring-cloud-gcp-starter-logging` only wires trace-ID correlation (TraceIdFilter →
+  TraceIdLoggingWebMvcInterceptor); the Cloud Logging output itself must be configured here. On
+  GAE Standard (the `prod` profile), logs are emitted as StackdriverJsonLayout JSON on stdout,
+  which the runtime ingests into Cloud Logging with correct severity and trace grouping. On any
+  other profile (local/test), the standard Spring Boot console output is kept — no GCP
+  credentials or connectivity is ever needed.
+-->
+<configuration>
+  <!-- Everything that does not run on App Engine (local dev, tests): Spring Boot defaults. -->
+  <springProfile name="!prod">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <!-- `prod` (App Engine): structured JSON on stdout, ingested by the GAE runtime into Cloud
+       Logging. projectId resolves the trace field to projects/<project>/traces/<traceId> — the
+       env var is always set by the App Engine runtime; locally there is no `prod` run. -->
+  <springProfile name="prod">
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+        <layout class="com.google.cloud.spring.logging.StackdriverJsonLayout">
+          <projectId>${projectId:-${GOOGLE_CLOUD_PROJECT}}</projectId>
+          <serviceContext>
+            <service>${GAE_SERVICE:-deploy-info-portal}</service>
+          </serviceContext>
+        </layout>
+      </encoder>
+    </appender>
+    <root level="INFO">
+      <appender-ref ref="CONSOLE_JSON"/>
+    </root>
+  </springProfile>
+</configuration>

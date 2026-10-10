@@ -1,10 +1,10 @@
 package infrastructure.scheduling
 
 import application.RetryScheduler
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.logging.Logger
 
 /**
  * Simple single-threaded scheduled-executor implementation of [RetryScheduler] (POC-grade; no queue
@@ -23,7 +23,7 @@ class SimpleRetryScheduler : RetryScheduler {
                 try {
                     task.run()
                 } catch (e: RuntimeException) {
-                    logger.warning("Scheduled retry task failed: ${e.message}")
+                    logger.warn("Scheduled retry task failed: ${e.message}")
                 }
             },
             delay.toMillis(),
@@ -32,6 +32,6 @@ class SimpleRetryScheduler : RetryScheduler {
     }
 
     companion object {
-        private val logger = Logger.getLogger(SimpleRetryScheduler::class.java.name)
+        private val logger = LoggerFactory.getLogger(SimpleRetryScheduler::class.java)
     }
 }

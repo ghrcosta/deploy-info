@@ -78,13 +78,15 @@ There is **no Angular proxy** — the frontend calls the backend directly at a U
 
 Because it's a cross-origin call, the **backend CORS config matters**:
 `infrastructure/security/CorsConfiguration.kt` reads
-`deploy-info.cors.allowed-origins` (comma-separated; `DeployInfoProperties.Cors`). The base
-`application.properties` sets `http://localhost:4200`, so the dev pairing of backend 8080 + UI 4200
-works out of the box. An **empty list disables CORS processing entirely** — this is what the
-production deploy needs, because there the UI is built into the same jar and served from the same
-origin, and browsers still send an `Origin` header on non-GET requests: any registered CORS mapping
-would reject those requests (`deploy-info.cors.allowed-origins` is therefore intentionally absent
-from `application-prod.properties`). Add the key to a profile only if the UI runs on another origin.
+`deploy-info.cors.allowed-origins` (comma-separated; `DeployInfoProperties.Cors`). The key is
+defined in every properties file, never in the base one — `application-local.properties` and
+`application-test.properties` set `http://localhost:4200`, so the dev pairing of backend 8080 +
+UI 4200 works out of the box. An **empty value disables CORS processing entirely** — this is what
+the production deploy needs, because there the UI is built into the same jar and served from the
+same origin, and browsers still send an `Origin` header on non-GET requests: any registered CORS
+mapping would reject those requests (`application-prod.properties` therefore sets the key to an
+empty value, explicitly, since a profile file only overrides keys it defines). Add a value to a
+profile's properties file only if the UI runs on another origin.
 
 ### Serving the frontend from the fat jar
 
@@ -96,3 +98,14 @@ Node/npm: `test` and `bootRun` work without them.
 
 Current UI status: the Settings screen is fully wired to the backend; the deploy navigator and file
 viewer still use `EXAMPLE_DATA_*` mocks and a simulated `delay(1000)`.
+
+## Deploying to GCP App Engine
+
+The fat jar can be deployed straight from Gradle to GCP App Engine Standard (Java 21):
+
+```
+./gradlew appengineDeploy -PgaeProjectId=<gcp-project> [-PgaeService=<service>]
+```
+
+The version name is `<portal_version>-<timestamp>`, the GCP project and service are configurable
+via the `-P` properties above. Details: [deployment.md](deployment.md).

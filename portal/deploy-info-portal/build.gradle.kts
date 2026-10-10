@@ -3,6 +3,7 @@ plugins {
 	alias(libs.plugins.kotlin.spring)
 	alias(libs.plugins.spring.boot)
 	alias(libs.plugins.spring.dependencyManagement)
+	alias(libs.plugins.google.appengine)
 }
 
 group = "io.github.ghrcosta"
@@ -120,5 +121,95 @@ tasks.bootJar {
 	dependsOn(packageUi)
 	from(uiStaticResources) {
 		into("BOOT-INF/classes/static")
+	}
+	// Pinned jar name so the app.yaml entrypoint (`java -jar portal.jar`) never changes with the
+	// project version — the deployed version identity is carried by the App Engine version name.
+	archiveFileName = "portal.jar"
+}
+
+// ---------------------------------------------------------------------------
+// GAE deploy: deploy the portal fat jar to GCP App Engine Standard (Java 21).
+//
+//	./gradlew appengineDeploy -PgaeProjectId=<gcp-project> [-PgaeService=<service>]
+//
+// - gaeProjectId (required) — the GCP project to deploy to
+// - gaeService (default "default") — the App Engine service to deploy to
+// - gaePromote (default true) — route traffic to the new version (also stops the previous
+//   version, matching gcloud's default pairing of the two flags)
+//
+// These properties can also be set permanently instead of per-command: in `gradle.properties`
+// next to this build script (or in `~/.gradle/gradle.properties` for every project) as
+// `gaeProjectId=<gcp-project>`, or in an environment variable `ORG_GRADLE_PROJECT_gaeProjectId`
+// (CI-friendly). They surface exactly like `-P` flags, which always win over them.
+//
+// The App Engine version name is "v<portal_version>" (e.g. v0-0-1): GAE version IDs must start
+// with a letter and only contain lowercase letters, digits and hyphens, so the project version
+// is lowercased, "-SNAPSHOT" is dropped and every other character becomes a hyphen. See
+// documentation/deployment.md.
+// ---------------------------------------------------------------------------
+
+val gaeProjectId: String? = findProperty("gaeProjectId")?.toString()
+val gaeService: String = (findProperty("gaeService") ?: "default").toString()
+val gaePromote: Boolean = (findProperty("gaePromote") ?: "true").toString().toBoolean()
+
+val gaePortalVersion = version.toString()
+	.lowercase()
+	.removeSuffix("-snapshot")
+	.replace(Regex("[^a-z0-9-]"), "-")
+	.trimEnd('-')
+val gaeVersion = "v${gaePortalVersion}"
+
+val gaeAppEngineDirectory = layout.buildDirectory.dir("generated-appengine")
+
+// The final app.yaml is generated from the template in src/main/appengine/app.yaml with the
+// service name injected, so the target service is configurable from the command line without
+// editing the template. The generated directory is what the plugin stages from.
+val generateGaeConfig = tasks.register("generateGaeConfig") {
+	group = "build"
+	description = "Generates the app.yaml staged for the App Engine deploy (service from -PgaeService)."
+	inputs.file(layout.projectDirectory.file("src/main/appengine/app.yaml"))
+	inputs.property("service", gaeService)
+	outputs.dir(gaeAppEngineDirectory)
+	doLast {
+		if (!Regex("^[a-z][a-z0-9-]{0,62}$").matches(gaeService)) {
+			throw GradleException(
+				"Invalid gaeService '$gaeService': App Engine service IDs must start with a letter and " +
+					"contain only lowercase letters, digits and hyphens (max 63 characters)."
+			)
+		}
+		val outDir = gaeAppEngineDirectory.get().asFile
+		outDir.deleteRecursively()
+		outDir.mkdirs()
+		File(outDir, "app.yaml").writeText(
+			layout.projectDirectory.file("src/main/appengine/app.yaml").asFile.readText()
+				.replace("@GAE_SERVICE@", gaeService)
+		)
+	}
+}
+
+appengine {
+	stage {
+		setArtifact(tasks.bootJar.flatMap { it.archiveFile })
+		setAppEngineDirectory(gaeAppEngineDirectory)
+	}
+	deploy {
+		version = gaeVersion
+		promote = gaePromote
+		stopPreviousVersion = gaePromote
+		gaeProjectId?.let { projectId = it }
+	}
+}
+
+// The plugin resolves its staging inputs eagerly (plain setters), so the task dependencies from
+// staging to the jar build and to the generated app.yaml must be wired explicitly.
+tasks.appengineStage {
+	dependsOn(tasks.bootJar, generateGaeConfig)
+}
+
+tasks.named("appengineDeploy") {
+	doFirst {
+		if (gaeProjectId == null) {
+			throw GradleException("Missing gaeProjectId: run appengineDeploy with -PgaeProjectId=<gcp-project>.")
+		}
 	}
 }

@@ -104,7 +104,7 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 - [ ] Decide scope of the "version toml" TODO (portal already done; collector still inline)
 - [ ] Collector: move to version catalog + verify library versions are current
-- [ ] Deployment config for the portal: app.yaml/Dockerfile, app-gradle-plugin task in `portal/deploy-info-portal/build.gradle.kts`
+- [x] Deployment config for the portal: app-gradle-plugin `appengineDeploy` task (fat jar to GAE Standard, Java 21) in `portal/deploy-info-portal/build.gradle.kts` — configurable GCP project (`-PgaeProjectId`) and service (`-PgaeService`, default `default`), version `<portal_version>-<timestamp>` — see [`portal/deploy-info-portal/documentation/deployment.md`](portal/deploy-info-portal/documentation/deployment.md)
 - [x] Frontend served by the portal: the Gradle `bootJar` compiles the frontend (`npm ci` + `ng build`; `npm.cmd` on Windows, `npm` elsewhere) and embeds it into `BOOT-INF/classes/static`; the backend serves it same-origin with a frontend fallback (`portal/deploy-info-portal/documentation/frontend-serving.md`, `infrastructure/frontend/`), and `environment.ts` uses `url: ''` — replacing the previously planned deploy-script approach
 - [ ] `application-prod.properties`: project id, bucket name, CORS origin
 - [ ] GCP infra docs/scripts: bucket, Datastore, service accounts + IAM (impersonation; App Engine Viewer / Cloud Run Viewer), Storage lifecycle rule
