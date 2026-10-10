@@ -10,6 +10,7 @@ import domain.CloudRunDeploy
 import domain.GcpListingException
 import domain.Project
 import infrastructure.gcp.CredentialsProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
@@ -57,6 +58,12 @@ class GcpCloudRunApiClient(
         try {
             listing()
         } catch (e: ApiException) {
+            // The server's error text (denied permission, resource, remediation link) lives only in
+            // the cause chain — log it before it is discarded into the compact [GcpListingException].
+            logger.warn(
+                "GCP Cloud Run listing failed: project=${project.name}, serviceAccount=${project.serviceAccount}, " +
+                    "statusCode=${e.statusCode.code}, causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
             throw GcpListingException(
                 "GCP Cloud Run API returned ${e.statusCode.code} for project ${project.name}",
                 e,
@@ -122,6 +129,8 @@ class GcpCloudRunApiClient(
     }
 
     companion object {
+
+        private val logger = LoggerFactory.getLogger(GcpCloudRunApiClient::class.java)
 
         /** Creates the lister backed by the real Cloud Run client library. */
         fun create(credentialsProvider: CredentialsProvider): GcpCloudRunLister =

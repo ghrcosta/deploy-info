@@ -16,4 +16,16 @@ class GcpListingException(
 
     val isPermissionDenied: Boolean
         get() = statusCode == "PERMISSION_DENIED" || statusCode == "403"
+
+    companion object {
+
+        /**
+         * Joins the messages of the whole cause chain into one string, the way
+         * `GcpCredentialsProvider.categorize` matches them — used by the logging of the listing
+         * clients, because the client library surfaces the server's error text (denied permission,
+         * resource, remediation link) only somewhere along the cause chain.
+         */
+        fun causeChainMessage(throwable: Throwable): String =
+            generateSequence(throwable as Throwable?) { it.cause }.joinToString(" ") { it.message ?: "" }
+    }
 }

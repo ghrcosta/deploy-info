@@ -5,7 +5,9 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.auth.oauth2.ImpersonatedCredentials
 import domain.CredentialsErrorCategory
 import domain.CredentialsException
+import domain.GcpListingException
 import domain.Project
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -38,13 +40,24 @@ class GcpCredentialsProvider(
         }
         return try {
             credentials.refreshIfExpired()
+            // Never log the tokens themselves — only that a fresh token is ready for the account.
+            logger.debug("Impersonated access token for ${project.serviceAccount} is ready (refreshed if expired)")
             credentials
         } catch (e: CredentialsException) {
+            logger.warn(
+                "Could not obtain credentials for ${project.serviceAccount}: category=${e.category}, " +
+                    "CredentialsException causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
             throw e
         } catch (e: Exception) {
+            val category = categorize(e)
+            logger.warn(
+                "Could not obtain credentials for ${project.serviceAccount}: category=$category, " +
+                    "Exception causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
             throw CredentialsException(
                 "Could not obtain credentials for ${project.serviceAccount}",
-                categorize(e),
+                category,
                 e,
             )
         }
@@ -84,6 +97,8 @@ class GcpCredentialsProvider(
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(GcpCredentialsProvider::class.java)
+
         private const val CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
         private const val TOKEN_LIFETIME_SECONDS = 3600
 

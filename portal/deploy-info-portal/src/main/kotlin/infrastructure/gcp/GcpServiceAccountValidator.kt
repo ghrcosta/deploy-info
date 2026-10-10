@@ -8,6 +8,7 @@ import domain.CredentialsErrorCategory
 import domain.CredentialsException
 import domain.GcpListingException
 import domain.Project
+import org.slf4j.LoggerFactory
 
 /**
  * Validates a project's service account by exercising the same permission chain the deploy listing
@@ -32,29 +33,63 @@ class GcpServiceAccountValidator(
 ) : ServiceAccountValidator {
 
     override fun validate(project: Project): ServiceAccountIssue {
+        logger.info(
+            "Validating service account: project=${project.name}, serviceAccount=${project.serviceAccount}",
+        )
         val impersonationIssue = try {
             credentialsProvider.credentialsFor(project)
             null
         } catch (e: CredentialsException) {
+            logger.warn(
+                "Service account validation failed during impersonation: project=${project.name}, " +
+                    "serviceAccount=${project.serviceAccount}, " +
+                    "CredentialsException causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
             when (e.category) {
                 CredentialsErrorCategory.SERVICE_ACCOUNT_MISCONFIGURATION ->
                     ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION
                 CredentialsErrorCategory.PORTAL_ISSUE ->
                     ServiceAccountIssue.PORTAL_ISSUE
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn(
+                "Service account validation failed during impersonation: project=${project.name}, " +
+                    "serviceAccount=${project.serviceAccount}, issue=PORTAL_ISSUE, " +
+                    "Exception causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
             ServiceAccountIssue.PORTAL_ISSUE
         }
         if (impersonationIssue != null) return impersonationIssue
 
         return try {
-            appEngineLister.listAllDeploys(project)
-            cloudRunLister.listAllDeploys(project)
+            val appEngineDeploys = appEngineLister.listAllDeploys(project)
+            val cloudRunDeploys = cloudRunLister.listAllDeploys(project)
+            logger.info(
+                "Service account validation succeeded: project=${project.name}, " +
+                    "serviceAccount=${project.serviceAccount}, appEngineVersions=${appEngineDeploys.size}, " +
+                    "cloudRunRevisions=${cloudRunDeploys.size}",
+            )
             ServiceAccountIssue.NONE
         } catch (e: GcpListingException) {
-            if (e.isPermissionDenied) ServiceAccountIssue.MISSING_LISTING_PERMISSION else ServiceAccountIssue.PORTAL_ISSUE
-        } catch (_: CredentialsException) {
+            val issue =
+                if (e.isPermissionDenied) ServiceAccountIssue.MISSING_LISTING_PERMISSION else ServiceAccountIssue.PORTAL_ISSUE
+            logger.warn(
+                "Service account validation failed during listing: project=${project.name}, " +
+                    "serviceAccount=${project.serviceAccount}, issue=$issue, statusCode=${e.statusCode}, " +
+                    "causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
+            issue
+        } catch (e: CredentialsException) {
+            logger.warn(
+                "Service account validation failed during listing: project=${project.name}, " +
+                    "serviceAccount=${project.serviceAccount}, issue=PORTAL_ISSUE, " +
+                    "causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
+            )
             ServiceAccountIssue.PORTAL_ISSUE
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GcpServiceAccountValidator::class.java)
     }
 }
