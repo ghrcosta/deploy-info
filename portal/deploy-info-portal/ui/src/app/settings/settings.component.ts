@@ -77,7 +77,7 @@ export class SettingsComponent {
 }
 
 export interface Project {
-    name: string;
+    projectId: string;
     group?: string;
     serviceAccount: string;
 }

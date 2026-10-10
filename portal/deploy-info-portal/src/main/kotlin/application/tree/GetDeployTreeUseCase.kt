@@ -32,7 +32,7 @@ class GetDeployTreeUseCase(
     /** The top level: one entry per project group; the empty name is the "ungrouped" group. */
     data class GroupEntry(val name: String, val projects: List<ProjectEntry>)
 
-    data class ProjectEntry(val name: String, val services: List<ServiceEntry>)
+    data class ProjectEntry(val projectId: String, val services: List<ServiceEntry>)
 
     data class ServiceEntry(
         val name: String,
@@ -57,13 +57,13 @@ class GetDeployTreeUseCase(
     )
 
     fun execute(): List<GroupEntry> {
-        val projectsByName: Map<String, Project> = projectRepository.getAll().associateBy { it.name }
+        val projectsByName: Map<String, Project> = projectRepository.getAll().associateBy { it.projectId }
         val tree = mutableMapOf<String, MutableMap<String, MutableMap<ServiceKey, MutableList<VersionEntry>>>>()
 
         for (link in deployLinkRepository.getAll()) {
-            val groupName = projectsByName[link.projectName]?.group ?: UNGROUPED
+            val groupName = projectsByName[link.projectId]?.group ?: UNGROUPED
             tree.getOrPut(groupName) { mutableMapOf() }
-                .getOrPut(link.projectName) { mutableMapOf() }
+                .getOrPut(link.projectId) { mutableMapOf() }
                 .getOrPut(ServiceKey(link.deployType, link.serviceId)) { mutableListOf() }
                 .add(link.toVersionEntry())
         }
@@ -89,8 +89,8 @@ class GetDeployTreeUseCase(
                     name = groupName,
                     projects = projects.entries
                         .sortedBy { it.key }
-                        .map { (projectName, services) ->
-                            ProjectEntry(name = projectName, services = services.toServiceEntries())
+                        .map { (projectId, services) ->
+                            ProjectEntry(projectId = projectId, services = services.toServiceEntries())
                         },
                 )
             }

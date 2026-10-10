@@ -30,7 +30,7 @@ class SettingsController(
     fun editProject(@RequestBody project: ProjectDTO): ResponseEntity<EditProjectResultDTO> =
         editProjectUseCase.execute(project.toModel()).toResponse(portalIdentityResolver::resolve)
 
-    @DeleteMapping("/project/{projectName}")
-    fun deleteProject(@PathVariable("projectName") projectName: String): ResponseEntity<List<ProjectDTO>> =
-        deleteProjectUseCase.execute(projectName).toResponse()
+    @DeleteMapping("/project/{projectId}")
+    fun deleteProject(@PathVariable("projectId") projectId: String): ResponseEntity<List<ProjectDTO>> =
+        deleteProjectUseCase.execute(projectId).toResponse()
 }

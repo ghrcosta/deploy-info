@@ -105,7 +105,7 @@ keyed by deploy type, so the same service name may appear once as a GAE and once
 | Field (per level)                | Type           | Description |
 |----------------------------------|----------------|-------------|
 | `name` (group)                   | string         | The project group (`""` = ungrouped). |
-| `projects[].name`                | string         | The GCP project name. |
+| `projects[].projectId`           | string         | The GCP project ID. |
 | `projects[].services[].name`     | string         | The service id. |
 | `projects[].services[].type`     | string         | `GAE` or `RUN`. |
 | `versions[].id`                  | string         | The deploy identity key `<project>_<TYPE>_<location|->_<service>_<version>`. Stable identifier for the version node. |
@@ -122,7 +122,7 @@ keyed by deploy type, so the same service name may appear once as a GAE and once
     "name": "PROD",
     "projects": [
       {
-        "name": "proj-qa",
+        "projectId": "proj-qa",
         "services": [
           {
             "name": "web",

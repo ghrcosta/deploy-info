@@ -34,9 +34,13 @@ export class ServiceAccountErrorDialogComponent {
         return this.data.serviceAccountIssue == ServiceAccountIssueCode.MISSING_LISTING_PERMISSION;
     }
 
-    /** Only the user-fixable permission issues come with grant instructions (and a retry button). */
-    hasGrantInstructions = () => {
-        return this.isMissingImpersonationPermission() || this.isMissingListingPermission();
+    isProjectNotFound = () => {
+        return this.data.serviceAccountIssue == ServiceAccountIssueCode.PROJECT_NOT_FOUND;
+    }
+
+    /** Only the user-fixable issues come with instructions (and a retry button). */
+    hasInstructions = () => {
+        return this.isMissingImpersonationPermission() || this.isMissingListingPermission() || this.isProjectNotFound();
     }
 
     /**
@@ -53,12 +57,15 @@ export class ServiceAccountErrorDialogComponent {
                 '    --role="roles/iam.serviceAccountTokenCreator"',
             ].join('\n');
         }
+        if (this.isProjectNotFound()) {
+            return 'gcloud projects list';
+        }
         return [
-            `gcloud projects add-iam-policy-binding ${this.data.projectName} \\`,
+            `gcloud projects add-iam-policy-binding ${this.data.projectId} \\`,
             `    --member="serviceAccount:${this.data.serviceAccount}" \\`,
             '    --role="roles/appengine.appViewer"',
             '',
-            `gcloud projects add-iam-policy-binding ${this.data.projectName} \\`,
+            `gcloud projects add-iam-policy-binding ${this.data.projectId} \\`,
             `    --member="serviceAccount:${this.data.serviceAccount}" \\`,
             '    --role="roles/run.viewer"',
         ].join('\n');
@@ -78,14 +85,15 @@ export class ServiceAccountErrorDialogComponent {
 export enum ServiceAccountIssueCode {
     MISSING_IMPERSONATION_PERMISSION = 'MISSING_IMPERSONATION_PERMISSION',
     MISSING_LISTING_PERMISSION = 'MISSING_LISTING_PERMISSION',
+    PROJECT_NOT_FOUND = 'PROJECT_NOT_FOUND',
     PORTAL_ISSUE = 'PORTAL_ISSUE'
 }
 
 export interface ServiceAccountErrorDialogData {
     /** Issue code from the backend response (`result.issues.serviceAccountIssue`). */
     serviceAccountIssue: string;
-    /** Name of the project being added or edited. */
-    projectName: string;
+    /** The GCP project ID of the project being added or edited. */
+    projectId: string;
     /** Target service account email (from the form). */
     serviceAccount: string;
     /** Portal's own service account email (from the response); undefined when it could not be resolved. */

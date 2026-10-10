@@ -12,21 +12,21 @@ class AddProjectUseCase(
     fun execute(newProject: Project): Output {
         val existingProjects = projectRepository.getAll()
 
-        val issueNameConflict = existingProjects.any { it.name == newProject.name }
+        val issueProjectIdConflict = existingProjects.any { it.projectId == newProject.projectId }
 
         var serviceAccountIssue = ServiceAccountIssue.NONE
-        if (!issueNameConflict) {
+        if (!issueProjectIdConflict) {
             serviceAccountIssue = serviceAccountValidator.validate(newProject)
         }
 
         var projectsInDatabase: List<Project> = emptyList()
-        if (!issueNameConflict && serviceAccountIssue == ServiceAccountIssue.NONE) {
+        if (!issueProjectIdConflict && serviceAccountIssue == ServiceAccountIssue.NONE) {
             projectRepository.save(newProject)
             projectsInDatabase = projectRepository.getAll()
         }
 
         return Output(
-            issueNameConflict = issueNameConflict,
+            issueProjectIdConflict = issueProjectIdConflict,
             issueServiceAccountError = serviceAccountIssue != ServiceAccountIssue.NONE,
             serviceAccountIssue = serviceAccountIssue,
             projectsInRepository = projectsInDatabase
@@ -34,11 +34,11 @@ class AddProjectUseCase(
     }
 
     class Output(
-        val issueNameConflict: Boolean,
+        val issueProjectIdConflict: Boolean,
         val issueServiceAccountError: Boolean,
         val serviceAccountIssue: ServiceAccountIssue = ServiceAccountIssue.NONE,
         val projectsInRepository: List<Project>
     ) {
-        fun issuesFound() = issueNameConflict || issueServiceAccountError
+        fun issuesFound() = issueProjectIdConflict || issueServiceAccountError
     }
 }

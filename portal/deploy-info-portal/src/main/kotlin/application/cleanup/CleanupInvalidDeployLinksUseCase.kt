@@ -53,7 +53,7 @@ class CleanupInvalidDeployLinksUseCase(
         for (project in checkedProjects) {
             for (deployType in DeployType.entries) {
                 // Grace period: a link younger than the grace period is never judged stale.
-                val candidates = deployLinkRepository.getAllFor(project.name, deployType).filter {
+                val candidates = deployLinkRepository.getAllFor(project.projectId, deployType).filter {
                     it.collectTimestamp.isBefore(now.minus(gracePeriod))
                 }
                 if (candidates.isEmpty()) continue
@@ -61,10 +61,10 @@ class CleanupInvalidDeployLinksUseCase(
                 val existingIdentities = try {
                     listExistingIdentities(project, deployType)
                 } catch (e: GcpListingException) {
-                    skipped.add("${project.name}/${deployType.name} (${e.message})")
+                    skipped.add("${project.projectId}/${deployType.name} (${e.message})")
                     continue
                 } catch (e: CredentialsException) {
-                    skipped.add("${project.name}/${deployType.name} (${e.message})")
+                    skipped.add("${project.projectId}/${deployType.name} (${e.message})")
                     continue
                 }
 
@@ -75,11 +75,11 @@ class CleanupInvalidDeployLinksUseCase(
                         storageCleaner.delete(link.storageFolder)
                     } catch (e: RuntimeException) {
                         logger.warn(
-                            "Deleted stale deploy link ${link.keyName} of ${project.name}, " +
+                            "Deleted stale deploy link ${link.keyName} of ${project.projectId}, " +
                                 "but deleting its storage folder ${link.storageFolder} failed: ${e.message}",
                         )
                     }
-                    deleted.add("${project.name}/${deployType.name}/${link.keyName}")
+                    deleted.add("${project.projectId}/${deployType.name}/${link.keyName}")
                 }
             }
         }

@@ -24,11 +24,11 @@ class FakeAppEngineLister(
     private var throwOnNextList: Boolean = false
 
     override fun listAllDeploys(project: Project): List<AppEngineDeploy> {
-        if (throwOnEveryList || throwOnNextList || throwOnProject?.invoke(project.name) == true) {
+        if (throwOnEveryList || throwOnNextList || throwOnProject?.invoke(project.projectId) == true) {
             throwOnNextList = false
             throw GcpListingException("transient listing failure")
         }
-        return deploysByProject[project.name].orEmpty().sortedByDescending { it.createTime }
+        return deploysByProject[project.projectId].orEmpty().sortedByDescending { it.createTime }
     }
 
     /** Makes the next listing throw [GcpListingException] (simulating a transient failure). */

@@ -23,7 +23,7 @@ class DeployLinkDatastoreRepositoryTests {
     private val repository = DeployLinkDatastoreRepository(datastoreTemplate)
 
     private val gaeLink = DeployLink(
-        projectName = "testProject1",
+        projectId = "testProject1",
         deployType = DeployType.GAE,
         serviceId = "default",
         versionId = "20261004t120000",
@@ -34,7 +34,7 @@ class DeployLinkDatastoreRepositoryTests {
     )
 
     private val runLink = DeployLink(
-        projectName = "testProject2",
+        projectId = "testProject2",
         deployType = DeployType.RUN,
         serviceId = "my-service",
         versionId = "my-service-00001-abc",
@@ -71,7 +71,7 @@ class DeployLinkDatastoreRepositoryTests {
             .thenReturn(DeployLinkEntity(gaeLink))
 
         val link = repository.get(
-            projectName = "testProject1",
+            projectId = "testProject1",
             deployType = DeployType.GAE,
             location = null,
             serviceId = "default",
@@ -87,7 +87,7 @@ class DeployLinkDatastoreRepositoryTests {
 
         assertNull(
             repository.get(
-                projectName = "missing",
+                projectId = "missing",
                 deployType = DeployType.GAE,
                 location = null,
                 serviceId = "default",

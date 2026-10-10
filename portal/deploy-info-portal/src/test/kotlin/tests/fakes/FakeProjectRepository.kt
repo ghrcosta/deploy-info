@@ -14,14 +14,14 @@ class FakeProjectRepository(
 
     override fun getAll(): List<Project> = projects.toList()
 
-    override fun get(projectName: String): Project? = projects.firstOrNull { it.name == projectName }
+    override fun get(projectId: String): Project? = projects.firstOrNull { it.projectId == projectId }
 
     override fun save(project: Project) {
-        projects.removeAll { it.name == project.name }
+        projects.removeAll { it.projectId == project.projectId }
         projects.add(project)
     }
 
-    override fun delete(projectName: String) {
-        projects.removeAll { it.name == projectName }
+    override fun delete(projectId: String) {
+        projects.removeAll { it.projectId == projectId }
     }
 }

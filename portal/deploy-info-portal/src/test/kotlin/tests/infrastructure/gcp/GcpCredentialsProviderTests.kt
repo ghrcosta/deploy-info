@@ -74,7 +74,7 @@ class GcpCredentialsProviderTests {
 
     @Test
     fun `Return impersonated credentials for the project's service account`() {
-        val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
+        val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
         val credentials = provider().credentialsFor(project) as ImpersonatedCredentials
 
@@ -90,8 +90,8 @@ class GcpCredentialsProviderTests {
 
     @Test
     fun `Reuse the impersonated credentials of a service account across calls`() {
-        val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
-        val other = Project(name = "proj", group = null, serviceAccount = "other@proj.iam.gserviceaccount.com")
+        val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
+        val other = Project(projectId = "proj", group = null, serviceAccount = "other@proj.iam.gserviceaccount.com")
         val credentialsProvider = provider()
 
         val credentials = credentialsProvider.credentialsFor(project)
@@ -111,7 +111,7 @@ class GcpCredentialsProviderTests {
     fun `Report a permission problem as a service account misconfiguration`() {
         transportFactory.statusCode = 403
         transportFactory.body = """{"error":{"code":403,"message":"Permission denied"}}"""
-        val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
+        val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
         val exception = assertFailsWith<CredentialsException> { provider().credentialsFor(project) }
 
@@ -121,7 +121,7 @@ class GcpCredentialsProviderTests {
     @Test
     fun `Report a server error as a portal issue`() {
         transportFactory.statusCode = 500
-        val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
+        val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
         val exception = assertFailsWith<CredentialsException> { provider().credentialsFor(project) }
 
@@ -130,7 +130,7 @@ class GcpCredentialsProviderTests {
 
     @Test
     fun `Report missing portal credentials as a portal issue`() {
-        val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
+        val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
         val exception = assertFailsWith<CredentialsException> {
             provider(callerCredentials = { throw IllegalStateException("Your default credentials were not found") })

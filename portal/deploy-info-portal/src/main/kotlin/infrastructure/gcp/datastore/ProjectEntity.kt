@@ -7,19 +7,19 @@ import org.springframework.data.annotation.Id
 @Entity(name = "deploy-info/project")
 class ProjectEntity(
     @Id
-    val name: String,
+    val projectId: String,
 
     val group: String? = null,
     val serviceAccount: String,
 ) {
     constructor(project: Project) : this(
-        name = project.name,
+        projectId = project.projectId,
         group = project.group,
         serviceAccount = project.serviceAccount,
     )
 
     fun toModel(): Project = Project(
-        name = name,
+        projectId = projectId,
         group = group,
         serviceAccount = serviceAccount,
     )

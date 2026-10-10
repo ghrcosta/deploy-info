@@ -6,8 +6,8 @@ import domain.Project
 class DeleteProjectUseCase(
     private val projectRepository: ProjectRepository
 ) {
-    fun execute(projectName: String): Output {
-        projectRepository.delete(projectName)
+    fun execute(projectId: String): Output {
+        projectRepository.delete(projectId)
 
         return Output(projectRepository.getAll())
     }

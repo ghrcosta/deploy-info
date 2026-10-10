@@ -3,11 +3,11 @@
         <h2>Manage projects</h2>
     </div>
     <div class="project-list">
-        @for (project of projects; track project.name) {
+        @for (project of projects; track project.projectId) {
             <mat-card appearance="outlined" class="project">
                 <mat-card-header>
                     <mat-card-title-group>
-                        <mat-card-title>{{project.name}}</mat-card-title>
+                        <mat-card-title>{{project.projectId}}</mat-card-title>
                         <div>
                             <a (click)="onEditProjectClicked(project)">
                                 <mat-icon svgIcon="edit"></mat-icon>

@@ -26,7 +26,7 @@ class AddProjectUseCaseTests {
 
     @Test
     fun `Add project without issues`() {
-        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
         val output = addProjectUseCase.execute(newProject1)
         assertFalse(output.issuesFound())
         assertFalse(output.issueServiceAccountError)
@@ -38,13 +38,13 @@ class AddProjectUseCaseTests {
 
     @Test
     fun `Notify issue when adding project with same name twice`() {
-        val newProject1 = Project(name = "testProject", group = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(projectId = "testProject", group = "test", serviceAccount = "test@account.com")
         fakeProjectRepository.save(newProject1)
 
-        val newProject2 = Project(name = "testProject", group = "test2", serviceAccount = "test2@account.com")
+        val newProject2 = Project(projectId = "testProject", group = "test2", serviceAccount = "test2@account.com")
         val output = addProjectUseCase.execute(newProject2)
         assertTrue(output.issuesFound())
-        assertTrue(output.issueNameConflict)
+        assertTrue(output.issueProjectIdConflict)
         assert(output.projectsInRepository.isEmpty())
         // The name conflict is reported without even trying the service account.
         assert(fakeServiceAccountValidator.validatedProjects.isEmpty())
@@ -53,7 +53,7 @@ class AddProjectUseCaseTests {
     @Test
     fun `Skip the save and report the issue when the service account cannot be validated`() {
         fakeServiceAccountValidator.issue = ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION
-        val newProject1 = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val newProject1 = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
 
         val output = addProjectUseCase.execute(newProject1)
 

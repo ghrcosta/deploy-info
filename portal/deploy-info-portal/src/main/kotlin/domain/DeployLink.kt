@@ -7,13 +7,13 @@ enum class DeployType { GAE, RUN }
 /**
  * The link between a collector upload (a Cloud Storage folder) and the GCP deploy it was built for.
  *
- * Identity is the tuple (projectName, deployType, serviceId, versionId, location): location is part
+ * Identity is the tuple (projectId, deployType, serviceId, versionId, location): location is part
  * of the identity because Cloud Run revision ids repeat across regions (null for App Engine).
  * The project/deployType/storage folder/user email/timestamp come from the collector's trigger
  * request; service/version/location/url are filled by the linking logic from the GCP listing.
  */
 data class DeployLink(
-    val projectName: String,
+    val projectId: String,
     val deployType: DeployType,
     val serviceId: String,
     val versionId: String,
@@ -26,7 +26,7 @@ data class DeployLink(
     /** Datastore key name for this deploy link's identity. */
     val keyName: String
         get() = listOf(
-            projectName,
+            projectId,
             deployType.name,
             location ?: "-",
             serviceId,

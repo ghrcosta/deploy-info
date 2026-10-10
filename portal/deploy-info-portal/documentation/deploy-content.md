@@ -8,7 +8,7 @@ feature is the backend counterpart of that contract.
 ## Data sources
 
 - **The deploy link** (`domain/DeployLink.kt`): the input is a deploy identity
-  `(projectName, deployType, serviceId, versionId, location)` — the same tuple the frontend tree
+  `(projectId, deployType, serviceId, versionId, location)` — the same tuple the frontend tree
   carries per version node. The link provides the upload's storage folder; if no link exists, the
   deploy has no collected content.
 - **The Cloud Storage folder**: `git-log.txt`, `git-status.txt`, uuid-named diff/full-content files

@@ -54,8 +54,8 @@ class GetAllProjectsUseCaseEndpointTests {
     fun `Happy path with repository not empty`() {
         val output = GetAllProjectsUseCase.Output(
             projectsInRepository = listOf(
-                Project(name = "testProject1", group = "test", serviceAccount = "test@account.com"),
-                Project(name = "testProject2", group = "test", serviceAccount = "test@account.com")
+                Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com"),
+                Project(projectId = "testProject2", group = "test", serviceAccount = "test@account.com")
             )
         )
         whenever(useCase.execute()).thenReturn(output)

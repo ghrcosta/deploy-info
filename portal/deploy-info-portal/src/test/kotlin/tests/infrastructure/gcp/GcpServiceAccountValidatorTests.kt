@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
  */
 class GcpServiceAccountValidatorTests {
 
-    private val project = Project(name = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
+    private val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")
 
     private val okCredentialsProvider = CredentialsProvider {
         GoogleCredentials.create(AccessToken("token", Date(Long.MAX_VALUE)))
@@ -85,6 +85,30 @@ class GcpServiceAccountValidatorTests {
         val issue = GcpServiceAccountValidator(okCredentialsProvider, appEngineLister, mock()).validate(project)
 
         assertEquals(ServiceAccountIssue.MISSING_LISTING_PERMISSION, issue)
+    }
+
+    @Test
+    fun `Report PROJECT_NOT_FOUND when a listing API cannot find the project`() {
+        val cloudRunLister = mock<GcpCloudRunLister> {
+            on { listAllDeploys(any()) } doThrow
+                GcpListingException("GCP Cloud Run API returned NOT_FOUND", statusCode = "NOT_FOUND")
+        }
+
+        val issue = GcpServiceAccountValidator(okCredentialsProvider, mock(), cloudRunLister).validate(project)
+
+        assertEquals(ServiceAccountIssue.PROJECT_NOT_FOUND, issue)
+    }
+
+    @Test
+    fun `Report PROJECT_NOT_FOUND when a listing API rejects the project id as invalid`() {
+        val appEngineLister = mock<GcpAppEngineLister> {
+            on { listAllDeploys(any()) } doThrow
+                GcpListingException("GCP App Engine API returned INVALID_ARGUMENT", statusCode = "INVALID_ARGUMENT")
+        }
+
+        val issue = GcpServiceAccountValidator(okCredentialsProvider, appEngineLister, mock()).validate(project)
+
+        assertEquals(ServiceAccountIssue.PROJECT_NOT_FOUND, issue)
     }
 
     @Test

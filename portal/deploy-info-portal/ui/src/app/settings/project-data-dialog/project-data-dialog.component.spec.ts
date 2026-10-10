@@ -9,7 +9,7 @@ describe('ProjectDataDialogComponent', () => {
 
   const dialogData: DialogData = {
     action: ProjectDataDialogAction.ADD,
-    project: { name: 'test-project', group: 'test-group', serviceAccount: 'test@test.iam.gserviceaccount.com' }
+    project: { projectId: 'test-project', group: 'test-group', serviceAccount: 'test@test.iam.gserviceaccount.com' }
   };
 
   beforeEach(async () => {

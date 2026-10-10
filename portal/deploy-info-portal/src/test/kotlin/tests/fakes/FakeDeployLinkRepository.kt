@@ -13,9 +13,9 @@ class FakeDeployLinkRepository(
     private val deployLinks: MutableList<DeployLink> = mutableListOf(),
 ) : DeployLinkRepository {
 
-    override fun get(projectName: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): DeployLink? =
+    override fun get(projectId: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): DeployLink? =
         deployLinks.firstOrNull {
-            it.projectName == projectName &&
+            it.projectId == projectId &&
                 it.deployType == deployType &&
                 it.serviceId == serviceId &&
                 it.versionId == versionId &&
@@ -24,8 +24,8 @@ class FakeDeployLinkRepository(
 
     override fun getAll(): List<DeployLink> = deployLinks.toList()
 
-    override fun getAllFor(projectName: String, deployType: DeployType): List<DeployLink> =
-        deployLinks.filter { it.projectName == projectName && it.deployType == deployType }
+    override fun getAllFor(projectId: String, deployType: DeployType): List<DeployLink> =
+        deployLinks.filter { it.projectId == projectId && it.deployType == deployType }
 
     override fun save(deployLink: DeployLink) {
         delete(deployLink)
@@ -34,7 +34,7 @@ class FakeDeployLinkRepository(
 
     override fun delete(deployLink: DeployLink) {
         deployLinks.removeAll {
-            it.projectName == deployLink.projectName &&
+            it.projectId == deployLink.projectId &&
                 it.deployType == deployLink.deployType &&
                 it.serviceId == deployLink.serviceId &&
                 it.versionId == deployLink.versionId &&

@@ -22,7 +22,9 @@ import org.slf4j.LoggerFactory
  * 2. **Listing** — lists the App Engine and Cloud Run deploys with the impersonated credentials,
  *    which requires the App Engine Viewer / Cloud Run Viewer roles on the target project. A
  *    permission denial (`403` / `PERMISSION_DENIED`) surfaces as [GcpListingException] with that
- *    status code.
+ *    status code and maps to `MISSING_LISTING_PERMISSION`; a listing failure that cannot resolve
+ *    the project at all (`NOT_FOUND` / `INVALID_ARGUMENT`) maps to `PROJECT_NOT_FOUND`, so a wrong
+ *    project id does not masquerade as missing permissions.
  *
  * Like the credentials themselves, validation runs lazily per add/edit request — never at startup.
  */
@@ -34,14 +36,14 @@ class GcpServiceAccountValidator(
 
     override fun validate(project: Project): ServiceAccountIssue {
         logger.info(
-            "Validating service account: project=${project.name}, serviceAccount=${project.serviceAccount}",
+            "Validating service account: project=${project.projectId}, serviceAccount=${project.serviceAccount}",
         )
         val impersonationIssue = try {
             credentialsProvider.credentialsFor(project)
             null
         } catch (e: CredentialsException) {
             logger.warn(
-                "Service account validation failed during impersonation: project=${project.name}, " +
+                "Service account validation failed during impersonation: project=${project.projectId}, " +
                     "serviceAccount=${project.serviceAccount}, " +
                     "CredentialsException causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )
@@ -53,7 +55,7 @@ class GcpServiceAccountValidator(
             }
         } catch (e: Exception) {
             logger.warn(
-                "Service account validation failed during impersonation: project=${project.name}, " +
+                "Service account validation failed during impersonation: project=${project.projectId}, " +
                     "serviceAccount=${project.serviceAccount}, issue=PORTAL_ISSUE, " +
                     "Exception causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )
@@ -65,23 +67,25 @@ class GcpServiceAccountValidator(
             val appEngineDeploys = appEngineLister.listAllDeploys(project)
             val cloudRunDeploys = cloudRunLister.listAllDeploys(project)
             logger.info(
-                "Service account validation succeeded: project=${project.name}, " +
+                "Service account validation succeeded: project=${project.projectId}, " +
                     "serviceAccount=${project.serviceAccount}, appEngineVersions=${appEngineDeploys.size}, " +
                     "cloudRunRevisions=${cloudRunDeploys.size}",
             )
             ServiceAccountIssue.NONE
         } catch (e: GcpListingException) {
             val issue =
-                if (e.isPermissionDenied) ServiceAccountIssue.MISSING_LISTING_PERMISSION else ServiceAccountIssue.PORTAL_ISSUE
+                if (e.isPermissionDenied) ServiceAccountIssue.MISSING_LISTING_PERMISSION
+                else if (e.isProjectNotFound) ServiceAccountIssue.PROJECT_NOT_FOUND
+                else ServiceAccountIssue.PORTAL_ISSUE
             logger.warn(
-                "Service account validation failed during listing: project=${project.name}, " +
+                "Service account validation failed during listing: project=${project.projectId}, " +
                     "serviceAccount=${project.serviceAccount}, issue=$issue, statusCode=${e.statusCode}, " +
                     "causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )
             issue
         } catch (e: CredentialsException) {
             logger.warn(
-                "Service account validation failed during listing: project=${project.name}, " +
+                "Service account validation failed during listing: project=${project.projectId}, " +
                     "serviceAccount=${project.serviceAccount}, issue=PORTAL_ISSUE, " +
                     "causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )

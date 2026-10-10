@@ -114,12 +114,12 @@ class CreateDeployLinkUseCase(
             when (input.deployType) {
                 DeployType.GAE ->
                     appEngineLister.listAllDeploys(project).map {
-                        DeployCandidate(project.name, it.createTime, it.serviceId, it.versionId, it.url, it.createdBy)
+                        DeployCandidate(project.projectId, it.createTime, it.serviceId, it.versionId, it.url, it.createdBy)
                     }
                 DeployType.RUN ->
                     cloudRunLister.listAllDeploys(project).map {
                         DeployCandidate(
-                            project.name, it.createTime, it.serviceId, it.revisionId, it.url, it.createdBy, it.location,
+                            project.projectId, it.createTime, it.serviceId, it.revisionId, it.url, it.createdBy, it.location,
                         )
                     }
             }
@@ -137,7 +137,7 @@ class CreateDeployLinkUseCase(
             return MatchResult.NoMatch
         }
         val existing = deployLinkRepository.get(
-            closest.projectName, input.deployType, closest.location, closest.serviceId, closest.versionId,
+            closest.projectId, input.deployType, closest.location, closest.serviceId, closest.versionId,
         ) ?: return MatchResult.Matched(closest)
         return MatchResult.AlreadyLinked(existing)
     }
@@ -148,7 +148,7 @@ class CreateDeployLinkUseCase(
         collectTimestamp: Instant,
     ): Output.Created {
         val link = DeployLink(
-            projectName = deploy.projectName,
+            projectId = deploy.projectId,
             deployType = input.deployType,
             serviceId = deploy.serviceId,
             versionId = deploy.versionId,
@@ -181,7 +181,7 @@ class CreateDeployLinkUseCase(
 
     /** Deploy fields the link needs, shared between the App Engine and Cloud Run listers. */
     private data class DeployCandidate(
-        val projectName: String,
+        val projectId: String,
         val createTime: Instant,
         val serviceId: String,
         val versionId: String,

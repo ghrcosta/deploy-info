@@ -23,6 +23,13 @@ enum class ServiceAccountIssue {
      */
     MISSING_LISTING_PERMISSION,
 
+    /**
+     * The listing API cannot resolve the project — the id does not exist, cannot be reached, or is
+     * not a valid project id. Fixable by the user: enter the exact GCP project ID (e.g. from
+     * `gcloud projects list`), not the console display name.
+     */
+    PROJECT_NOT_FOUND,
+
     /** A portal-side problem the user cannot fix — needs developer/admin attention. */
     PORTAL_ISSUE,
 }

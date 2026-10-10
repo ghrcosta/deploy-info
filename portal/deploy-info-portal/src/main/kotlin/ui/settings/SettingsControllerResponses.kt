@@ -23,7 +23,7 @@ fun AddProjectUseCase.Output.toResponse(portalServiceAccount: () -> String?): Re
         ResponseEntity.ok(
             AddProjectResultDTO(
                 issues = AddProjectResultDTO.IssuesDTO(
-                    issueNameConflict = issueNameConflict,
+                    issueProjectIdConflict = issueProjectIdConflict,
                     issueServiceAccountError = issueServiceAccountError,
                     serviceAccountIssue = serviceAccountIssue.name.takeIf { issueServiceAccountError },
                     portalServiceAccount = portalServiceAccount().takeIf { issueServiceAccountError },

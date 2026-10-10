@@ -16,7 +16,7 @@ describe('DeployNavigatorComponent', () => {
       name: 'PROD',
       projects: [
         {
-          name: 'Project C',
+          projectId: 'Project C',
           services: [
             {
               name: 'web',
@@ -34,7 +34,7 @@ describe('DeployNavigatorComponent', () => {
       name: '',
       projects: [
         {
-          name: 'Project D',
+          projectId: 'Project D',
           services: [
             {
               name: 'worker',

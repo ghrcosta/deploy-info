@@ -40,8 +40,8 @@ export class ProjectDataDialogComponent {
     isActionEdit = () => { return this.data.action == ProjectDataDialogAction.EDIT}
     isActionDelete = () => { return this.data.action == ProjectDataDialogAction.DELETE}
 
-    getInitialNameValue = () => {
-        if (this.isActionEdit()) { return this.data.project.name } else { return '' }
+    getInitialProjectIdValue = () => {
+        if (this.isActionEdit()) { return this.data.project.projectId } else { return '' }
     }
 
     getInitialGroupValue = () => {
@@ -52,16 +52,16 @@ export class ProjectDataDialogComponent {
         if (this.isActionEdit()) { return this.data.project.serviceAccount } else { return '' }
     }
 
-    nameFormControl = new FormControl({value: this.getInitialNameValue(), disabled: this.isActionEdit()}, [Validators.required]);
+    projectIdFormControl = new FormControl({value: this.getInitialProjectIdValue(), disabled: this.isActionEdit()}, [Validators.required]);
     groupFormControl = new FormControl(this.getInitialGroupValue(), []);
     serviceAccountFormControl = new FormControl(this.getInitialServiceAccountValue(), [Validators.required, Validators.email]);
 
     isFormInvalid = () => {
-        const formContainsErrors = this.nameFormControl.invalid
+        const formContainsErrors = this.projectIdFormControl.invalid
             || this.groupFormControl.invalid
             || this.serviceAccountFormControl.invalid;
 
-        const noDataWasChanged = (this.nameFormControl.value == this.getInitialNameValue())
+        const noDataWasChanged = (this.projectIdFormControl.value == this.getInitialProjectIdValue())
             && (this.groupFormControl.value == this.getInitialGroupValue())
             && (this.serviceAccountFormControl.value == this.getInitialServiceAccountValue());
 
@@ -83,7 +83,7 @@ export class ProjectDataDialogComponent {
     addProject() {
         this.isRequestOngoing = true;
         const project: Project = {
-            name: this.nameFormControl.value ?? '',
+            projectId: this.projectIdFormControl.value ?? '',
             group: this.groupFormControl.value ?? '',
             serviceAccount: this.serviceAccountFormControl.value ?? ''
         }
@@ -94,8 +94,8 @@ export class ProjectDataDialogComponent {
                         this.openServiceAccountErrorDialog(result.issues.serviceAccountIssue, result.issues.portalServiceAccount);
                     } else {
                         let issuesText = [];
-                        if (result.issues.issueNameConflict) {
-                            issuesText.push('A project with this name already exists.');
+                        if (result.issues.issueProjectIdConflict) {
+                            issuesText.push('A project with this project ID already exists.');
                         }
                         let text = issuesText.join('\n\n');
                         this.openSnackBar(text);
@@ -115,7 +115,7 @@ export class ProjectDataDialogComponent {
     editProject() {
         this.isRequestOngoing = true;
         const project: Project = {
-            name: this.nameFormControl.value ?? '',
+            projectId: this.projectIdFormControl.value ?? '',
             group: this.groupFormControl.value ?? '',
             serviceAccount: this.serviceAccountFormControl.value ?? ''
         }
@@ -146,8 +146,8 @@ export class ProjectDataDialogComponent {
 
     deleteProject() {
         this.isRequestOngoing = true;
-        const projectName = this.data.project.name;
-        this.network.deleteProject(projectName).subscribe({
+        const projectId = this.data.project.projectId;
+        this.network.deleteProject(projectId).subscribe({
             next: projects => {
                 this.dialogRef.close(projects);
                 this.isRequestOngoing = false;
@@ -170,7 +170,7 @@ export class ProjectDataDialogComponent {
             panelClass: 'service-account-error-dialog',
             data: {
                 serviceAccountIssue: serviceAccountIssue ?? '',
-                projectName: this.nameFormControl.value ?? this.data.project?.name ?? '',
+                projectId: this.projectIdFormControl.value ?? this.data.project?.projectId ?? '',
                 serviceAccount: this.serviceAccountFormControl.value ?? this.data.project?.serviceAccount ?? '',
                 portalServiceAccount: portalServiceAccount
             } as ServiceAccountErrorDialogData
@@ -214,7 +214,7 @@ export interface AddProjectResult {
     projects?: Project[];
 }
 export interface AddProjectIssues {
-    issueNameConflict: boolean;
+    issueProjectIdConflict: boolean;
     issueServiceAccountError: boolean;
     /** Issue code from the backend (`ServiceAccountIssue`), set only when `issueServiceAccountError`. */
     serviceAccountIssue?: string;

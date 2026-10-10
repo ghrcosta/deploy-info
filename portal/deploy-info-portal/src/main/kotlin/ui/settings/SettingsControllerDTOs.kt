@@ -3,18 +3,18 @@ package ui.settings
 import domain.Project
 
 data class ProjectDTO(
-    val name: String,
+    val projectId: String,
     val group: String? = null,
     val serviceAccount: String
 ) {
     constructor(project: Project) : this(
-        name = project.name,
+        projectId = project.projectId,
         group = project.group,
         serviceAccount = project.serviceAccount,
     )
 
     fun toModel(): Project = Project(
-        name = name,
+        projectId = projectId,
         group = group,
         serviceAccount = serviceAccount,
     )
@@ -25,7 +25,7 @@ class AddProjectResultDTO(
     val projects: List<ProjectDTO>? = null,
 ) {
     class IssuesDTO (
-        val issueNameConflict: Boolean,
+        val issueProjectIdConflict: Boolean,
         val issueServiceAccountError: Boolean,
 
         /** The specific service-account issue (a [application.ServiceAccountIssue] code), when any. */

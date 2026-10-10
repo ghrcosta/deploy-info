@@ -14,21 +14,21 @@ import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private const val PROJECT_NAME = "testProject"
-private const val PROJECT_2_NAME = "otherProject"
+private const val PROJECT_ID = "testProject"
+private const val PROJECT_2_ID = "otherProject"
 private val NOW: Instant = Instant.ofEpochSecond(10_000_000)
 private val GRACE_PERIOD: Duration = Duration.ofMinutes(10)
 private val OLD_ENOUGH: Instant = NOW.minus(GRACE_PERIOD).minusSeconds(60)
 
 private fun link(
-    projectName: String = PROJECT_NAME,
+    projectId: String = PROJECT_ID,
     deployType: DeployType = DeployType.GAE,
     serviceId: String,
     versionId: String,
     location: String? = null,
     collectTimestamp: Instant = OLD_ENOUGH,
 ) = DeployLink(
-    projectName = projectName,
+    projectId = projectId,
     deployType = deployType,
     serviceId = serviceId,
     versionId = versionId,
@@ -40,8 +40,8 @@ private fun link(
 
 class CleanupInvalidDeployLinksUseCaseTests {
 
-    private val project = Project(name = PROJECT_NAME, group = null, serviceAccount = "sa@test.iam.gserviceaccount.com")
-    private val project2 = Project(name = PROJECT_2_NAME, group = null, serviceAccount = "sa2@test.iam.gserviceaccount.com")
+    private val project = Project(projectId = PROJECT_ID, group = null, serviceAccount = "sa@test.iam.gserviceaccount.com")
+    private val project2 = Project(projectId = PROJECT_2_ID, group = null, serviceAccount = "sa2@test.iam.gserviceaccount.com")
 
     private lateinit var fakeProjectRepository: FakeProjectRepository
     private lateinit var fakeAppEngineLister: FakeAppEngineLister
@@ -72,11 +72,11 @@ class CleanupInvalidDeployLinksUseCaseTests {
     @Test
     fun `GAE - stale link (service and version gone) is deleted from the repository and its storage folder too`() {
         fakeDeployLinkRepository.save(link(serviceId = "web", versionId = "v42"))
-        fakeAppEngineLister.seed(PROJECT_NAME, listOf(FakeAppEngineLister.deploy(PROJECT_NAME, "other", "v1", NOW, null)))
+        fakeAppEngineLister.seed(PROJECT_ID, listOf(FakeAppEngineLister.deploy(PROJECT_ID, "other", "v1", NOW, null)))
 
         useCase.execute()
 
-        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertEquals(listOf("uploads/web-v42"), fakeStorageCleaner.deletedFolders)
     }
 
@@ -84,16 +84,16 @@ class CleanupInvalidDeployLinksUseCaseTests {
     fun `GAE - live link (exact service and version still listed) is kept untouched`() {
         fakeDeployLinkRepository.save(link(serviceId = "web", versionId = "v42"))
         fakeAppEngineLister.seed(
-            PROJECT_NAME,
+            PROJECT_ID,
             listOf(
-                FakeAppEngineLister.deploy(PROJECT_NAME, "web", "v41", NOW, null),
-                FakeAppEngineLister.deploy(PROJECT_NAME, "web", "v42", NOW, null),
+                FakeAppEngineLister.deploy(PROJECT_ID, "web", "v41", NOW, null),
+                FakeAppEngineLister.deploy(PROJECT_ID, "web", "v42", NOW, null),
             ),
         )
 
         useCase.execute()
 
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 
@@ -101,13 +101,13 @@ class CleanupInvalidDeployLinksUseCaseTests {
     fun `GAE - a same-service newer version does not keep the stale older version's link alive`() {
         fakeDeployLinkRepository.save(link(serviceId = "web", versionId = "v41"))
         fakeAppEngineLister.seed(
-            PROJECT_NAME,
-            listOf(FakeAppEngineLister.deploy(PROJECT_NAME, "web", "v42", NOW, null)),
+            PROJECT_ID,
+            listOf(FakeAppEngineLister.deploy(PROJECT_ID, "web", "v42", NOW, null)),
         )
 
         useCase.execute()
 
-        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertEquals(listOf("uploads/web-v41"), fakeStorageCleaner.deletedFolders)
     }
 
@@ -118,16 +118,16 @@ class CleanupInvalidDeployLinksUseCaseTests {
         )
         // Same revision id in a different region, and a live revision in the same one.
         fakeCloudRunLister.seed(
-            PROJECT_NAME,
+            PROJECT_ID,
             listOf(
-                FakeCloudRunLister.deploy(PROJECT_NAME, "us-central1", "svc", "rev-old", NOW, null),
-                FakeCloudRunLister.deploy(PROJECT_NAME, "europe-west1", "svc", "rev-new", NOW, null),
+                FakeCloudRunLister.deploy(PROJECT_ID, "us-central1", "svc", "rev-old", NOW, null),
+                FakeCloudRunLister.deploy(PROJECT_ID, "europe-west1", "svc", "rev-new", NOW, null),
             ),
         )
 
         useCase.execute()
 
-        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.RUN).size)
+        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.RUN).size)
         assertEquals(listOf("uploads/svc-rev-old"), fakeStorageCleaner.deletedFolders)
     }
 
@@ -137,13 +137,13 @@ class CleanupInvalidDeployLinksUseCaseTests {
             link(deployType = DeployType.RUN, serviceId = "svc", versionId = "rev-1", location = "europe-west1"),
         )
         fakeCloudRunLister.seed(
-            PROJECT_NAME,
-            listOf(FakeCloudRunLister.deploy(PROJECT_NAME, "europe-west1", "svc", "rev-1", NOW, null)),
+            PROJECT_ID,
+            listOf(FakeCloudRunLister.deploy(PROJECT_ID, "europe-west1", "svc", "rev-1", NOW, null)),
         )
 
         useCase.execute()
 
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.RUN).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.RUN).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 
@@ -152,11 +152,11 @@ class CleanupInvalidDeployLinksUseCaseTests {
         fakeDeployLinkRepository.save(
             link(serviceId = "web", versionId = "v42", collectTimestamp = NOW.minus(GRACE_PERIOD).plusSeconds(1)),
         )
-        fakeAppEngineLister.seed(PROJECT_NAME, emptyList())
+        fakeAppEngineLister.seed(PROJECT_ID, emptyList())
 
         useCase.execute()
 
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 
@@ -165,11 +165,11 @@ class CleanupInvalidDeployLinksUseCaseTests {
         fakeDeployLinkRepository.save(
             link(serviceId = "web", versionId = "v42", collectTimestamp = NOW.minus(GRACE_PERIOD)),
         )
-        fakeAppEngineLister.seed(PROJECT_NAME, emptyList())
+        fakeAppEngineLister.seed(PROJECT_ID, emptyList())
 
         useCase.execute()
 
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 
@@ -180,7 +180,7 @@ class CleanupInvalidDeployLinksUseCaseTests {
 
         useCase.execute()
 
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 
@@ -190,13 +190,13 @@ class CleanupInvalidDeployLinksUseCaseTests {
         fakeDeployLinkRepository.save(
             link(deployType = DeployType.RUN, serviceId = "svc", versionId = "rev-1", location = "europe-west1"),
         )
-        fakeAppEngineLister.seed(PROJECT_NAME, emptyList())
+        fakeAppEngineLister.seed(PROJECT_ID, emptyList())
         fakeCloudRunLister.throwOnEveryList = true
 
         useCase.execute()
 
-        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.RUN).size)
+        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.RUN).size)
         assertEquals(listOf("uploads/web-v42"), fakeStorageCleaner.deletedFolders)
     }
 
@@ -205,39 +205,39 @@ class CleanupInvalidDeployLinksUseCaseTests {
         fakeProjectRepository.save(project2)
         fakeDeployLinkRepository.save(link(serviceId = "web", versionId = "v42"))
         fakeDeployLinkRepository.save(
-            link(projectName = PROJECT_2_NAME, serviceId = "web", versionId = "v42"),
+            link(projectId = PROJECT_2_ID, serviceId = "web", versionId = "v42"),
         )
         // Both projects' GAE listings exist; project 2's listing throws.
-        fakeAppEngineLister.seed(PROJECT_NAME, emptyList())
-        fakeAppEngineLister.seed(PROJECT_2_NAME, emptyList())
-        fakeAppEngineLister.throwOnProject = { it == PROJECT_2_NAME }
+        fakeAppEngineLister.seed(PROJECT_ID, emptyList())
+        fakeAppEngineLister.seed(PROJECT_2_ID, emptyList())
+        fakeAppEngineLister.throwOnProject = { it == PROJECT_2_ID }
 
         useCase.execute()
 
-        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_2_NAME, DeployType.GAE).size)
+        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_2_ID, DeployType.GAE).size)
         assertEquals(listOf("uploads/web-v42"), fakeStorageCleaner.deletedFolders)
     }
 
     @Test
     fun `Storage failure - the Datastore entry is still deleted and the sweep continues`() {
         fakeDeployLinkRepository.save(link(serviceId = "web", versionId = "v42"))
-        fakeAppEngineLister.seed(PROJECT_NAME, emptyList())
+        fakeAppEngineLister.seed(PROJECT_ID, emptyList())
         fakeStorageCleaner.throwOnEveryDelete = true
 
         useCase.execute()
 
-        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(0, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 
     @Test
     fun `Unconfigured project - a link whose project is no longer configured is left untouched`() {
         fakeDeployLinkRepository.save(
-            link(projectName = "removed-project", serviceId = "web", versionId = "v42"),
+            link(projectId = "removed-project", serviceId = "web", versionId = "v42"),
         )
-        fakeAppEngineLister.seed(PROJECT_NAME, emptyList())
-        fakeCloudRunLister.seed(PROJECT_NAME, emptyList())
+        fakeAppEngineLister.seed(PROJECT_ID, emptyList())
+        fakeCloudRunLister.seed(PROJECT_ID, emptyList())
 
         useCase.execute()
 
@@ -249,13 +249,13 @@ class CleanupInvalidDeployLinksUseCaseTests {
     fun `Nothing stale - nothing is deleted at all`() {
         fakeDeployLinkRepository.save(link(serviceId = "web", versionId = "v42"))
         fakeAppEngineLister.seed(
-            PROJECT_NAME,
-            listOf(FakeAppEngineLister.deploy(PROJECT_NAME, "web", "v42", NOW, null)),
+            PROJECT_ID,
+            listOf(FakeAppEngineLister.deploy(PROJECT_ID, "web", "v42", NOW, null)),
         )
 
         useCase.execute()
 
-        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_NAME, DeployType.GAE).size)
+        assertEquals(1, fakeDeployLinkRepository.getAllFor(PROJECT_ID, DeployType.GAE).size)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
 }

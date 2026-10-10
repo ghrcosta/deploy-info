@@ -22,13 +22,13 @@ class CollectorController(
             is CreateDeployLinkUseCase.Output.Created ->
                 ResponseEntity.ok(
                     CollectorResponse.created(
-                        output.deployLink.projectName, output.deployLink.serviceId, output.deployLink.versionId,
+                        output.deployLink.projectId, output.deployLink.serviceId, output.deployLink.versionId,
                     )
                 )
             is CreateDeployLinkUseCase.Output.AlreadyLinked ->
                 ResponseEntity.ok(
                     CollectorResponse.alreadyLinked(
-                        output.existing.projectName, output.existing.serviceId, output.existing.versionId,
+                        output.existing.projectId, output.existing.serviceId, output.existing.versionId,
                     )
                 )
             is CreateDeployLinkUseCase.Output.NotLinked -> ResponseEntity.accepted().body(CollectorResponse.PENDING)

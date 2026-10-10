@@ -6,7 +6,7 @@ export interface GroupEntry {
     projects: ProjectEntry[];
 }
 export interface ProjectEntry {
-    name: string;
+    projectId: string;
     services: ServiceEntry[];
 }
 export interface ServiceEntry {

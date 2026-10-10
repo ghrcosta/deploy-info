@@ -31,10 +31,10 @@ class GcpAppEngineApiClient(
 
     override fun listAllDeploys(project: Project): List<AppEngineDeploy> {
         val adminClient = adminClientFor(project)
-        val services = catchListingErrors(project) { adminClient.listServices(project.name) }
+        val services = catchListingErrors(project) { adminClient.listServices(project.projectId) }
         return services
             .flatMap { service ->
-                val versions = catchListingErrors(project) { adminClient.listVersions(project.name, service.id) }
+                val versions = catchListingErrors(project) { adminClient.listVersions(project.projectId, service.id) }
                 versions.map { it.toAppEngineDeploy(project, service.id) }
             }
             .sortedByDescending { it.createTime }
@@ -54,11 +54,11 @@ class GcpAppEngineApiClient(
             // The server's error text (denied permission, resource, remediation link) lives only in
             // the cause chain — log it before it is discarded into the compact [GcpListingException].
             logger.warn(
-                "GCP App Engine listing failed: project=${project.name}, serviceAccount=${project.serviceAccount}, " +
+                "GCP App Engine listing failed: project=${project.projectId}, serviceAccount=${project.serviceAccount}, " +
                     "statusCode=${e.statusCode.code}, causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )
             throw GcpListingException(
-                "GCP App Engine API returned ${e.statusCode.code} for project ${project.name}",
+                "GCP App Engine API returned ${e.statusCode.code} for project ${project.projectId}",
                 e,
                 e.statusCode.code.toString(),
             )
@@ -66,10 +66,10 @@ class GcpAppEngineApiClient(
 
     private fun Version.toAppEngineDeploy(project: Project, serviceId: String): AppEngineDeploy =
         AppEngineDeploy(
-            projectId = project.name,
+            projectId = project.projectId,
             serviceId = serviceId,
             versionId = id,
-            createTime = createTime.toInstant(project.name, serviceId, id),
+            createTime = createTime.toInstant(project.projectId, serviceId, id),
             url = versionUrl.takeIf { it.isNotEmpty() },
             createdBy = createdBy.takeIf { it.isNotEmpty() },
         )

@@ -1,7 +1,7 @@
 package domain
 
 data class Project(
-    var name: String,
+    var projectId: String,
     var group: String? = null,
     var serviceAccount: String
 )

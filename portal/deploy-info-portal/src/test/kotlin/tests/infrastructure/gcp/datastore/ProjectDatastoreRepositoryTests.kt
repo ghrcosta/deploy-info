@@ -5,11 +5,7 @@ import domain.Project
 import infrastructure.gcp.datastore.ProjectDatastoreRepository
 import infrastructure.gcp.datastore.ProjectEntity
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -27,7 +23,7 @@ class ProjectDatastoreRepositoryTests {
 
     @Test
     fun `Save a project through the datastore template`() {
-        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
 
         repository.save(project)
 
@@ -39,7 +35,7 @@ class ProjectDatastoreRepositoryTests {
 
     @Test
     fun `Get one project from the datastore`() {
-        val entity = ProjectEntity(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val entity = ProjectEntity(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
         whenever(datastoreTemplate.findById("testProject1", ProjectEntity::class.java)).thenReturn(entity)
 
         val project = repository.get("testProject1")
@@ -57,8 +53,8 @@ class ProjectDatastoreRepositoryTests {
     @Test
     fun `Get all projects from the datastore`() {
         val entities = listOf(
-            ProjectEntity(name = "testProject1", group = "group1", serviceAccount = "test@account.com"),
-            ProjectEntity(name = "testProject2", group = null, serviceAccount = "test@account.com"),
+            ProjectEntity(projectId = "testProject1", group = "group1", serviceAccount = "test@account.com"),
+            ProjectEntity(projectId = "testProject2", group = null, serviceAccount = "test@account.com"),
         )
         whenever(datastoreTemplate.findAll(ProjectEntity::class.java)).thenReturn(entities)
 
@@ -66,8 +62,8 @@ class ProjectDatastoreRepositoryTests {
 
         assertEquals(
             listOf(
-                Project(name = "testProject1", group = "group1", serviceAccount = "test@account.com"),
-                Project(name = "testProject2", group = null, serviceAccount = "test@account.com"),
+                Project(projectId = "testProject1", group = "group1", serviceAccount = "test@account.com"),
+                Project(projectId = "testProject2", group = null, serviceAccount = "test@account.com"),
             ),
             projects,
         )

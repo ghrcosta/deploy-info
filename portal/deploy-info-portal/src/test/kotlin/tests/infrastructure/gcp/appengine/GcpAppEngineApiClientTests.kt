@@ -21,7 +21,7 @@ private const val PROJECT_ID = "testProject"
 
 class GcpAppEngineApiClientTests {
 
-    private val project = Project(name = PROJECT_ID, group = null, serviceAccount = "sa@test.iam.gserviceaccount.com")
+    private val project = Project(projectId = PROJECT_ID, group = null, serviceAccount = "sa@test.iam.gserviceaccount.com")
 
     private fun client(
         adminClient: AppEngineAdminClient,
@@ -84,6 +84,40 @@ class GcpAppEngineApiClientTests {
         )
         assertEquals("PERMISSION_DENIED", exception.statusCode)
         assertTrue(exception.isPermissionDenied)
+    }
+
+    @Test
+    fun `Throw GcpListingException when the App Engine API cannot find the project`() {
+        val adminClient = mock<AppEngineAdminClient> {
+            on { listServices(PROJECT_ID) } doThrow
+                ApiException(RuntimeException("not found"), statusCode(StatusCode.Code.NOT_FOUND), false)
+        }
+
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+
+        assertEquals(
+            "GCP App Engine API returned NOT_FOUND for project ${PROJECT_ID}",
+            exception.message,
+        )
+        assertEquals("NOT_FOUND", exception.statusCode)
+        assertTrue(exception.isProjectNotFound)
+    }
+
+    @Test
+    fun `Throw GcpListingException when the App Engine API rejects the project id as invalid`() {
+        val adminClient = mock<AppEngineAdminClient> {
+            on { listServices(PROJECT_ID) } doThrow
+                ApiException(RuntimeException("invalid argument"), statusCode(StatusCode.Code.INVALID_ARGUMENT), false)
+        }
+
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+
+        assertEquals(
+            "GCP App Engine API returned INVALID_ARGUMENT for project ${PROJECT_ID}",
+            exception.message,
+        )
+        assertEquals("INVALID_ARGUMENT", exception.statusCode)
+        assertTrue(exception.isProjectNotFound)
     }
 
     @Suppress("SameParameterValue")

@@ -19,8 +19,8 @@ export class ProjectDataDialogNetworkService {
         return this.http.put<EditProjectResult>(`${environment.url}/settings/project`, project)
     }
 
-    deleteProject(projectName: string): Observable<Project[]> {
-        return this.http.delete<Project[]>(`${environment.url}/settings/project/${projectName}`)
+    deleteProject(projectId: string): Observable<Project[]> {
+        return this.http.delete<Project[]>(`${environment.url}/settings/project/${projectId}`)
     }
 }
 

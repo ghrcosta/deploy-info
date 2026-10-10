@@ -22,7 +22,7 @@ class FakeCloudRunLister(
         if (throwOnEveryList) {
             throw GcpListingException("transient listing failure")
         }
-        return deploysByProject[project.name].orEmpty().sortedByDescending { it.createTime }
+        return deploysByProject[project.projectId].orEmpty().sortedByDescending { it.createTime }
     }
 
     fun seed(projectId: String, deploys: List<CloudRunDeploy>) {

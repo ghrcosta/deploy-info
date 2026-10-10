@@ -68,7 +68,7 @@ export class DeployNavigatorComponent {
                             id: version.id,
                             name: version.name,
                             selection: {
-                                project: project.name,
+                                project: project.projectId,
                                 service: service.name,
                                 version: version,
                             },
@@ -86,7 +86,7 @@ export class DeployNavigatorComponent {
                 }
 
                 projectNodes.push({
-                    name: project.name,
+                    projectId: project.projectId,
                     services: serviceNodes,
                 });
             }
@@ -109,7 +109,7 @@ interface GroupNode {
     projects: ProjectNode[];
 }
 interface ProjectNode {
-    name: string;
+    projectId: string;
     services: TreeNode[];
 }
 interface TreeNode {

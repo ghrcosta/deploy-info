@@ -18,11 +18,11 @@ data class GroupDTO(
 }
 
 data class ProjectDTO(
-    val name: String,
+    val projectId: String,
     val services: List<ServiceDTO>,
 ) {
     constructor(project: GetDeployTreeUseCase.ProjectEntry) : this(
-        name = project.name,
+        projectId = project.projectId,
         services = project.services.map { ServiceDTO(it) },
     )
 }

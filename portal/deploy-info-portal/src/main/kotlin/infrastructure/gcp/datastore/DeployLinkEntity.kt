@@ -11,7 +11,7 @@ class DeployLinkEntity(
     @Id
     val id: String,
 
-    val projectName: String,
+    val projectId: String,
     val deployType: DeployType,
     val serviceId: String,
     val versionId: String,
@@ -23,7 +23,7 @@ class DeployLinkEntity(
 ) {
     constructor(deployLink: DeployLink) : this(
         id = deployLink.keyName,
-        projectName = deployLink.projectName,
+        projectId = deployLink.projectId,
         deployType = deployLink.deployType,
         serviceId = deployLink.serviceId,
         versionId = deployLink.versionId,
@@ -35,7 +35,7 @@ class DeployLinkEntity(
     )
 
     fun toModel(): DeployLink = DeployLink(
-        projectName = projectName,
+        projectId = projectId,
         deployType = deployType,
         serviceId = serviceId,
         versionId = versionId,

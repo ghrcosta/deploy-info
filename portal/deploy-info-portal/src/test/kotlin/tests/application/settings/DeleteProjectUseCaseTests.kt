@@ -21,17 +21,17 @@ class DeleteProjectUseCaseTests {
 
     @Test
     fun `Delete project without issues`() {
-        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
         fakeProjectRepository.save(project)
 
-        val output = deleteProjectUseCase.execute(project.name)
+        val output = deleteProjectUseCase.execute(project.projectId)
         assertNotNull(output.projectsInRepository)
         assertTrue(output.projectsInRepository.isEmpty())
     }
 
     @Test
     fun `Ignore when trying to delete project that does not exist`() {
-        val project = Project(name = "testProject", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject", group = "test", serviceAccount = "test@account.com")
         fakeProjectRepository.save(project)
 
         val output = deleteProjectUseCase.execute("wrong-name")

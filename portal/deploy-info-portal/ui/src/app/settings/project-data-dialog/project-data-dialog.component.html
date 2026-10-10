@@ -3,9 +3,10 @@
         <h2 mat-dialog-title>@if (isActionAdd()) {Add new project} @else {Edit project}</h2>
         <mat-dialog-content>
             <mat-form-field>
-                <mat-label>GCP project name @if (isActionEdit()) {(cannot be changed)}</mat-label>
-                <input matInput type="text" [formControl]="nameFormControl">
-                @if (nameFormControl.hasError('required')) {
+                <mat-label>GCP project ID @if (isActionEdit()) {(cannot be changed)}</mat-label>
+                <input matInput type="text" [formControl]="projectIdFormControl">
+                <mat-hint>The exact GCP project ID — not the console display name</mat-hint>
+                @if (projectIdFormControl.hasError('required')) {
                     <mat-error>Field required</mat-error>
                 }
             </mat-form-field>
@@ -37,7 +38,7 @@
     <div class="project-delete">
         <h2 mat-dialog-title>Delete project</h2>
         <mat-dialog-content>
-            Are you sure you want to delete project '<strong>{{data.project.name}}</strong>'?
+            Are you sure you want to delete project '<strong>{{data.project.projectId}}</strong>'?
         </mat-dialog-content>
         <mat-dialog-actions>
             <button mat-button (click)="onCancelClicked()">Cancel</button>

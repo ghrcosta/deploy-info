@@ -12,12 +12,12 @@ class DeployLinkDatastoreRepository(
     private val datastoreTemplate: DatastoreTemplate,
 ) : DeployLinkRepository {
 
-    override fun get(projectName: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): DeployLink? =
-        datastoreTemplate.findById(keyName(projectName, deployType, location, serviceId, versionId), DeployLinkEntity::class.java)?.toModel()
+    override fun get(projectId: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): DeployLink? =
+        datastoreTemplate.findById(keyName(projectId, deployType, location, serviceId, versionId), DeployLinkEntity::class.java)?.toModel()
 
-    override fun getAllFor(projectName: String, deployType: DeployType): List<DeployLink> =
+    override fun getAllFor(projectId: String, deployType: DeployType): List<DeployLink> =
         datastoreTemplate.findAll(DeployLinkEntity::class.java)
-            .filter { it.projectName == projectName && it.deployType == deployType }
+            .filter { it.projectId == projectId && it.deployType == deployType }
             .map { it.toModel() }
 
     override fun getAll(): List<DeployLink> =
@@ -31,9 +31,9 @@ class DeployLinkDatastoreRepository(
         datastoreTemplate.deleteById(deployLink.keyName, DeployLinkEntity::class.java)
     }
 
-    private fun keyName(projectName: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): String =
+    private fun keyName(projectId: String, deployType: DeployType, location: String?, serviceId: String, versionId: String): String =
         DeployLink(
-            projectName = projectName,
+            projectId = projectId,
             deployType = deployType,
             serviceId = serviceId,
             versionId = versionId,

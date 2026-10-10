@@ -12,11 +12,11 @@
                 </div>
             }
             <div class="project-list">
-                @for (project of group.projects; track project.name) {
+                @for (project of group.projects; track project.projectId) {
                     <mat-expansion-panel>
                         <mat-expansion-panel-header>
                             <mat-panel-title>
-                                <span>{{ project.name }}</span>
+                                <span>{{ project.projectId }}</span>
                             </mat-panel-title>
                         </mat-expansion-panel-header>
 

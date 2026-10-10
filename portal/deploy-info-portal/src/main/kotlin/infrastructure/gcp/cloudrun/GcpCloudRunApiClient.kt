@@ -34,7 +34,7 @@ class GcpCloudRunApiClient(
         val adminClient = adminClientFor(project)
         return catchListingErrors(project) {
             adminClient
-                .listServices(project.name)
+                .listServices(project.projectId)
                 .flatMap { service ->
                     val serviceName = ServiceName.parse(service.name)
                     adminClient.listRevisions(service.name).map { revision ->
@@ -61,11 +61,11 @@ class GcpCloudRunApiClient(
             // The server's error text (denied permission, resource, remediation link) lives only in
             // the cause chain — log it before it is discarded into the compact [GcpListingException].
             logger.warn(
-                "GCP Cloud Run listing failed: project=${project.name}, serviceAccount=${project.serviceAccount}, " +
+                "GCP Cloud Run listing failed: project=${project.projectId}, serviceAccount=${project.serviceAccount}, " +
                     "statusCode=${e.statusCode.code}, causeChain=\"${GcpListingException.causeChainMessage(e)}\"",
             )
             throw GcpListingException(
-                "GCP Cloud Run API returned ${e.statusCode.code} for project ${project.name}",
+                "GCP Cloud Run API returned ${e.statusCode.code} for project ${project.projectId}",
                 e,
                 e.statusCode.code.toString(),
             )
@@ -79,11 +79,11 @@ class GcpCloudRunApiClient(
     ): CloudRunDeploy {
         val revisionName = RevisionName.parse(name)
         return CloudRunDeploy(
-            projectId = project.name,
+            projectId = project.projectId,
             location = location,
             serviceId = serviceId,
             revisionId = revisionName.revision,
-            createTime = createTime.toInstant(project.name, serviceId, revisionName.revision),
+            createTime = createTime.toInstant(project.projectId, serviceId, revisionName.revision),
             url = url,
             createdBy = creator.takeIf { it.isNotEmpty() },
         )

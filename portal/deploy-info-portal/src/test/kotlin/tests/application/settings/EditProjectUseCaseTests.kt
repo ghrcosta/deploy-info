@@ -25,10 +25,10 @@ class EditProjectUseCaseTests {
 
     @Test
     fun `Edit project without issues`() {
-        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
         fakeProjectRepository.save(project)
 
-        val modifiedProject = Project(name = "testProject1", group = "test2", serviceAccount = "test2@account.com")
+        val modifiedProject = Project(projectId = "testProject1", group = "test2", serviceAccount = "test2@account.com")
         val output = editProjectUseCase.execute(modifiedProject)
         assertFalse(output.issuesFound())
         assertFalse(output.issueServiceAccountError)
@@ -37,7 +37,7 @@ class EditProjectUseCaseTests {
         // The changed service account was validated before the save.
         assertEquals(listOf(modifiedProject), fakeServiceAccountValidator.validatedProjects)
 
-        val savedProject = fakeProjectRepository.get(project.name)
+        val savedProject = fakeProjectRepository.get(project.projectId)
         assertNotNull(savedProject)
         assertEquals(modifiedProject.group, savedProject.group)
         assertEquals(modifiedProject.serviceAccount, savedProject.serviceAccount)
@@ -45,7 +45,7 @@ class EditProjectUseCaseTests {
 
     @Test
     fun `Notify issue when editing project that does not exist`() {
-        val project = Project(name = "testProject", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject", group = "test", serviceAccount = "test@account.com")
 
         val output = editProjectUseCase.execute(project)
         assertTrue(output.issuesFound())
@@ -57,10 +57,10 @@ class EditProjectUseCaseTests {
 
     @Test
     fun `Do not validate the service account when it did not change`() {
-        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
         fakeProjectRepository.save(project)
 
-        val modifiedProject = Project(name = "testProject1", group = "test2", serviceAccount = "test@account.com")
+        val modifiedProject = Project(projectId = "testProject1", group = "test2", serviceAccount = "test@account.com")
         val output = editProjectUseCase.execute(modifiedProject)
         assertFalse(output.issuesFound())
         assertEquals(1, output.projectsInRepository.size)
@@ -70,10 +70,10 @@ class EditProjectUseCaseTests {
     @Test
     fun `Skip the save and report the issue when the changed service account cannot be validated`() {
         fakeServiceAccountValidator.issue = ServiceAccountIssue.MISSING_LISTING_PERMISSION
-        val project = Project(name = "testProject1", group = "test", serviceAccount = "test@account.com")
+        val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
         fakeProjectRepository.save(project)
 
-        val modifiedProject = Project(name = "testProject1", group = "test", serviceAccount = "test2@account.com")
+        val modifiedProject = Project(projectId = "testProject1", group = "test", serviceAccount = "test2@account.com")
         val output = editProjectUseCase.execute(modifiedProject)
 
         assertTrue(output.issuesFound())
@@ -81,6 +81,6 @@ class EditProjectUseCaseTests {
         assertEquals(ServiceAccountIssue.MISSING_LISTING_PERMISSION, output.serviceAccountIssue)
         assert(output.projectsInRepository.isEmpty())
         // The project keeps its previously validated service account.
-        assertEquals("test@account.com", fakeProjectRepository.get(project.name)?.serviceAccount)
+        assertEquals("test@account.com", fakeProjectRepository.get(project.projectId)?.serviceAccount)
     }
 }

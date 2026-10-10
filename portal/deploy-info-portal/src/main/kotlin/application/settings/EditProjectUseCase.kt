@@ -10,7 +10,7 @@ class EditProjectUseCase(
     private val serviceAccountValidator: ServiceAccountValidator,
 ) {
     fun execute(modifiedProject: Project): Output {
-        val existingProject = projectRepository.get(modifiedProject.name)
+        val existingProject = projectRepository.get(modifiedProject.projectId)
 
         var issueProjectNotFound = false
         var serviceAccountIssue = ServiceAccountIssue.NONE
