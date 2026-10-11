@@ -4,10 +4,10 @@ import org.gradle.jvm.toolchain.JavaToolchainService
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.4.10"
+    alias(libs.plugins.kotlin.jvm)
 
     `java-gradle-plugin`
-    id("com.gradle.plugin-publish") version "1.3.1"
+    alias(libs.plugins.plugin.publish)
 }
 
 group = "io.github.ghrcosta"
@@ -38,8 +38,8 @@ repositories {
 
 dependencies {
     @Suppress("AvoidDuplicateDependencies") testImplementation(kotlin("test"))
-    testImplementation("io.mockk:mockk:1.14.11")
-    implementation("com.google.code.gson:gson:2.14.0")
+    testImplementation(libs.mockk)
+    implementation(libs.gson)
 }
 
 tasks.test {
@@ -70,8 +70,8 @@ dependencies {
     "functionalTestImplementation"(gradleApi())
     "functionalTestImplementation"(gradleTestKit())
     @Suppress("AvoidDuplicateDependencies") "functionalTestImplementation"(kotlin("test"))
-    "functionalTestImplementation"("org.junit.jupiter:junit-jupiter:5.12.2")
-    "functionalTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
+    "functionalTestImplementation"(libs.junit.jupiter)
+    "functionalTestRuntimeOnly"(libs.junit.launcher)
     // The TestKit runner locates the plugin-under-test metadata file on the TEST runtime classpath,
     // so the pluginUnderTestMetadata output must be part of it.
     "functionalTestRuntimeOnly"(files(tasks.pluginUnderTestMetadata))

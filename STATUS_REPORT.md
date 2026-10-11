@@ -109,8 +109,8 @@
 
 ## 6. DevOps / packaging (TODO section)
 
-- "Change build.gradle to use version toml": ambiguous. The **portal already uses the version catalog**; the **collector plugin still uses inline versions** (`kotlin("jvm") version "2.1.10"`) and is the only build file where this TODO still applies. *Noted as-is in the report; confirm later whether the intent was the collector.*
-- "Update libraries": portal was updated recently (Spring Boot 3.5.9, Spring Cloud GCP 7.4.1, per commit `83f91c1`). Collector: Kotlin 2.1.10 / mockk 1.14.0 — verify these are current at implementation time.
+- ~~"Change build.gradle to use version toml"~~ **Done (Phase 2.10):** the collector now uses the version catalog too (`collector-java/deploy-info-collector/gradle/libs.versions.toml`); only the foojay toolchain resolver keeps its version inline in `settings.gradle.kts` (Gradle does not support catalog aliases in the settings plugins block).
+- ~~"Update libraries"~~ **Done (Phase 2.11):** collector upgraded to Gradle 9.8.1 (wrapper, `-bin`), Kotlin 2.4.20 (aligned with the portal), `com.gradle.plugin-publish` 2.2.1 and JUnit Jupiter 6.1.3; gson 2.14.0 / mockk 1.14.11 / foojay-resolver-convention 1.0.0 were already the latest versions. Verified with `test`, `functionalTest` (compatibility matrix Gradle 7.6+JDK17 and 9.8.1+JDK21) and `publishToMavenLocal`.
 - **Missing entirely (not in TODO.md but required):**
   - Deployment config for the portal itself: no `app.yaml`, no Dockerfile, no App Engine/Cloud Run deploy task in `portal/deploy-info-portal/build.gradle.kts` (e.g., app-gradle-plugin), no UI build integration.
   - GCP infrastructure setup documentation/scripts: bucket creation, Datastore, service accounts + IAM roles (deployInfo project SA needs permission to impersonate each configured project's SA; each SA needs App Engine Viewer / Cloud Run Viewer), Cloud Storage lifecycle rule for cleanup would be a sensible addition.

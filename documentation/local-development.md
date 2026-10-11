@@ -18,7 +18,6 @@ each component's `documentation/` folder:
 | Tool | Version used | Notes |
 |---|---|---|
 | JDK | **21** (portal backend) / **17+** (collector plugin — toolchain; Gradle downloads it if needed) | Portal `build.gradle.kts` pins `JavaLanguageVersion.of(21)`. |
-| Gradle | via wrapper | Portal: 8.13 (`gradlew.bat` in `portal/deploy-info-portal`); Collector: 8.10 (`gradlew.bat` in `collector-java/deploy-info-collector`). |
 | Node.js + npm | for Angular 19 (Node 18/20/22 work) | Only needed for the frontend. |
 | gcloud CLI | any recent version, on `PATH` | Needed by the collector (`gcloud config get-value account`, `gcloud storage cp`) and for the Datastore emulator (installed with gcloud). |
 | Authenticated gcloud account | `gcloud auth login` done | The collector reads the account email and uploads to a bucket as this user. |

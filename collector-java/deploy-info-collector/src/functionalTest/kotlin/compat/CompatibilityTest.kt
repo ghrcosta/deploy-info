@@ -19,7 +19,7 @@ import java.io.File
  *
  * Covered combinations (the two corners of the compatibility matrix):
  *  - minimum supported:  Gradle 7.6 running on JDK 17 (catches too-new bytecode and APIs missing in 7.6)
- *  - maximum supported:  Gradle 9.8.0 running on JDK 21 (catches APIs removed in new Gradle and JDK-21 issues)
+ *  - maximum supported:  Gradle 9.8.1 running on JDK 21 (catches APIs removed in new Gradle and JDK-21 issues)
  */
 class CompatibilityTest {
 
@@ -28,7 +28,7 @@ class CompatibilityTest {
         private const val MINIMUM_SUPPORTED_GRADLE = "7.6"
 
         /** Latest stable Gradle the plugin is verified against. Update when upgrading the plugin build. */
-        private const val LATEST_SUPPORTED_GRADLE = "9.8.0"
+        private const val LATEST_SUPPORTED_GRADLE = "9.8.1"
 
         private const val PROBE_TASK = "deployInfoProbe"
         private const val PROBE_SUCCESS_MARKER = "deployInfoProbe OK:"
@@ -67,8 +67,8 @@ class CompatibilityTest {
     }
 
     @Test
-    @DisplayName("runs on latest supported combination Gradle 9.8.0 with Java 21")
-    fun runsOnLatestSupportedCombinationGradle98WithJava21() {
+    @DisplayName("runs on latest supported combination Gradle 9.8.1 with Java 21")
+    fun runsOnLatestSupportedCombinationGradle981WithJava21() {
         runProbeTask(gradleVersion = LATEST_SUPPORTED_GRADLE, javaHome = requireJavaHome("compat.java21Home"))
     }
 
