@@ -1,0 +1,22 @@
+<div class="login-screen">
+    <div class="panel">
+        <h1 class="app-name">DeployInfo</h1>
+
+        @if (isNoAccess) {
+            <p class="message">
+                Signed in as <span class="email">{{ noAccessEmail }}</span>,
+                but that account has no access to this portal.
+            </p>
+            <p class="hint">
+                Ask the portal administrator to grant the account a role on the portal's
+                GCP project — directly, or through a Google Group listed in the project's IAM.
+            </p>
+            <button mat-stroked-button (click)="signOut()">Sign out / switch account</button>
+        } @else if (isSignedOut) {
+            <p class="message">Sign in with your Google account to continue.</p>
+            <div #googleButton class="google-button"></div>
+        } @else {
+            <p class="message">Loading…</p>
+        }
+    </div>
+</div>

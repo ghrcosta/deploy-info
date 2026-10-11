@@ -18,9 +18,11 @@ import java.net.URL
  * client dependency is added to the published plugin jar, mirroring [BucketLookup]. Gson is used to
  * serialize the request and to parse the response.
  *
- * The portal owns the matching logic and its 5-minute retry: a `pending` response means the portal
- * may still link the upload (or delete its folder) later, so it is logged but does not fail the
- * build. Any other unexpected outcome does fail the build.
+ * The request carries a gcloud access token ([accessToken]) as the `Authorization: Bearer`
+ * credential, so the portal can verify the caller is a user present in the IAM of its project
+ * (Phase 2.7 authentication). The portal owns the matching logic and its 5-minute retry: a
+ * `pending` response means the portal may still link the upload (or delete its folder) later, so
+ * it is logged but does not fail the build. Any other unexpected outcome does fail the build.
  */
 class PortalTrigger(
     /** Base URL for to communicate with the backend. */
@@ -33,6 +35,12 @@ class PortalTrigger(
     private val deployType: String,
     /** The gcloud account that performed the deploy and the collection. */
     private val userEmail: String,
+    /**
+     * gcloud access token sent as the `Authorization: Bearer` credential, or null when none could
+     * be obtained (a portal that requires authentication then answers with an actionable error).
+     * The token itself is never logged.
+     */
+    private val accessToken: String? = null,
     /** Seam for tests: how an [HttpURLConnection] is opened for a given [URL]. */
     private val openConnection: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
 ) {
@@ -47,6 +55,7 @@ class PortalTrigger(
             readTimeout = READ_TIMEOUT_MILLIS
             doOutput = true
             setRequestProperty("Content-Type", "application/json")
+            accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
         }
 
         try {
@@ -87,6 +96,15 @@ class PortalTrigger(
     private fun handleResponse(connection: HttpURLConnection, status: Int, url: URL) {
         when (status) {
             HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_ACCEPTED -> reportOutcome(connection, status, url)
+            HttpURLConnection.HTTP_UNAUTHORIZED -> throw GradleException(
+                "The portal at ${url} rejected the trigger for '$directoryName' with HTTP 401: it requires " +
+                    "authentication but no valid access token was presented. Run `gcloud auth login` (or " +
+                    "`gcloud auth application-default login`) and retry."
+            )
+            HttpURLConnection.HTTP_FORBIDDEN -> throw GradleException(
+                "The portal at ${url} rejected the trigger for '$directoryName' with HTTP 403: " +
+                    describeForbidden(connection, url)
+            )
             HTTP_UNPROCESSABLE -> throw GradleException(
                 "The portal at ${url} rejected the trigger for '$directoryName': none of the listed projects " +
                         "(${projects}) is configured in the portal. Add at least one of them to the portal's projects."
@@ -94,6 +112,33 @@ class PortalTrigger(
             else -> throw GradleException(
                 "The portal at ${url} returned HTTP ${status} when triggering processing of '$directoryName'."
             )
+        }
+    }
+
+    /**
+     * Turns a 403 into a remediation message. The portal distinguishes why an authenticated caller
+     * was denied (see `documentation/api.md`): not present in the portal project's IAM, or the
+     * claimed [userEmail] not matching the token's account (gcloud service-account impersonation
+     * setups), or a portal-side failure of the permission check.
+     */
+    private fun describeForbidden(connection: HttpURLConnection, url: URL): String {
+        val body = try {
+            connection.errorStream?.bufferedReader()?.use { it.readText() }
+        } catch (_: IOException) {
+            null
+        }
+        val response = body?.let { " Portal response: ${it.take(500)}" } ?: " (no response body)"
+        return when {
+            body != null && body.contains("\"email-mismatch\"") ->
+                "the request's userEmail does not match the authenticated account. This happens with gcloud " +
+                    "service-account impersonation setups (`gcloud config set auth/impersonate_service_account`): " +
+                    "the portal cannot attribute the upload to the deploying account then." + response
+            body != null && body.contains("\"not-permitted\"") ->
+                "the authenticated account is not present in the IAM of the portal's project, neither directly " +
+                    "nor through a group. Ask the portal administrator for access." + response
+            body != null && body.contains("\"portal-issue\"") ->
+                "the portal could not run its permission check (a portal-side problem, not yours)." + response
+            else -> "the authenticated account is not permitted." + response
         }
     }
 

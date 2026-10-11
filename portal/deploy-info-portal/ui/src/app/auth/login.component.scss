@@ -1,0 +1,50 @@
+.login-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 2rem;
+
+    .panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        max-width: 32rem;
+        text-align: center;
+
+        .app-name {
+            font-size: 2rem;
+            font-weight: 500;
+            cursor: default;
+        }
+
+        .message {
+            margin: 0;
+        }
+
+        .email {
+            font-weight: 500;
+        }
+
+        .hint {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .google-button {
+            // Dimensions matching the `renderButton` options (width: 300, size: 'large'), with the
+            // Google-rendered iframe centered inside the container. `min-height` rather than a
+            // fixed height: the personalized "Sign in as <user>" button is a little taller, and
+            // the container must grow around it instead of clipping it.
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            // The personalized button's iframe paints a light (white) canvas; forcing the
+            // container to light makes that canvas blend in with the surrounding button chrome.
+            color-scheme: light;
+        }
+    }
+}

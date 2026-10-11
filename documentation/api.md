@@ -3,12 +3,40 @@
 Reference for both collectors (`collector-java`) and the portal frontend (`portal/deploy-info-portal/ui`).
 All bodies are JSON. Base URL depends on the environment (local vs. deployed portal).
 
+## Authentication
+
+When the portal has authentication enabled (`deploy-info.auth.enabled` — the prod profile), every
+endpoint below requires an `Authorization: Bearer <token>` header:
+
+| Client    | Token                                                                                        |
+|-----------|----------------------------------------------------------------------------------------------|
+| Collector | gcloud access token (`gcloud auth print-access-token`) of a user present in the IAM of the portal's project (directly or through a group) |
+| Frontend  | Google Identity Services ID token of the same kind of user, obtained via the sign-in flow    |
+
+Rejection codes (the same for every protected endpoint):
+
+| Status | Body | Meaning |
+|--------|------|---------|
+| `401 Unauthorized` | `{"error":"unauthenticated"}` | Token missing, malformed, expired or wrongly signed. |
+| `403 Forbidden` | `{"error":"not-permitted","email":"…"}` | Valid token, but the account is not present in the portal project's IAM. |
+| `403 Forbidden` | `{"error":"email-mismatch","tokenEmail":"…","requestUserEmail":"…"}` | Trigger only: the body's `userEmail` does not match the token's account (possible with gcloud service-account impersonation; see `portal/deploy-info-portal/documentation/authentication.md`). |
+| `503 Service Unavailable` | `{"error":"portal-issue"}` | The portal could not run its IAM membership check. |
+
+With authentication disabled (local/test profiles) the header is simply not required.
+
+## Auth endpoints (frontend only)
+
+- `GET /auth/config` — public; `{"enabled":<bool>,"clientId":"<oauth-client-id>"}` — the sign-in
+  configuration for the login screen. When `enabled` is false the frontend skips the login flow.
+- `GET /auth/user` — protected; `{"email":"<token-account-email>"}` — the identity of the
+  authenticated user (shown in the top bar; the sign-in flow calls it after receiving a credential).
+
 ## Who uses which contract
 
 | Client         | Endpoints                                       |
 |----------------|--------------------------------------------------|
-| Collector (`collector-java`) | `POST /collector/handleNewDirectory`, `GET /collector/bucket` |
-| Frontend (`portal/deploy-info-portal/ui`) | `GET /portal/tree`, `GET /portal/deploy/content` |
+| Collector | `POST /collector/handleNewDirectory`, `GET /collector/bucket` |
+| Frontend | `GET /auth/config`, `GET /auth/user`, `GET /portal/tree`, `GET /portal/deploy/content` |
 
 Prerequisite: the folder the deploy-link endpoint points at must follow the upload folder layout documented in
 [`collector-java/deploy-info-collector/documentation/collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)

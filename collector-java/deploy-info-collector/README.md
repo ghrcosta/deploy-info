@@ -10,6 +10,16 @@ it was built for. The upload bucket is not configured on the collector: it is re
 
 ## Usage
 
+**Authentication (since 0.0.2):** the collector authenticates itself against the portal with a
+gcloud access token of the active gcloud account (`gcloud auth print-access-token`) — the same
+account that performs the Cloud Storage upload, so there is nothing extra to configure. The portal
+verifies that the account is present in the IAM of the portal's project (directly or through a
+group) and rejects the calls with actionable errors otherwise: HTTP 401/403 during the bucket
+lookup or trigger fail the build with a message naming the fix (`gcloud auth login`, an IAM grant,
+or — for `email-mismatch` — the gcloud service-account impersonation setup). Portals with
+authentication disabled (local development) are unaffected. See the portal's
+`documentation/authentication.md`.
+
 Example for `build.gradle.kts`:
 ```kotlin
 // Add the plugin

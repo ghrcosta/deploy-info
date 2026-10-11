@@ -18,6 +18,11 @@ class GetStorageBucketUseCaseTests {
                 gracePeriod = Duration.ofMinutes(10),
             ),
             cors = DeployInfoProperties.Cors(allowedOrigins = listOf("http://localhost:4200")),
+            auth = DeployInfoProperties.Auth(
+                enabled = false,
+                clientId = "",
+                collectorRequireEmailMatch = true,
+            ),
         )
         return GetStorageBucketUseCase(properties)
     }

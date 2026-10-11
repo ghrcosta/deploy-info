@@ -55,6 +55,14 @@ Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`ut
    `deployInfoCollect` can run; the bucket name comes from the portal's `deploy-info.storage-bucket`
    property.
 
+Authentication (Phase 2.7) is **disabled in the local profile** — every step above runs without a
+Google sign-in. To exercise it locally: create an OAuth client id (web application, authorized
+JavaScript origin `http://localhost:4200`), grant your account any role on the portal's GCP
+project, then run the backend with `deploy-info.auth.enabled=true`, `deploy-info.auth.client-id=<id>`
+and the `GOOGLE_CLOUD_PROJECT` environment variable set to the portal's project id (the App Engine
+runtime sets it automatically; locally it must be provided by hand). See
+[`portal/deploy-info-portal/documentation/authentication.md`](../portal/deploy-info-portal/documentation/authentication.md).
+
 Gaps found during validation (and what changes once the backend core exists) should be fed back into
 `TODO.md` / `STATUS_REPORT.md`.
 

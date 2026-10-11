@@ -1,12 +1,16 @@
 <div class="home">
-    <div class="bar">
-        <top-bar></top-bar>
-    </div>
-    <div class="content">
-        @if (showSettings) {
-            <settings></settings>
-        } @else {
-            <deploy-viewer></deploy-viewer>
-        }
-    </div>
+    @if (signedIn) {
+        <div class="bar">
+            <top-bar></top-bar>
+        </div>
+        <div class="content">
+            @if (showSettings) {
+                <settings></settings>
+            } @else {
+                <deploy-viewer></deploy-viewer>
+            }
+        </div>
+    } @else {
+        <login></login>
+    }
 </div>

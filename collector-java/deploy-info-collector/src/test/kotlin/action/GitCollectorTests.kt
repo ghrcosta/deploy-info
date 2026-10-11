@@ -157,6 +157,36 @@ class GitCollectorTests {
     }
 
     @Test
+    fun `Generate main files + repo root equals the project root`() {
+        val file = File(projectRootDir, "file01").also { it.createNewFile() }
+
+        val paths = mutableListOf<String>()
+
+        everyExecuteCommandAnswers(
+            gitStatusPorcelainResponse = {
+                """
+                ?? ${file.name}
+                """.trimIndent()
+            },
+            gitDiffResponse = { path: String ->
+                paths.add(path)
+                someFileRelatedContent
+            },
+            gitRepoRootResponse = { projectRootDir.absolutePath }
+        )
+
+        GitCollector().execute()
+
+        assertEquals(1, paths.size)
+        assertEquals(file.absolutePath, paths.first())
+        assertGitFilesAreCorrect()
+
+        val gitUuidMap = Context.get().gitUuidMap
+        assertEquals(1, gitUuidMap.entries.size)
+        assertFilesFromUuidMapExist(gitUuidMap)
+    }
+
+    @Test
     fun `Generate main files + support file names with spaces`() {
         val file = File(projectRootDir, "file with space").also { it.createNewFile() }
 
@@ -186,7 +216,8 @@ class GitCollectorTests {
 
     private fun everyExecuteCommandAnswers(
         gitStatusPorcelainResponse: () -> String,
-        gitDiffResponse: (String) -> String
+        gitDiffResponse: (String) -> String,
+        gitRepoRootResponse: () -> String = { testDir.absolutePath }
     ) {
         val commandSlot = slot<String>()
         every { executeCommand(capture(commandSlot)) } answers {
@@ -198,6 +229,9 @@ class GitCollectorTests {
                 }
                 (command == "git log --oneline") -> {
                     gitLogResponse
+                }
+                (command == "git rev-parse --show-toplevel") -> {
+                    gitRepoRootResponse()
                 }
                 (command == "git status --porcelain --untracked-files=normal --no-renames") -> {
                     gitStatusPorcelainResponse()

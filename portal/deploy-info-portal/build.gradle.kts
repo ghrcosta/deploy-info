@@ -32,6 +32,7 @@ dependencies {
 
 	implementation(libs.google.cloud.appengine.admin)
 	implementation(libs.google.cloud.run)
+	implementation(libs.google.cloud.asset)
 
 	implementation(platform(libs.spring.cloud.gcp.bom))
 	implementation(libs.spring.cloud.gcp.starter)

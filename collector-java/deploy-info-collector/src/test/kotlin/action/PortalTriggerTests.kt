@@ -50,12 +50,16 @@ class PortalTriggerTests {
         inputStreamError: Exception? = null,
         responseCodeError: Exception? = null,
         outputError: Exception? = null,
+        errorBody: String? = null,
     ): ConnectionFixture {
         val writtenBody = ByteArrayOutputStream()
         val connection = mockk<HttpURLConnection>(relaxed = true)
         every { connection.outputStream } answers {
             outputError?.let { throw it }
             writtenBody
+        }
+        if (errorBody != null) {
+            every { connection.errorStream } returns ByteArrayInputStream(errorBody.toByteArray())
         }
         if (responseCodeError != null) {
             every { connection.responseCode } throws responseCodeError
@@ -70,8 +74,10 @@ class PortalTriggerTests {
         return ConnectionFixture(connection, writtenBody)
     }
 
-    private fun triggerWith(connection: HttpURLConnection): PortalTrigger =
-        PortalTrigger(portalUrl, directoryName, projects, deployType, userEmail) { connection }
+    private fun triggerWith(connection: HttpURLConnection, accessToken: String? = null): PortalTrigger =
+        PortalTrigger(portalUrl, directoryName, projects, deployType, userEmail, accessToken = accessToken) {
+            connection
+        }
 
     @Test
     fun `Posts the contract request body for a created link`() {
@@ -213,6 +219,77 @@ class PortalTriggerTests {
             }.execute()
         }
         assertTrue(exception.message!!.contains("'portalUrl' is not a valid URL"))
+    }
+
+    @Test
+    fun `Sends the access token as the Authorization header when present`() {
+        val fixture = mockConnection()
+
+        triggerWith(fixture.connection, accessToken = "gcloud-token").execute()
+
+        verify { fixture.connection.setRequestProperty("Authorization", "Bearer gcloud-token") }
+    }
+
+    @Test
+    fun `Sends no Authorization header without an access token (portal auth may be disabled)`() {
+        val fixture = mockConnection()
+
+        triggerWith(fixture.connection).execute()
+
+        verify(exactly = 0) { fixture.connection.setRequestProperty("Authorization", any()) }
+    }
+
+    @Test
+    fun `HTTP 401 fails with a gcloud login hint`() {
+        val fixture = mockConnection(status = HttpURLConnection.HTTP_UNAUTHORIZED, errorBody = "{}")
+
+        val exception = assertFailsWith<GradleException> {
+            triggerWith(fixture.connection, accessToken = "gcloud-token").execute()
+        }
+        assertTrue(exception.message!!.contains("HTTP 401"))
+        assertTrue(exception.message!!.contains("gcloud auth login"))
+    }
+
+    @Test
+    fun `HTTP 403 not-permitted fails with the IAM remediation`() {
+        val fixture = mockConnection(
+            status = HttpURLConnection.HTTP_FORBIDDEN,
+            body = "",
+            errorBody = """{"error":"not-permitted","email":"jdoe@example.com"}""",
+        )
+
+        val exception = assertFailsWith<GradleException> {
+            triggerWith(fixture.connection, accessToken = "gcloud-token").execute()
+        }
+        assertTrue(exception.message!!.contains("HTTP 403"))
+        assertTrue(exception.message!!.contains("not present in the IAM"))
+        assertTrue(exception.message!!.contains("jdoe@example.com"))
+    }
+
+    @Test
+    fun `HTTP 403 email-mismatch fails with the impersonation remediation`() {
+        val fixture = mockConnection(
+            status = HttpURLConnection.HTTP_FORBIDDEN,
+            body = "",
+            errorBody = """{"error":"email-mismatch","tokenEmail":"sa@proj.iam.gserviceaccount.com","requestUserEmail":"jdoe@example.com"}""",
+        )
+
+        val exception = assertFailsWith<GradleException> {
+            triggerWith(fixture.connection, accessToken = "gcloud-token").execute()
+        }
+        assertTrue(exception.message!!.contains("email-mismatch"))
+        assertTrue(exception.message!!.contains("impersonation"))
+    }
+
+    @Test
+    fun `HTTP 403 without a known error body still fails with an actionable message`() {
+        val fixture = mockConnection(status = HttpURLConnection.HTTP_FORBIDDEN, body = "", errorBody = null)
+
+        val exception = assertFailsWith<GradleException> {
+            triggerWith(fixture.connection, accessToken = "gcloud-token").execute()
+        }
+        assertTrue(exception.message!!.contains("HTTP 403"))
+        assertTrue(exception.message!!.contains("not permitted"))
     }
 }
 

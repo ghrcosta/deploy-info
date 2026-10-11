@@ -3,8 +3,7 @@ package io.github.ghrcosta.action
 import io.github.ghrcosta.util.*
 import java.io.File
 import java.io.IOException
-import java.util.UUID
-import java.util.regex.Matcher
+import java.util.*
 
 
 class GitCollector {
@@ -22,12 +21,12 @@ class GitCollector {
 
             // "git status --porcelain" is better for automations, use it to list (and process) modified files
             val gitStatusPorcelain = executeCommand("git status --porcelain --untracked-files=normal --no-renames")
-            val filePaths = extractFilePaths(gitStatusPorcelain)
+            val repoRoot = getGitRepoRoot()
+            val filePaths = extractFilePaths(gitStatusPorcelain, repoRoot)
             filePaths.forEach { filePath ->
-                val fullFilePath = parsePathFromProjectRootParent(filePath)
-                val gitDiffOutput = executeCommand("git --no-pager diff \"${fullFilePath}\"")
+                val gitDiffOutput = executeCommand("git --no-pager diff \"${filePath}\"")
                 if (gitDiffOutput.isBlank()) {
-                    val fileContent = File(fullFilePath).getContents()
+                    val fileContent = File(filePath).getContents()
                     saveContentToUuidFile(filePath, fileContent)
                 } else {
                     saveContentToUuidFile(filePath, gitDiffOutput)
@@ -40,31 +39,41 @@ class GitCollector {
         }
     }
 
-    private fun extractFilePaths(gitStatusOutput: String): List<String> {
+    private fun extractFilePaths(gitStatusOutput: String, repoRoot: File): List<String> {
         val gitStatusFilePathPattern = "^[A-Z?!\\s]{2}\\s+(.*)$".toRegex(RegexOption.MULTILINE)
         val filePaths = mutableListOf<String>()
 
         gitStatusFilePathPattern.findAll(gitStatusOutput).forEach { match ->
             val filePath = match.groupValues[1].trim()
                 .replace("\"", "") // To support names with spaces
-            if (filePath.isNotEmpty() && File(parsePathFromProjectRootParent(filePath)).isFile) {
-                filePaths.add(filePath)
+            if (filePath.isNotEmpty()) {
+                val fullFilePath = parsePathFromRepoRoot(filePath, repoRoot)
+                if (File(fullFilePath).isFile) {
+                    filePaths.add(fullFilePath)
+                }
             }
         }
         return filePaths
     }
 
-    private fun parsePathFromProjectRootParent(filePath: String): String {
-        val escapedFileSeparator = Matcher.quoteReplacement(File.separator)
-        val basePath = "${Context.get().projectRootDir.parent}${File.separator}${filePath}"
-        return basePath.replace("\\\\/".toRegex(), escapedFileSeparator)
+    /** Returns the root directory of the git repository, falling back to the project root. */
+    private fun getGitRepoRoot(): File {
+        val repoRootPath = executeCommand("git rev-parse --show-toplevel").trim()
+        return if (repoRootPath.isNotEmpty()) File(repoRootPath) else Context.get().projectRootDir
     }
+
+    /**
+     * Converts a path relative to the git repository root (as reported by `git status --porcelain`) into an absolute
+     * path. Porcelain paths always use "/" as separator, but [File] normalizes to the OS separator.
+     */
+    private fun parsePathFromRepoRoot(filePath: String, repoRoot: File): String =
+        File(repoRoot, filePath).absolutePath
 
     private fun saveContentToUuidFile(filePath: String, content: String) {
         val uuid = UUID.randomUUID().toString()
         val gitFile = createEmptyFile(uuid)
         gitFile.writeText(content)
         val parsedPath = "/${filePath}".replace("\\", "/").replace("//", "/")
-        Context.get().gitUuidMap.put(uuid, parsedPath)
+        Context.get().gitUuidMap[uuid] = parsedPath
     }
 }

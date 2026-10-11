@@ -39,3 +39,15 @@ data class BucketResponse(
     /** The Cloud Storage bucket the collector uploads go to. */
     val bucket: String,
 )
+
+/**
+ * Response body when the trigger's `userEmail` does not match the email of the presented token —
+ * only possible for hand-crafted requests (see `DeployInfoProperties.Auth`).
+ */
+data class CollectorAuthenticationError(
+    val error: String,
+    /** The email of the account the presented token was issued for. */
+    val tokenEmail: String,
+    /** The `userEmail` the request body claimed. */
+    val requestUserEmail: String,
+)

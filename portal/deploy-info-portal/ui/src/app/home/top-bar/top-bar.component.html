@@ -3,6 +3,9 @@
         <span class="app-name" (click)="openDeployViewer()">DeployInfo</span>
 
         <div class="buttons">
+            @if (userEmail) {
+                <span class="user-email">{{ userEmail }}</span>
+            }
             <button mat-icon-button (click)="toggleDarkMode()">
                 <mat-icon>
                     @if (isDarkMode) { dark_mode } @else { light_mode }
@@ -11,7 +14,7 @@
             <button mat-icon-button (click)="openSettings()">
                 <mat-icon>settings</mat-icon>
             </button>
-            <button mat-icon-button class="logout-button">
+            <button mat-icon-button class="logout-button" (click)="logout()">
                 <mat-icon>logout</mat-icon>
             </button>
         </div>

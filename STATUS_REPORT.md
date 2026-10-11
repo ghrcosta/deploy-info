@@ -77,7 +77,7 @@
    standalone scheduler option, see `portal/deploy-info-portal/documentation/deploy-cleanup.md`) and
    `GET /portal/deploy/content?folder=…` (GIT/Extras file content from Cloud Storage, backed by
    `GetDeployContentUseCase`). See `portal/deploy-info-portal/src/main/kotlin/ui/portal/PortalController.kt`.
-6. **No login/auth at all** — no Spring Security dependency, no auth of any kind. TODO: check user permissions on the deployInfo project via the AppEngine service account. Also the trigger endpoint has no authentication (anyone could POST).
+6. ~~No login/auth at all~~ — **Done (Phase 2.7)**: servlet-filter authentication (no Spring Security added) — browser callers present a Google Identity Services ID token, the collector a `gcloud auth print-access-token` access token; both are verified via Google's tokeninfo endpoint and then checked against the IAM of the portal's own project with the Cloud Asset API's `AnalyzeIamPolicy` (`expandGroups` — users bound only through a group also pass). See `portal/deploy-info-portal/documentation/authentication.md`.
 7. **`application-prod.properties` is empty** — no prod config (project id, bucket name, etc.).
    Note: `deploy-info.cors.allowed-origins` is intentionally empty there — the UI will be served
    from the same deploy (same origin), and an empty `deploy-info.cors.allowed-origins` list
@@ -93,7 +93,8 @@
 **Implemented (Angular 19 + Material):**
 
 - App shell with routing (`/`, `/settings`); dark/light themes, styles.
-- **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; the configuration icon is wired (in-place toggle to the Settings screen via `HomeService`'s `BehaviorSubject`, now in its own `home.service.ts` to break a circular import); logout intentionally remains a no-op until Phase 2 auth. The dead standalone `/settings` route was removed.
+- **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; the configuration icon is wired (in-place toggle to the Settings screen via `HomeService`'s `BehaviorSubject`, now in its own `home.service.ts` to break a circular import). The dead standalone `/settings` route was removed.
+- **Authentication UI (Phase 2.7)** — `auth/` folder: `AuthService` (state machine over `BehaviorSubject`: loading / signed-out / no-access / signed-in; token in `sessionStorage`), `authInterceptor` (Bearer header; 401 → sign-in, 403 → no-access), `login` component (Google Identity Services button; no-access screen with remediation text), app initializer fetching `GET /auth/config`; `HomeComponent` renders the login screen instead of the app while not signed in. **Real logout**: the top-bar button revokes the Google grant (`google.accounts.id.revoke` + `disableAutoSelect`) and clears the session; the user's email is shown in the top bar. Auth-disabled portals (local dev) skip the whole flow.
 - **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, now fed by the real `GET /portal/tree` (`deploy-tree.network.service.ts`); note it already implements a "group" level above project which TODO.md doesn't mention.
 - **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes) and Extras, syntax highlighting incl. custom `git` language — now fed by real data: the header comes from the clicked tree version node, the content from `GET /portal/deploy/content` (`deploy-content.network.service.ts`); the fake `DeployData` + `delay(1000)` simulation is gone.
 - **Settings screen** — fully wired to real backend (get/add/edit/delete projects, dialogs).
@@ -101,7 +102,7 @@
 
 **Missing:**
 
-1. Logout icon behavior / login flow entirely.
+1. ~~Logout icon behavior / login flow entirely~~ — **Done (Phase 2.7)**, see the authentication UI above.
 2. ~~Deploy script that replaces `@url@` and copies the built UI into the backend's static resources~~ — done inside the Gradle build instead: `bootJar` compiles the frontend and embeds it into `BOOT-INF/classes/static`, and the backend serves it with a frontend fallback.
 3. The navigator and file-viewer `.spec.ts` files now have meaningful tests; the remaining `.spec.ts` files are still default Angular scaffolding.
 
@@ -111,6 +112,7 @@
 
 - ~~"Change build.gradle to use version toml"~~ **Done (Phase 2.10):** the collector now uses the version catalog too (`collector-java/deploy-info-collector/gradle/libs.versions.toml`); only the foojay toolchain resolver keeps its version inline in `settings.gradle.kts` (Gradle does not support catalog aliases in the settings plugins block).
 - ~~"Update libraries"~~ **Done (Phase 2.11):** collector upgraded to Gradle 9.8.1 (wrapper, `-bin`), Kotlin 2.4.20 (aligned with the portal), `com.gradle.plugin-publish` 2.2.1 and JUnit Jupiter 6.1.3; gson 2.14.0 / mockk 1.14.11 / foojay-resolver-convention 1.0.0 were already the latest versions. Verified with `test`, `functionalTest` (compatibility matrix Gradle 7.6+JDK17 and 9.8.1+JDK21) and `publishToMavenLocal`.
+- **Phase 2.7 — Authentication** (portal + frontend + collector): see `portal/deploy-info-portal/documentation/authentication.md`. Config: `deploy-info.auth.{enabled,client-id,collector-require-email-match}` (enabled in the prod profile — the client id must be filled in at deploy time; the portal refuses to start without it). Portal IAM prerequisite: `roles/cloudasset.viewer` (Cloud Asset `analyzeIamPolicy`) for the portal's service account.
 - **Missing entirely (not in TODO.md but required):**
   - Deployment config for the portal itself: no `app.yaml`, no Dockerfile, no App Engine/Cloud Run deploy task in `portal/deploy-info-portal/build.gradle.kts` (e.g., app-gradle-plugin), no UI build integration.
   - GCP infrastructure setup documentation/scripts: bucket creation, Datastore, service accounts + IAM roles (deployInfo project SA needs permission to impersonate each configured project's SA; each SA needs App Engine Viewer / Cloud Run Viewer), Cloud Storage lifecycle rule for cleanup would be a sensible addition.
@@ -126,7 +128,7 @@
 3. Portal: implement `CollectorController` — GCP listing clients (GAE + Cloud Run via impersonated SAs), 5-minute linking rule, Datastore link entity + repository.
 4. Portal: implement `PortalController` — tree data + file content from Storage, cleanup of deleted deploys.
 5. Frontend: replace mock data with real endpoints; logout.
-6. Auth: login/permission checks; secure the trigger endpoint.
+6. ~~Auth: login/permission checks; secure the trigger endpoint~~ — **Done (Phase 2.7)**.
 7. Service-account validation in Add/Edit project use cases; Settings UI already supports the error flags.
 8. Python collector (mirror the final contract).
 9. Packaging/DevOps: version catalog for collector (pending confirmation), UI build/deploy script, app.yaml, prod properties, CORS, READMEs.

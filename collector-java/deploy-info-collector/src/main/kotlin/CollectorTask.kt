@@ -1,6 +1,7 @@
 package io.github.ghrcosta
 
 import io.github.ghrcosta.action.BucketLookup
+import io.github.ghrcosta.action.GcloudAccessTokenProvider
 import io.github.ghrcosta.action.ExtraFilesCollector
 import io.github.ghrcosta.action.GitCollector
 import io.github.ghrcosta.action.PortalTrigger
@@ -106,15 +107,21 @@ abstract class CollectorTask : DefaultTask() {
         private val deployType: DeployType,
         private val projects: List<String>,
     ) {
+        private val accessTokenProvider = GcloudAccessTokenProvider()
+
         fun run() {
             Logger.init(project)
             Context.init(project, deployType, maxFileSize)
 
             collectGitStatusData()
             collectExtraFiles()
-            val bucketName = lookupBucket()
+            // One gcloud access token for both portal calls (bucket lookup + trigger); null when
+            // none can be obtained — the portal then answers with its own actionable error if it
+            // requires authentication.
+            val accessToken = accessTokenProvider.fetch()
+            val bucketName = lookupBucket(accessToken)
             uploadFiles(bucketName)
-            triggerPortalProcessing()
+            triggerPortalProcessing(accessToken)
 
             Logger.i("Done!")
         }
@@ -131,8 +138,8 @@ abstract class CollectorTask : DefaultTask() {
             }
         }
 
-        private fun lookupBucket(): String {
-            val bucketName = BucketLookup(portalUrl).execute()
+        private fun lookupBucket(accessToken: String?): String {
+            val bucketName = BucketLookup(portalUrl, accessToken).execute()
             Logger.i("Uploads will go to Cloud Storage bucket '$bucketName' (resolved from the portal at $portalUrl).")
             return bucketName
         }
@@ -141,7 +148,7 @@ abstract class CollectorTask : DefaultTask() {
             Uploader(bucketName).execute()
         }
 
-        private fun triggerPortalProcessing() {
+        private fun triggerPortalProcessing(accessToken: String?) {
             val context = Context.get()
             PortalTrigger(
                 portalUrl = portalUrl,
@@ -149,6 +156,7 @@ abstract class CollectorTask : DefaultTask() {
                 projects = projects,
                 deployType = deployType.name,
                 userEmail = context.userEmail,
+                accessToken = accessToken,
             ).execute()
         }
     }

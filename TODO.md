@@ -85,9 +85,9 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 
 ### 7. Authentication
 
-- [ ] Login: use the AppEngine service account to check user permissions on the deployInfo project
-- [ ] Secure the trigger endpoint (currently anyone can POST)
-- [ ] Frontend login flow + real logout behavior
+- [x] Login: check user permissions on the deployInfo project — the Cloud Asset API's `AnalyzeIamPolicy` (with `expandGroups`, so users bound only through a group also pass) on the portal's own project (`GOOGLE_CLOUD_PROJECT`), behind a servlet filter — see [`portal/deploy-info-portal/documentation/authentication.md`](portal/deploy-info-portal/documentation/authentication.md)
+- [x] Secure the trigger endpoint — the collector now sends `gcloud auth print-access-token` as the `Authorization: Bearer` header on `/collector/bucket` and `/collector/handleNewDirectory` (with an email-match check against the body's `userEmail` as defense in depth, configurable for impersonation setups)
+- [x] Frontend login flow (Google Identity Services; `GET /auth/config` + `GET /auth/user`, interceptor, login/no-access screens) + real logout behavior (token revoke + session clear)
 
 ### 8. Settings hardening
 

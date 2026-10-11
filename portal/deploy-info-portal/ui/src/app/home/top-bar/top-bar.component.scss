@@ -28,6 +28,19 @@
 .buttons {
     margin-left: auto;
     margin-top: auto;
+.user-email {
+    color: var(--mat-sys-on-primary);
+    margin-top: auto;
+    margin-bottom: auto;
+    opacity: 0.8;
+    font-size: 0.9rem;
+    margin-right: 4px;
+    user-select: none;
+}
+
+.logout-button {
+    margin-left: 40px;
+}
     margin-bottom: auto;
 
     @include mat.icon-button-overrides((

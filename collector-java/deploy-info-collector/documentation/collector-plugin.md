@@ -84,14 +84,12 @@ Executed when `collectGitStatus` is true. Writes into `Context.outputDir`:
 
 1. **`git-status.txt`** — output of `git status --long --branch --untracked-files=normal` (the human-readable status shown on the portal).
 2. **`git-log.txt`** — output of `git log --oneline`.
-3. **Per changed file**: parses `git status --porcelain --untracked-files=normal --no-renames` to get the list of changed paths (supports quoted names with spaces; skips entries that don't resolve to an existing file). For each path:
+3. **Per changed file**: parses `git status --porcelain --untracked-files=normal --no-renames` to get the list of changed paths (supports quoted names with spaces; skips entries that don't resolve to an existing file). Porcelain paths are always relative to the **git repository root** (which may differ from the Gradle project root, e.g. when the repo root is a parent of the module the plugin is applied to). They are resolved to absolute paths against the repository root obtained from `git rev-parse --show-toplevel` (falling back to the Gradle project root if the command fails). This works for any repo/module layout, on both Linux and Windows. For each path:
    - runs `git --no-pager diff "<path>"`; if the diff is non-blank, saves it;
    - otherwise (e.g. untracked files have no diff) saves the **full file content** via `File.getContents()` — so large files become `<FILE IS TOO LARGE ...>`, binaries become `<FILE IS BINARY>`, blank files become `<FILE IS BLANK>`.
    - content is written to a file named by a fresh **`UUID`** (not the real path — avoids path/encoding issues in Storage), and `uuid → "/real/path"` is recorded in `Context.gitUuidMap` (backslashes normalized to `/`).
 
 On `IOException` the error is logged and an `error.txt` with the message is written to the output dir instead of failing the task.
-
-Note: paths from `git status` are relative to the **parent** of the Gradle project root (the repo root may be the parent of the module the plugin is applied to) — handled by `parsePathFromProjectRootParent`.
 
 ## 5. `ExtraFilesCollector`
 

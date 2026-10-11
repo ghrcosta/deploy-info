@@ -15,6 +15,12 @@ import java.net.URL
  */
 class BucketLookup(
     private val portalUrl: String,
+    /**
+     * gcloud access token sent as the `Authorization: Bearer` credential, or null when none could
+     * be obtained (a portal that requires authentication then answers with an actionable error).
+     * The token itself is never logged.
+     */
+    private val accessToken: String? = null,
     /** Seam for tests: how an [HttpURLConnection] is opened for a given [URL]. */
     private val openConnection: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
 ) {
@@ -25,6 +31,7 @@ class BucketLookup(
             requestMethod = "GET"
             connectTimeout = CONNECT_TIMEOUT_MILLIS
             readTimeout = READ_TIMEOUT_MILLIS
+            accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
         }
 
         try {
@@ -34,7 +41,14 @@ class BucketLookup(
                 throw GradleException("Could not reach the portal at $url to resolve the upload bucket: ${e.message}", e)
             }
             if (status != HTTP_OK) {
-                throw GradleException("The portal at $url returned HTTP $status when resolving the upload bucket.")
+                val authHint =
+                    if (status == HttpURLConnection.HTTP_UNAUTHORIZED || status == HttpURLConnection.HTTP_FORBIDDEN)
+                        " The portal requires authentication: run `gcloud auth login` (or " +
+                            "`gcloud auth application-default login`) and retry."
+                    else ""
+                throw GradleException(
+                    "The portal at $url returned HTTP $status when resolving the upload bucket.$authHint"
+                )
             }
 
             val body = try {

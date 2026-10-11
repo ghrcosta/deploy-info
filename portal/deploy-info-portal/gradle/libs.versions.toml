@@ -3,6 +3,7 @@ kotlin = "2.4.20" # See Spring Initializr
 appengineGradlePlugin = "2.8.7" # https://github.com/GoogleCloudPlatform/appengine-plugins/releases (app-gradle-plugin)
 googleCloudAppengineAdmin = "2.99.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
 googleCloudRun = "0.93.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
+googleCloudAsset = "3.103.0" # Aligned with the gax 2.87.0 / grpc 1.83.1 stack managed by Spring Cloud GCP 8.2.x BOM
 mockito = "5.24.0" # Use max(5.24.0, version supported by [mockitoKotlin]) -- agent required by Java 21
 mockitoKotlin = "6.4.0" # https://github.com/mockito/mockito-kotlin/releases
 spring-boot = "4.1.1" # See Spring Initializr
@@ -29,6 +30,7 @@ junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher
 
 google-cloud-appengine-admin = { group = "com.google.cloud", name = "google-cloud-appengine-admin", version.ref = "googleCloudAppengineAdmin" }
 google-cloud-run = { group = "com.google.cloud", name = "google-cloud-run", version.ref = "googleCloudRun" }
+google-cloud-asset = { group = "com.google.cloud", name = "google-cloud-asset", version.ref = "googleCloudAsset" }
 
 [plugins] # Find IDs at https://plugins.gradle.org
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

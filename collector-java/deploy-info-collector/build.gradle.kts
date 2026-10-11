@@ -14,7 +14,7 @@ group = "io.github.ghrcosta"
 
 val pluginId = "${group}.deploy-info-collector"
 val pluginMainClass = "${group}.CollectorPlugin"
-val pluginVersion = "0.0.1"
+val pluginVersion = "0.0.2"
 val pluginName = "DeployInfo Collector"
 val pluginDescription = "Used to collect the data shown on DeployInfo portal."
 
