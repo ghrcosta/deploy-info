@@ -10,7 +10,13 @@ enum class DeployType { GAE, RUN }
  * Identity is the tuple (projectId, deployType, serviceId, versionId, location): location is part
  * of the identity because Cloud Run revision ids repeat across regions (null for App Engine).
  * The project/deployType/storage folder/user email/timestamp come from the collector's trigger
- * request; service/version/location/url are filled by the linking logic from the GCP listing.
+ * request; service/version/location/deploy timestamp/url are filled by the linking logic from the
+ * GCP listing.
+ *
+ * [deployTimestamp] is the GCP deploy's creation time. It disambiguates a version id that is
+ * deployed again (the same identity tuple, but a new deploy): the linking logic uses it to tell
+ * "the very same deploy is already linked" from "a new deploy reused an existing identity" — in the
+ * latter case the new link replaces the old one (see `CreateDeployLinkUseCase`).
  */
 data class DeployLink(
     val projectId: String,
@@ -21,6 +27,7 @@ data class DeployLink(
     val storageFolder: String,
     val userEmail: String,
     val collectTimestamp: Instant,
+    val deployTimestamp: Instant,
     val url: String? = null,
 ) {
     /** Datastore key name for this deploy link's identity. */

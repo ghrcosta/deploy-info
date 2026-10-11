@@ -19,6 +19,7 @@ class DeployLinkEntity(
     val storageFolder: String,
     val userEmail: String,
     val collectTimestamp: Instant,
+    val deployTimestamp: Instant,
     val url: String? = null,
 ) {
     constructor(deployLink: DeployLink) : this(
@@ -31,6 +32,7 @@ class DeployLinkEntity(
         storageFolder = deployLink.storageFolder,
         userEmail = deployLink.userEmail,
         collectTimestamp = deployLink.collectTimestamp,
+        deployTimestamp = deployLink.deployTimestamp,
         url = deployLink.url,
     )
 
@@ -43,6 +45,7 @@ class DeployLinkEntity(
         storageFolder = storageFolder,
         userEmail = userEmail,
         collectTimestamp = collectTimestamp,
+        deployTimestamp = deployTimestamp,
         url = url,
     )
 }

@@ -41,5 +41,6 @@ class DeployLinkDatastoreRepository(
             storageFolder = "",
             userEmail = "",
             collectTimestamp = Instant.EPOCH,
+            deployTimestamp = Instant.EPOCH,
         ).keyName
 }

@@ -86,6 +86,7 @@ class CreateDeployLinkUseCaseTests {
         assertEquals("deployer_GAE_1735689600000", created.deployLink.storageFolder)
         assertEquals("deployer@example.com", created.deployLink.userEmail)
         assertEquals(COLLECT_TIME, created.deployLink.collectTimestamp)
+        assertEquals(COLLECT_TIME.minusSeconds(60), created.deployLink.deployTimestamp)
         assertEquals(created.deployLink, fakeDeployLinkRepository.get(PROJECT_ID, DeployType.GAE, null, "web", "v42"))
         assertTrue(fakeRetryScheduler.scheduledTasks().isEmpty())
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
@@ -113,6 +114,7 @@ class CreateDeployLinkUseCaseTests {
         assertEquals("europe-west1", created.deployLink.location)
         assertEquals("web-api", created.deployLink.serviceId)
         assertEquals("rev-7", created.deployLink.versionId)
+        assertEquals(COLLECT_TIME.minusSeconds(60), created.deployLink.deployTimestamp)
         assertEquals(created.deployLink, fakeDeployLinkRepository.get(PROJECT_ID, DeployType.RUN, "europe-west1", "web-api", "rev-7"))
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
     }
@@ -214,7 +216,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Already linked - the existing link is returned untouched and the old storage folder is kept`() {
+    fun `Already linked - the same deploy's existing link is returned untouched and the old storage folder is kept`() {
         val createTime = COLLECT_TIME.minusSeconds(60)
         fakeAppEngineLister.seed(
             PROJECT_ID,
@@ -229,6 +231,7 @@ class CreateDeployLinkUseCaseTests {
             storageFolder = "uploads/old-folder",
             userEmail = "deployer@example.com",
             collectTimestamp = COLLECT_TIME.minusSeconds(120),
+            deployTimestamp = createTime, // the very same deploy the listing reports
         )
         fakeDeployLinkRepository.save(existingLink)
 
@@ -239,6 +242,70 @@ class CreateDeployLinkUseCaseTests {
         assertEquals("uploads/old-folder", fakeDeployLinkRepository.get(PROJECT_ID, DeployType.GAE, null, "web", "v1")?.storageFolder)
         assertTrue(fakeStorageCleaner.deletedFolders.isEmpty())
         assertTrue(fakeRetryScheduler.scheduledTasks().isEmpty())
+    }
+
+    @Test
+    fun `Redeploy - a new deploy with the same version id replaces the existing link and deletes the old upload's folder`() {
+        fakeAppEngineLister.seed(
+            PROJECT_ID,
+            listOf(FakeAppEngineLister.deploy(PROJECT_ID, "web", "v1", COLLECT_TIME.minusSeconds(60), "deployer@example.com")),
+        )
+        fakeDeployLinkRepository.save(
+            domain.DeployLink(
+                projectId = PROJECT_ID,
+                deployType = DeployType.GAE,
+                serviceId = "web",
+                versionId = "v1",
+                location = null,
+                storageFolder = "uploads/old-folder",
+                userEmail = "deployer@example.com",
+                collectTimestamp = COLLECT_TIME.minusSeconds(120),
+                deployTimestamp = COLLECT_TIME.minusSeconds(600), // an older deploy with the same version id
+            ),
+        )
+
+        val output = useCase.execute(input())
+
+        val created = assertIs<CreateDeployLinkUseCase.Output.Created>(output)
+        assertEquals(COLLECT_TIME.minusSeconds(60), created.deployLink.deployTimestamp)
+        assertEquals(created.deployLink, fakeDeployLinkRepository.get(PROJECT_ID, DeployType.GAE, null, "web", "v1"))
+        // Only the replaced link's storage folder is deleted; the new upload's folder is kept.
+        assertEquals(listOf("uploads/old-folder"), fakeStorageCleaner.deletedFolders)
+    }
+
+    @Test
+    fun `Redeploy - a Cloud Run revision id that is used again replaces the link too`() {
+        fakeCloudRunLister.seed(
+            PROJECT_ID,
+            listOf(
+                FakeCloudRunLister.deploy(
+                    projectId = PROJECT_ID,
+                    location = "europe-west1",
+                    serviceId = "web-api",
+                    revisionId = "rev-7",
+                    createTime = COLLECT_TIME.minusSeconds(60),
+                    createdBy = "deployer@example.com",
+                ),
+            ),
+        )
+        fakeDeployLinkRepository.save(
+            domain.DeployLink(
+                projectId = PROJECT_ID,
+                deployType = DeployType.RUN,
+                serviceId = "web-api",
+                versionId = "rev-7",
+                location = "europe-west1",
+                storageFolder = "uploads/old-folder",
+                userEmail = "deployer@example.com",
+                collectTimestamp = COLLECT_TIME.minusSeconds(120),
+                deployTimestamp = COLLECT_TIME.minusSeconds(600),
+            ),
+        )
+
+        val output = useCase.execute(input(deployType = DeployType.RUN))
+
+        assertIs<CreateDeployLinkUseCase.Output.Created>(output)
+        assertEquals(listOf("uploads/old-folder"), fakeStorageCleaner.deletedFolders)
     }
 
     @Test

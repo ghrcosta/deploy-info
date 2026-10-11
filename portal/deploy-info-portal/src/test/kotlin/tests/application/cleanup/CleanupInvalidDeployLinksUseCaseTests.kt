@@ -27,6 +27,7 @@ private fun link(
     versionId: String,
     location: String? = null,
     collectTimestamp: Instant = OLD_ENOUGH,
+    deployTimestamp: Instant = collectTimestamp.minusSeconds(60),
 ) = DeployLink(
     projectId = projectId,
     deployType = deployType,
@@ -36,6 +37,7 @@ private fun link(
     storageFolder = "uploads/$serviceId-$versionId",
     userEmail = "deployer@example.com",
     collectTimestamp = collectTimestamp,
+    deployTimestamp = deployTimestamp,
 )
 
 class CleanupInvalidDeployLinksUseCaseTests {

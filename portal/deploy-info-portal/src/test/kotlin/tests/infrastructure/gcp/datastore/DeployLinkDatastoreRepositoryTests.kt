@@ -31,6 +31,7 @@ class DeployLinkDatastoreRepositoryTests {
         storageFolder = "john.doe_GAE_1746322088662",
         userEmail = "john.doe@example.com",
         collectTimestamp = Instant.ofEpochMilli(1746322088662),
+        deployTimestamp = Instant.ofEpochMilli(1746322082000),
     )
 
     private val runLink = DeployLink(
@@ -42,6 +43,7 @@ class DeployLinkDatastoreRepositoryTests {
         storageFolder = "jane.doe_RUN_1746322089000",
         userEmail = "jane.doe@example.com",
         collectTimestamp = Instant.ofEpochMilli(1746322089000),
+        deployTimestamp = Instant.ofEpochMilli(1746322085000),
         url = "https://my-service-00001-abc.run.app",
     )
 

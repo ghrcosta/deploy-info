@@ -2,6 +2,7 @@ package application.collector
 
 import application.*
 import domain.*
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 
@@ -19,7 +20,12 @@ import java.time.Instant
  *
  * When no plausible match is found, the matching is retried once after a short delay (a deploy may
  * appear late, or the listing may fail transiently) before the upload's storage folder is deleted.
- * A deploy identity that is already linked is never re-linked or overwritten.
+ *
+ * A deploy identity that is already linked is handled by comparing the existing link's deploy
+ * timestamp (the GCP deploy's creation time, stored on every link) with the matched deploy's:
+ * when they are equal it is the very same deploy (e.g. a duplicate trigger) and the existing link
+ * is left untouched; when they differ a new deploy reused the version id — the new link then
+ * replaces the old one, and the old link's storage folder (the replaced deploy's upload) is deleted.
  *
  * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
  */
@@ -73,7 +79,7 @@ class CreateDeployLinkUseCase(
         if (projects.isEmpty()) return unknownProject(input)
         return try {
             when (val result = matchDeploy(projects, input, collectTimestamp)) {
-                is MatchResult.Matched -> createLink(input, result.deploy, collectTimestamp)
+                is MatchResult.Matched -> createLink(input, result.deploy, collectTimestamp, result.replaced)
                 is MatchResult.AlreadyLinked -> Output.AlreadyLinked(result.existing)
                 MatchResult.NoMatch -> scheduleRetry(input, collectTimestamp)
             }
@@ -99,7 +105,7 @@ class CreateDeployLinkUseCase(
             }
         }
         when (result) {
-            is MatchResult.Matched -> createLink(input, result.deploy, collectTimestamp)
+            is MatchResult.Matched -> createLink(input, result.deploy, collectTimestamp, result.replaced)
             is MatchResult.AlreadyLinked -> Unit
             null, MatchResult.NoMatch -> storageCleaner.delete(input.directoryName)
         }
@@ -138,14 +144,18 @@ class CreateDeployLinkUseCase(
         }
         val existing = deployLinkRepository.get(
             closest.projectId, input.deployType, closest.location, closest.serviceId, closest.versionId,
-        ) ?: return MatchResult.Matched(closest)
-        return MatchResult.AlreadyLinked(existing)
+        ) ?: return MatchResult.Matched(closest, replaced = null)
+        if (existing.deployTimestamp == closest.createTime) return MatchResult.AlreadyLinked(existing)
+        // Same identity, different deploy: a redeploy that reused the version id. The new link
+        // replaces the existing one (createLink deletes the replaced link's storage folder).
+        return MatchResult.Matched(closest, replaced = existing)
     }
 
     private fun createLink(
         input: Input,
         deploy: DeployCandidate,
         collectTimestamp: Instant,
+        replaced: DeployLink?,
     ): Output.Created {
         val link = DeployLink(
             projectId = deploy.projectId,
@@ -156,9 +166,23 @@ class CreateDeployLinkUseCase(
             storageFolder = input.directoryName,
             userEmail = input.userEmail,
             collectTimestamp = collectTimestamp,
+            deployTimestamp = deploy.createTime,
             url = deploy.url,
         )
+        // Saving first: a failure must never leave a link pointing at an already-deleted folder.
         deployLinkRepository.save(link)
+        replaced?.let { old ->
+            if (old.storageFolder != link.storageFolder) {
+                try {
+                    storageCleaner.delete(old.storageFolder)
+                } catch (e: RuntimeException) {
+                    logger.warn(
+                        "Replaced deploy link ${old.keyName} (a new deploy reused its version id), " +
+                            "but deleting its old storage folder ${old.storageFolder} failed: ${e.message}",
+                    )
+                }
+            }
+        }
         return Output.Created(link)
     }
 
@@ -174,7 +198,7 @@ class CreateDeployLinkUseCase(
     }
 
     private sealed interface MatchResult {
-        data class Matched(val deploy: DeployCandidate) : MatchResult
+        data class Matched(val deploy: DeployCandidate, val replaced: DeployLink?) : MatchResult
         data class AlreadyLinked(val existing: DeployLink) : MatchResult
         data object NoMatch : MatchResult
     }
@@ -191,6 +215,8 @@ class CreateDeployLinkUseCase(
     )
 
     companion object {
+        private val logger = LoggerFactory.getLogger(CreateDeployLinkUseCase::class.java)
+
         /** Delay before the re-run that either links the upload or deletes its storage folder. */
         val RETRY_DELAY: Duration = Duration.ofMinutes(5)
 
