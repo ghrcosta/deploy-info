@@ -6,6 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
+    "pretest": "node scripts/ensure-headless-chrome.js",
     "test": "ng test"
   },
   "private": true,
@@ -25,7 +26,7 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^22.2.1",
+    "@angular/build": "^22.2.2",
     "@angular/cli": "^22.2.1",
     "@angular/compiler-cli": "^22.2.1",
     "@types/jasmine": "~5.1.15",
