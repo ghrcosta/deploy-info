@@ -196,6 +196,15 @@ name is the collector's output directory name (e.g. `jdoe_GAE_1735689600000`).
 | `502 Bad Gateway` | (empty) | Cloud Storage could not be read (a portal issue, not a user issue). |
 | `400 Bad Request` | (empty) | The `folder` parameter is missing. |
 
+### Caching
+
+A `200` response carries `Cache-Control: private, max-age=604800, immutable`: an upload folder's
+content never changes after the collector wrote it (the only lifecycle event is the cleanup sweep
+deleting the whole folder, which the tree then no longer links to), so the browser may reuse the
+response for a week without revalidation. The `private` scope keeps shared caches (proxies/CDNs)
+out — the endpoint sits behind authentication — and the error responses carry no cache header, so
+they are never cached.
+
 ```json
 {
   "git": {

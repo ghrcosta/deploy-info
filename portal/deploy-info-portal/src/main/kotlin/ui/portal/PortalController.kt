@@ -35,12 +35,20 @@ class PortalController(
     /**
      * The collected files (GIT section and extras) of one upload folder, as carried by the tree's
      * version nodes — so this endpoint touches Cloud Storage only, never Datastore.
+     *
+     * The 200 response is browser-cacheable (`Cache-Control: private, max-age=604800, immutable`):
+     * an upload folder's content never changes after the collector wrote it — the only lifecycle
+     * event is the cleanup sweep deleting the whole folder, which the tree no longer links to. The
+     * `private` scope keeps proxies/shared caches out of the authenticated API; error responses
+     * (404/502) carry no cache header, so they are never cached.
      */
     @GetMapping("/deploy/content")
     fun getContent(@RequestParam("folder") storageFolder: String): ResponseEntity<Any> =
         when (val output = getDeployContentUseCase.execute(GetDeployContentUseCase.Input(storageFolder))) {
             is GetDeployContentUseCase.Output.Content ->
-                ResponseEntity.ok(DeployContentDTO(output.deployContent))
+                ResponseEntity.ok()
+                    .header("Cache-Control", "private, max-age=604800, immutable")
+                    .body(DeployContentDTO(output.deployContent))
             is GetDeployContentUseCase.Output.FolderNotFound ->
                 ResponseEntity.status(404).build()
             is GetDeployContentUseCase.Output.StorageError ->

@@ -38,7 +38,11 @@ and the content endpoint (`storageFolder`).
 - `GET /portal/deploy/content?folder=<storageFolder>` → `200` `DeployContentDTO`
   (`git.gitlog` / `git.gitstatus` / `git.changes[]` / `extras[]`, field names matching the
   frontend's `DeployData`), `404` when the folder is absent/empty (e.g. cleaned up in the meantime),
-  `502` when Cloud Storage itself fails (portal-side issue).
+  `502` when Cloud Storage itself fails (portal-side issue). The 200 response carries
+  `Cache-Control: private, max-age=604800, immutable` — upload folders never change after the
+  collector wrote them, so the browser may cache the content for a week; the `private` scope keeps
+  proxies/shared caches out of the authenticated API, and the 404/502 responses carry no cache
+  header.
 
 Wiring: `infrastructure/beans/PortalUseCaseBeans.kt` (tree + content use cases and the lazily
 resolved `FileContentReader`) and `infrastructure/beans/CleanupBeans.kt` (sweep + trigger).
@@ -53,6 +57,9 @@ resolved `FileContentReader`) and `infrastructure/beans/CleanupBeans.kt` (sweep 
   reader failure → `StorageError`).
 - `tests/application/cleanup/RunCleanupIfDueUseCaseTests.kt` — the trigger timing rules (see
   `deploy-cleanup.md`).
+- `tests/ui/portal/GetDeployContentEndpointTests.kt` — the content endpoint's caching contract
+  (200 responses carry the `Cache-Control: private, max-age=604800, immutable` browser-cache
+  header; 404 responses carry none).
 
 ## Explicitly out of scope / Frontend wiring
 
