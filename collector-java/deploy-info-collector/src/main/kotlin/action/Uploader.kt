@@ -1,17 +1,21 @@
 package io.github.ghrcosta.action
 
 import io.github.ghrcosta.util.Context
+import io.github.ghrcosta.util.CsvUtils
 import io.github.ghrcosta.util.createEmptyFile
 import io.github.ghrcosta.util.executeCommandOrThrowException
 import java.nio.charset.StandardCharsets
 
 class Uploader(private val storageBucketName: String) {
     fun execute() {
-        val gitUuidProperties = Context.get().gitUuidMap.toProperties()
-        if (gitUuidProperties.isNotEmpty()) {
-            val gitUuidPropertiesFile = createEmptyFile("uuid-git.properties")
-            gitUuidPropertiesFile.writer(StandardCharsets.UTF_8).use {
-                gitUuidProperties.store(it, null)
+        val gitUuidMap = Context.get().gitUuidMap
+        if (gitUuidMap.isNotEmpty()) {
+            val gitUuidCsvFile = createEmptyFile("uuid-git.csv")
+            gitUuidCsvFile.writer(StandardCharsets.UTF_8).use { writer ->
+                writer.write("uuid,filepath,status\n")
+                gitUuidMap.forEach { (uuid, collectedFile) ->
+                    writer.write("${CsvUtils.escape(uuid)},${CsvUtils.escape(collectedFile.filepath)},${CsvUtils.escape(collectedFile.status.wireValue)}\n")
+                }
             }
         }
 

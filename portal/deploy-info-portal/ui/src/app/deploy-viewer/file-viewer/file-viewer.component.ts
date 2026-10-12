@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Highlight, HighlightAuto, HighlightJS } from 'ngx-highlightjs';
 import { HighlightLineNumbers } from 'ngx-highlightjs/line-numbers';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,6 +24,7 @@ import highlightGitLanguage from '../../highlightjs/git.js';
         MatIconModule,
         MatProgressSpinnerModule,
         MatTabsModule,
+        MatTooltipModule,
     ],
     templateUrl: './file-viewer.component.html',
     changeDetection: ChangeDetectionStrategy.Eager,

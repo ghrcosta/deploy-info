@@ -16,8 +16,8 @@ class Context(
     val maxFileSize: Int,
     /** The gcloud account that performed the deploy and the collection */
     val userEmail: String,
-    /** Map of UUID for files collected by [io.github.ghrcosta.action.GitCollector] and their real path */
-    val gitUuidMap: MutableMap<String,String> = mutableMapOf(),
+    /** Map of UUID for files collected by [io.github.ghrcosta.action.GitCollector], their real path and git state (new/modified) */
+    val gitUuidMap: MutableMap<String, GitCollectedFile> = mutableMapOf(),
     /** Map of UUID for files collected by [io.github.ghrcosta.action.ExtraFilesCollector] and their real path */
     val extraUuidMap: MutableMap<String,String> = mutableMapOf(),
 ) {

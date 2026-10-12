@@ -4,6 +4,8 @@ import io.github.ghrcosta.CollectorTask
 import io.github.ghrcosta.action.GitCollector
 import io.github.ghrcosta.util.CommandResult
 import io.github.ghrcosta.util.Context
+import io.github.ghrcosta.util.GitCollectedFile
+import io.github.ghrcosta.util.GitFileStatus
 import io.github.ghrcosta.util.Logger
 import io.github.ghrcosta.util.executeCommand
 import io.github.ghrcosta.util.executeCommandOrThrowException
@@ -58,6 +60,7 @@ class GitCollectorTests {
         val file01 = File(projectRootDir, "file01").also { it.createNewFile() }
         val file02 = File(projectRootDir, "file02").also { it.createNewFile() }
         val file03 = File(projectRootDir, "file03").also { it.createNewFile() }
+        val file04 = File(projectRootDir, "file04").also { it.createNewFile() }
 
         val paths = mutableListOf<String>()
 
@@ -67,6 +70,7 @@ class GitCollectorTests {
                  M ${projectRootDir.name}/${file01.name}
                 MM ${projectRootDir.name}/${file02.name}
                 ?? ${projectRootDir.name}/${file03.name}
+                AM ${projectRootDir.name}/${file04.name}
                 """.trimIndent()
             },
             gitDiffResponse = { path: String ->
@@ -77,12 +81,21 @@ class GitCollectorTests {
 
         GitCollector().execute()
 
-        assertEquals(3, paths.size)
+        assertEquals(4, paths.size)
         assertGitFilesAreCorrect()
 
         val gitUuidMap = Context.get().gitUuidMap
-        assertEquals(3, gitUuidMap.entries.size)
+        assertEquals(4, gitUuidMap.entries.size)
         assertFilesFromUuidMapExist(gitUuidMap)
+        assertEquals(
+            mapOf(
+                "file01" to GitFileStatus.MODIFIED,
+                "file02" to GitFileStatus.MODIFIED,
+                "file03" to GitFileStatus.UNTRACKED,
+                "file04" to GitFileStatus.NEW, // 'AM': the staged addition wins over the worktree modification
+            ),
+            gitUuidMap.values.associate { File(it.filepath).name to it.status },
+        )
     }
 
     @Test
@@ -260,7 +273,7 @@ class GitCollectorTests {
         assert(!errorFile.exists())
     }
 
-    private fun assertFilesFromUuidMapExist(uuidMap: Map<String, String>) {
+    private fun assertFilesFromUuidMapExist(uuidMap: Map<String, GitCollectedFile>) {
         uuidMap.keys.forEach { uuid ->
             assertTrue(File(Context.get().outputDir, uuid).isFile)
         }

@@ -93,9 +93,12 @@ data class DeployContentDTO(
 data class ContentFileDTO(
     val filepath: String,
     val content: String,
+    /** The git state of the file per the collector: `new`, `untracked` or `modified` (extras are `modified`). */
+    val status: String,
 ) {
     constructor(file: ContentFile) : this(
         filepath = file.filepath,
         content = file.content,
+        status = file.status.wireValue,
     )
 }

@@ -4,6 +4,8 @@ import io.github.ghrcosta.CollectorTask
 import io.github.ghrcosta.action.Uploader
 import io.github.ghrcosta.util.CommandResult
 import io.github.ghrcosta.util.Context
+import io.github.ghrcosta.util.GitCollectedFile
+import io.github.ghrcosta.util.GitFileStatus
 import io.github.ghrcosta.util.Logger
 import io.github.ghrcosta.util.executeCommandOrThrowException
 import io.mockk.every
@@ -54,23 +56,29 @@ class UploaderTests {
     }
 
     @Test
-    fun `Save UUID maps to properties files`() {
+    fun `Save git UUID map to CSV and extra UUID map to properties file`() {
         val gitUuid1 = UUID.randomUUID().toString()
         val gitUuid2 = UUID.randomUUID().toString()
+        val gitUuid3 = UUID.randomUUID().toString()
         val extraUuid1 = UUID.randomUUID().toString()
-        Context.get().gitUuidMap.put(gitUuid1, "/path/to/file01")
-        Context.get().gitUuidMap.put(gitUuid2, "/path/to/file02")
+        Context.get().gitUuidMap.put(gitUuid1, GitCollectedFile("/path/to/file01", status = GitFileStatus.MODIFIED))
+        Context.get().gitUuidMap.put(gitUuid2, GitCollectedFile("/path/to/file02", status = GitFileStatus.NEW))
+        Context.get().gitUuidMap.put(gitUuid3, GitCollectedFile("/path/to/file04", status = GitFileStatus.UNTRACKED))
         Context.get().extraUuidMap.put(extraUuid1, "/path/to/file03")
 
         Uploader("fakeBucketName").execute()
 
-        val uuidGitPropertiesFile = File(Context.get().outputDir, "uuid-git.properties")
-        assert(uuidGitPropertiesFile.isFile)
-        val uuidGitProperties = Properties().also { properties ->
-            uuidGitPropertiesFile.reader().use { properties.load(it) }
-        }
-        assertEquals(2, uuidGitProperties.entries.size)
-        assert(uuidGitProperties.keys.containsAll(listOf(gitUuid1, gitUuid2)))
+        val uuidGitCsvFile = File(Context.get().outputDir, "uuid-git.csv")
+        assert(uuidGitCsvFile.isFile)
+        assertEquals(
+            listOf(
+                "uuid,filepath,status",
+                "$gitUuid1,/path/to/file01,modified",
+                "$gitUuid2,/path/to/file02,new",
+                "$gitUuid3,/path/to/file04,untracked",
+            ),
+            uuidGitCsvFile.readLines(),
+        )
 
         val uuidExtraPropertiesFile = File(Context.get().outputDir, "uuid-extra.properties")
         assert(uuidExtraPropertiesFile.isFile)
@@ -82,13 +90,33 @@ class UploaderTests {
     }
 
     @Test
-    fun `Git UUID properties file is not saved if map is empty`() {
+    fun `Git UUID CSV quotes filepaths containing commas or quotes`() {
+        val gitUuid1 = UUID.randomUUID().toString()
+        val gitUuid2 = UUID.randomUUID().toString()
+        Context.get().gitUuidMap.put(gitUuid1, GitCollectedFile("/path/with,comma", status = GitFileStatus.MODIFIED))
+        Context.get().gitUuidMap.put(gitUuid2, GitCollectedFile("/path/with\"quote", status = GitFileStatus.NEW))
+
+        Uploader("fakeBucketName").execute()
+
+        val csvLines = File(Context.get().outputDir, "uuid-git.csv").readLines()
+        assertEquals(
+            listOf(
+                "uuid,filepath,status",
+                "$gitUuid1,\"/path/with,comma\",modified",
+                "$gitUuid2,\"/path/with\"\"quote\",new",
+            ),
+            csvLines,
+        )
+    }
+
+    @Test
+    fun `Git UUID CSV file is not saved if map is empty`() {
         Context.get().extraUuidMap.put(UUID.randomUUID().toString(), "/path/to/file01")
 
         Uploader("fakeBucketName").execute()
 
-        val uuidGitPropertiesFile = File(Context.get().outputDir, "uuid-git.properties")
-        assert(!uuidGitPropertiesFile.exists())
+        val uuidGitCsvFile = File(Context.get().outputDir, "uuid-git.csv")
+        assert(!uuidGitCsvFile.exists())
 
         val uuidExtraPropertiesFile = File(Context.get().outputDir, "uuid-extra.properties")
         assert(uuidExtraPropertiesFile.isFile)
@@ -96,12 +124,12 @@ class UploaderTests {
 
     @Test
     fun `Extra UUID properties file is not saved if map is empty`() {
-        Context.get().gitUuidMap.put(UUID.randomUUID().toString(), "/path/to/file01")
+        Context.get().gitUuidMap.put(UUID.randomUUID().toString(), GitCollectedFile("/path/to/file01", status = GitFileStatus.MODIFIED))
 
         Uploader("fakeBucketName").execute()
 
-        val uuidGitPropertiesFile = File(Context.get().outputDir, "uuid-git.properties")
-        assert(uuidGitPropertiesFile.isFile)
+        val uuidGitCsvFile = File(Context.get().outputDir, "uuid-git.csv")
+        assert(uuidGitCsvFile.isFile)
 
         val uuidExtraPropertiesFile = File(Context.get().outputDir, "uuid-extra.properties")
         assert(!uuidExtraPropertiesFile.exists())

@@ -18,7 +18,8 @@ each component's `documentation/` folder:
 | Tool | Version used | Notes |
 |---|---|---|
 | JDK | **21** (portal backend) / **17+** (collector plugin — toolchain; Gradle downloads it if needed) | Portal `build.gradle.kts` pins `JavaLanguageVersion.of(21)`. |
-| Node.js + npm | for Angular 19 (Node 18/20/22 work) | Only needed for the frontend. |
+| Node.js + npm | for Angular 22 (Node 18/20/22 work) | Only needed for the frontend. |
+| chrome-headless-shell | 154.x (installed on demand) | Headless browser for the **frontend unit tests only**. Install via `npx @puppeteer/browsers install chrome-headless-shell@154.0.8037.92`, or let `npm test` auto-install it (see step 5 of the checklist). Auto-discovered from `~/.cache/puppeteer`; set `CHROME_BIN` to override. |
 | gcloud CLI | any recent version, on `PATH` | Needed by the collector (`gcloud config get-value account`, `gcloud storage cp`) and for the Datastore emulator (installed with gcloud). |
 | Authenticated gcloud account | `gcloud auth login` done | The collector reads the account email and uploads to a bucket as this user. |
 | GCP project + bucket | any test project | For the collector upload; the portal backend tests run fully local (no GCP access needed). |
@@ -47,7 +48,11 @@ Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`ut
    backend. Alternatively, `.\gradlew.bat bootJar` in `portal/deploy-info-portal` compiles the
    frontend, embeds it into the fat jar and serves it on 8080 from the same origin as the API (no
    CORS involved; see the portal's `documentation/frontend-serving.md`).
-5. Publish + apply the collector to a sample project; run `deployInfoCollect`; inspect
+5. `npm test` in `portal/deploy-info-portal/ui` — frontend unit tests pass, always headless
+   (`chrome-headless-shell` from the Puppeteer cache; no desktop browser needed; auto-installed by
+   the `pretest` hook if missing — one-time ~260 MB download, needs internet). Details in the
+   portal documentation's frontend section.
+6. Publish + apply the collector to a sample project; run `deployInfoCollect`; inspect
    `build/collector/<user>_<type>_<ts>/`, then verify the same folder appears in `gs://<bucket>`.
 
    Note: the collector now resolves its upload bucket from the portal first (`GET /collector/bucket`,

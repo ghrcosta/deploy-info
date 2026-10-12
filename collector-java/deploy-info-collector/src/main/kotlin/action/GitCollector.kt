@@ -19,17 +19,19 @@ class GitCollector {
             val gitLogOutputFile = createEmptyFile("git-log.txt")
             gitLogOutputFile.writeText(gitLogOutput)
 
-            // "git status --porcelain" is better for automations, use it to list (and process) modified files
+            // "git status --porcelain" is better for automations, use it to list (and process) files
             val gitStatusPorcelain = executeCommand("git status --porcelain --untracked-files=normal --no-renames")
             val repoRoot = getGitRepoRoot()
-            val filePaths = extractFilePaths(gitStatusPorcelain, repoRoot)
-            filePaths.forEach { filePath ->
-                val gitDiffOutput = executeCommand("git --no-pager diff \"${filePath}\"")
+            val changedFiles = extractChangedFiles(gitStatusPorcelain, repoRoot)
+            changedFiles.forEach { changedFile ->
+                val gitDiffOutput = if (changedFile.status == GitFileStatus.MODIFIED) {
+                    executeCommand("git --no-pager diff \"${changedFile.filePath}\"")
+                } else ""
                 if (gitDiffOutput.isBlank()) {
-                    val fileContent = File(filePath).getContents()
-                    saveContentToUuidFile(filePath, fileContent)
+                    val fileContent = File(changedFile.filePath).getContents()
+                    saveContentToUuidFile(changedFile.filePath, changedFile.status, fileContent)
                 } else {
-                    saveContentToUuidFile(filePath, gitDiffOutput)
+                    saveContentToUuidFile(changedFile.filePath, changedFile.status, gitDiffOutput)
                 }
             }
         } catch (e: IOException) {
@@ -39,21 +41,29 @@ class GitCollector {
         }
     }
 
-    private fun extractFilePaths(gitStatusOutput: String, repoRoot: File): List<String> {
-        val gitStatusFilePathPattern = "^[A-Z?!\\s]{2}\\s+(.*)$".toRegex(RegexOption.MULTILINE)
-        val filePaths = mutableListOf<String>()
+    /** One entry of `git status --porcelain`: the file path plus its git state. */
+    private data class ChangedFile(val filePath: String, val status: GitFileStatus)
+
+    /**
+     * Parses `git status --porcelain` output. The leading 2-char XY code carries the state: `??` is
+     * untracked, a code containing `A` (staged addition) is new — taking priority over `M` — and any
+     * other code (`M`, `MM`, `D`, ...) is a modification of a tracked file.
+     */
+    private fun extractChangedFiles(gitStatusOutput: String, repoRoot: File): List<ChangedFile> {
+        val gitStatusFilePathPattern = "^([A-Z?!\\s]{2})\\s+(.*)$".toRegex(RegexOption.MULTILINE)
+        val changedFiles = mutableListOf<ChangedFile>()
 
         gitStatusFilePathPattern.findAll(gitStatusOutput).forEach { match ->
-            val filePath = match.groupValues[1].trim()
+            val filePath = match.groupValues[2].trim()
                 .replace("\"", "") // To support names with spaces
             if (filePath.isNotEmpty()) {
                 val fullFilePath = parsePathFromRepoRoot(filePath, repoRoot)
                 if (File(fullFilePath).isFile) {
-                    filePaths.add(fullFilePath)
+                    changedFiles.add(ChangedFile(fullFilePath, status = GitFileStatus.fromPorcelainCode(match.groupValues[1])))
                 }
             }
         }
-        return filePaths
+        return changedFiles
     }
 
     /** Returns the root directory of the git repository, falling back to the project root. */
@@ -69,11 +79,11 @@ class GitCollector {
     private fun parsePathFromRepoRoot(filePath: String, repoRoot: File): String =
         File(repoRoot, filePath).absolutePath
 
-    private fun saveContentToUuidFile(filePath: String, content: String) {
+    private fun saveContentToUuidFile(filePath: String, status: GitFileStatus, content: String) {
         val uuid = UUID.randomUUID().toString()
         val gitFile = createEmptyFile(uuid)
         gitFile.writeText(content)
         val parsedPath = "/${filePath}".replace("\\", "/").replace("//", "/")
-        Context.get().gitUuidMap[uuid] = parsedPath
+        Context.get().gitUuidMap[uuid] = GitCollectedFile(filepath = parsedPath, status = status)
     }
 }

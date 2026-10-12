@@ -26,9 +26,13 @@ describe('FileViewerComponent', () => {
     git: {
       gitlog: 'commit 1a2b3c ...',
       gitstatus: 'On branch main ...',
-      changes: [{ filepath: '/src/main.kt', content: 'diff --git a/src/main.kt ...' }],
+      changes: [
+        { filepath: '/src/main.kt', content: 'diff --git a/src/main.kt ...', status: 'modified' },
+        { filepath: '/src/new-file.kt', content: 'full file content ...', status: 'new' },
+        { filepath: '/src/untracked-file.kt', content: 'full file content ...', status: 'untracked' },
+      ],
     },
-    extras: [{ filepath: '/docs/readme.md', content: '# readme' }],
+    extras: [{ filepath: '/docs/readme.md', content: '# readme', status: 'modified' }],
   };
   const EMPTY_CONTENT: DeployContent = { git: null, extras: [] };
 
@@ -91,10 +95,27 @@ describe('FileViewerComponent', () => {
     fixture.detectChanges();
 
     const panels = (fixture.nativeElement as HTMLElement).querySelectorAll('mat-expansion-panel');
-    expect(panels.length).toEqual(3);
+    expect(panels.length).toEqual(5);
     expect(panels[0].textContent).toContain('git log');
     expect(panels[1].textContent).toContain('git status');
     expect(panels[2].textContent).toContain('/src/main.kt');
+    expect(panels[3].textContent).toContain('/src/new-file.kt');
+    expect(panels[4].textContent).toContain('/src/untracked-file.kt');
+  });
+
+  it('should mark each git change panel with a new/untracked/modified icon (extras get none)', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    const panels = (fixture.nativeElement as HTMLElement).querySelectorAll('mat-expansion-panel');
+    expect(panels[2].querySelector('.file-state-icon.modified')).toBeTruthy();
+    expect(panels[2].querySelector('.file-state-icon.new')).toBeNull();
+    expect(panels[3].querySelector('.file-state-icon.new')).toBeTruthy();
+    expect(panels[3].querySelector('.file-state-icon.modified')).toBeNull();
+    expect(panels[4].querySelector('.file-state-icon.untracked')).toBeTruthy();
+    expect(panels[4].querySelector('.file-state-icon.new')).toBeNull();
+    expect(panels[0].querySelector('.file-state-icon')).toBeNull(); // git log panel
+    expect(panels[1].querySelector('.file-state-icon')).toBeNull(); // git status panel
   });
 
   it('should show the no-data alert when there is no git data and no extras', () => {

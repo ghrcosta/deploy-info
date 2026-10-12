@@ -1,10 +1,7 @@
 package application.content
 
 import application.FileContentReader
-import domain.ContentFile
-import domain.DeployContent
-import domain.GitContent
-import domain.StorageReadException
+import domain.*
 import java.util.*
 
 /**
@@ -13,10 +10,10 @@ import java.util.*
  * touches Cloud Storage only, never Datastore.
  *
  * The folder layout is the one produced by the collector (see the collector plugin documentation):
- * `git-log.txt` / `git-status.txt` at the top level, uuid-named files with their `uuid → path`
- * mappings in `uuid-git.properties` / `uuid-extra.properties`. Every part is optional: git files
- * only exist when the collector was configured to collect them, and the uuid maps only when
- * something was collected.
+ * `git-log.txt` / `git-status.txt` at the top level, uuid-named files with their `uuid → path` +
+ * new/modified state mappings in `uuid-git.csv`, and `uuid → path` mappings in
+ * `uuid-extra.properties`. Every part is optional: git files only exist when the collector was
+ * configured to collect them, and the uuid maps only when something was collected.
  *
  * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
  */
@@ -55,7 +52,7 @@ class GetDeployContentUseCase(
     private fun readContent(storageFolder: String): DeployContent {
         val gitLog = fileContentReader.readText(storageFolder, GIT_LOG_FILE)
         val gitStatus = fileContentReader.readText(storageFolder, GIT_STATUS_FILE)
-        val changes = readMappedFiles(storageFolder, GIT_UUID_PROPERTIES)
+        val changes = readGitChanges(storageFolder)
         val extras = readMappedFiles(storageFolder, EXTRA_UUID_PROPERTIES)
         val git = if (gitLog == null && gitStatus == null && changes.isEmpty()) {
             null
@@ -63,6 +60,63 @@ class GetDeployContentUseCase(
             GitContent(gitLog = gitLog, gitStatus = gitStatus, changes = changes)
         }
         return DeployContent(git = git, extras = extras)
+    }
+
+    /**
+     * Reads the git-collected files: parses `uuid-git.csv` (header `uuid,filepath,status`; RFC 4180 —
+     * filepaths containing commas/quotes are quoted) and reads each uuid file's text. Rows with a
+     * wrong shape or an unknown status, and entries referencing files that are missing from the
+     * folder, are skipped (partial uploads must not fail the whole content read).
+     */
+    private fun readGitChanges(storageFolder: String): List<ContentFile> {
+        val csvText = fileContentReader.readText(storageFolder, GIT_UUID_CSV) ?: return emptyList()
+        return parseCsvRows(csvText)
+            .drop(1) // the header row
+            .mapNotNull { fields ->
+                val uuid = fields.getOrNull(0)
+                val filepath = fields.getOrNull(1)
+                if (uuid.isNullOrEmpty() || filepath.isNullOrEmpty()) return@mapNotNull null
+                val status = GitFileStatus.fromWireValue(fields.getOrNull(2)) ?: return@mapNotNull null
+                val content = fileContentReader.readText(storageFolder, uuid) ?: return@mapNotNull null
+                ContentFile(filepath = filepath, content = content, status = status)
+            }
+    }
+
+    /**
+     * Parses RFC 4180 CSV rows: fields separated by commas, optionally wrapped in double quotes with
+     * embedded quotes doubled (line breaks inside quotes kept) — so a filepath containing a comma, a
+     * quote or a line break cannot break the parsing.
+     */
+    private fun parseCsvRows(text: String): List<List<String>> {
+        val rows = mutableListOf<List<String>>()
+        var field = StringBuilder()
+        var currentRow = mutableListOf<String>()
+        var inQuotes = false
+        var i = 0
+        while (i < text.length) {
+            val char = text[i]
+            when {
+                inQuotes && char == '"' && i + 1 < text.length && text[i + 1] == '"' -> {
+                    field.append('"'); i += 1
+                }
+                char == '"' -> inQuotes = !inQuotes
+                char == ',' && !inQuotes -> {
+                    currentRow.add(field.toString()); field = StringBuilder()
+                }
+                (char == '\n' || char == '\r') && !inQuotes -> {
+                    if (char == '\r' && i + 1 < text.length && text[i + 1] == '\n') i += 1
+                    currentRow.add(field.toString()); field = StringBuilder()
+                    rows.add(currentRow); currentRow = mutableListOf()
+                }
+                else -> field.append(char)
+            }
+            i += 1
+        }
+        if (field.isNotEmpty() || currentRow.isNotEmpty()) {
+            currentRow.add(field.toString())
+            rows.add(currentRow)
+        }
+        return rows
     }
 
     /**
@@ -83,7 +137,7 @@ class GetDeployContentUseCase(
         /** File names as written by the collector into each upload folder. */
         const val GIT_LOG_FILE = "git-log.txt"
         const val GIT_STATUS_FILE = "git-status.txt"
-        const val GIT_UUID_PROPERTIES = "uuid-git.properties"
+        const val GIT_UUID_CSV = "uuid-git.csv"
         const val EXTRA_UUID_PROPERTIES = "uuid-extra.properties"
     }
 }

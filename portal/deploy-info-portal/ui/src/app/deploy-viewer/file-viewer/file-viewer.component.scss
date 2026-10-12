@@ -133,3 +133,32 @@ mat-spinner {
     justify-self: center;
     margin-top: 40px;
 }
+
+mat-panel-title {
+    align-items: center;
+
+    & .file-state-icon {
+        font-size: 20px;
+        height: 20px;
+        width: 20px;
+        margin-right: 6px;
+
+        &.new {
+            @include mat.icon-overrides((
+                color: #2e7d32,
+            ));
+        }
+
+        &.untracked {
+            @include mat.icon-overrides((
+                color: #1565c0,
+            ));
+        }
+
+        &.modified {
+            @include mat.icon-overrides((
+                color: #ef6c00,
+            ));
+        }
+    }
+}

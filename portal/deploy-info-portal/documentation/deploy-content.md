@@ -12,14 +12,16 @@ feature is the backend counterpart of that contract.
   carries per version node. The link provides the upload's storage folder; if no link exists, the
   deploy has no collected content.
 - **The Cloud Storage folder**: `git-log.txt`, `git-status.txt`, uuid-named diff/full-content files
-  with `uuid-git.properties` (`<uuid>=<path>`), and verbatim extra files with
-  `uuid-extra.properties`. Every part is optional: git files only exist when the collector was
-  configured to collect them, the uuid maps only when something was collected.
+  with `uuid-git.csv` (`uuid,filepath,status`; `status` is `new`/`untracked`/`modified` per the
+  collector's `git status --porcelain`), and verbatim extra files with `uuid-extra.properties`
+  (`<uuid>=<path>`). Every part is optional: git files only exist when the collector was configured
+  to collect them, the uuid maps only when something was collected.
 
 ## Model (`domain/DeployContent.kt`)
 
-- `ContentFile(filepath, content)` — one collected file with its original repository path (from the
-  uuid map) and its stored text.
+- `ContentFile(filepath, content, status = MODIFIED)` — one collected file with its original
+  repository path (from the uuid map), its stored text, and its git state (`GitFileStatus`:
+  `new`/`untracked`/`modified` per the collector's porcelain status; always `modified` for extras).
 - `GitContent(gitlog?, gitstatus?, changes: List<ContentFile>)` — the GIT section; `null` in
   `DeployContent` when the upload contains no git data at all.
 - `DeployContent(git?, extras: List<ContentFile>)` — the whole folder's content; `extras` is empty
@@ -42,8 +44,10 @@ concern; the interface works with the folder name only.
   Cloud Storage only, never Datastore; the identity → folder mapping lives in the tree + Datastore).
 - Reads the folder through `FileContentReader`: first `listFileNames` (an absent/empty folder →
   `Output.FolderNotFound`, e.g. the cleanup sweep removed it), then the two git files plus both uuid
-  maps; each uuid file's content is resolved back to its original path. Entries referencing files
-  that are missing from the folder are skipped (partial uploads must not fail the whole read).
+  maps; each uuid file's content is resolved back to its original path. `uuid-git.csv` is parsed
+  RFC 4180-style (quoted filepaths survive commas/quotes); rows with a wrong shape or an unknown
+  status, and entries referencing files that are missing from the folder, are skipped (partial
+  uploads must not fail the whole read).
 - Output: `Content(DeployContent)` / `FolderNotFound` / `StorageError` (portal-issue failure).
 - Single-response design: log, status, all changes and all extras come back in one `DeployContent`,
   matching the frontend's single fetch per deploy click (files are size-capped by the collector's
@@ -66,9 +70,10 @@ target from the portal.
 ## Testing
 
 `tests/fakes/FakeFileContentReader.kt` (in-memory, with a fail-all-reads switch) and
-`tests/application/content/GetDeployContentUseCaseTests.kt`: full folder (paths from the uuid maps),
-no-git folder, empty/absent folder, status-only folder, uuid-map entry with a missing file, reader
-failure. No emulator, credentials, or internet access required.
+`tests/application/content/GetDeployContentUseCaseTests.kt`: full folder (paths and git states
+from the uuid maps), no-git folder, empty/absent folder, status-only folder, CSV filepaths
+with commas/quotes (RFC 4180), CSV rows with an unknown status, uuid-map entry with a missing file,
+reader failure. No emulator, credentials, or internet access required.
 
 ## Explicitly out of scope
 

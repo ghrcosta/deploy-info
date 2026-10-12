@@ -16,7 +16,12 @@ export interface GitContent {
     /** Per-changed-file diffs (or full content of untracked files). */
     changes: ContentFile[];
 }
+/** The git state of a collected file, from the collector's `git status --porcelain`. */
+export type GitFileStatus = 'new' | 'untracked' | 'modified';
+
 export interface ContentFile {
     filepath: string;
     content: string;
+    /** The git state of the file: new (staged addition), untracked, or modified; extras are always modified. */
+    status: GitFileStatus;
 }

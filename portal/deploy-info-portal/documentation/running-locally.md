@@ -88,6 +88,36 @@ mapping would reject those requests (`application-prod.properties` therefore set
 empty value, explicitly, since a profile file only overrides keys it defines). Add a value to a
 profile's properties file only if the UI runs on another origin.
 
+### Running the frontend unit tests
+
+```
+cd portal/deploy-info-portal/ui
+npm test        # or: npx ng test --watch=false for a single run
+```
+
+The tests **always run headless** — no desktop browser is needed, so they work on CI, in containers
+and on headless workstations (`ng test` on a machine without Chrome otherwise fails with
+`No binary for ChromeHeadless browser on your platform. Please set "CHROME_BIN"`).
+
+- **Always-headless setup:** `angular.json` pins `test.options.browsers` to `ChromeHeadlessCI`, a
+  launcher defined in `karma.conf.js` as `ChromeHeadless` plus the container/CI-safe flags
+  `--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions`.
+- **Binary resolution order** (`karma.conf.js`, cross-platform — `linux64`, `win64` + `.exe`,
+  `mac-arm64`, `mac-x64`; newest cached version first):
+  1. the `CHROME_BIN` environment variable (honored as-is), then
+  2. `chrome-headless-shell` in `~/.cache/puppeteer` (lightest option, ~260 MB per version), then
+  3. full Chrome for Testing in the same cache (fallback).
+- **Cache eviction self-healing:** `~/.cache` is an XDG cache dir that cleanup tools may purge. Every
+  `npm test` first runs the `pretest` hook (`scripts/ensure-headless-chrome.js`), which resolves the
+  binary with the same logic and, if absent, downloads the pinned
+  `chrome-headless-shell@154.0.8037.92` via `npx @puppeteer/browsers install` (one-time ~260 MB,
+  needs internet). When the browser is present the hook is a silent no-op. If both the hook and
+  Karma fail, the standard launcher error (`No binary for ChromeHeadless browser...`) is the
+  fail-fast signal.
+- **Custom installs:** point `CHROME_BIN` at any existing Chrome/Chromium binary — it overrides the
+  cache lookup and is not validated further, so a bogus path fails fast with the same launcher
+  error (deliberate: no silent fallback).
+
 ### Serving the frontend from the fat jar
 
 `./gradlew bootJar` compiles the frontend (`npm ci` + `ng build`; `npm.cmd` on Windows, `npm`

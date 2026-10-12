@@ -31,7 +31,7 @@ fun executeCommandOrThrowException(
     val stdoutFile = createEmptyFile("stdout", tempDir)
     val stderrFile = createEmptyFile("stderr", tempDir)
 
-    val process = ProcessBuilder(commandForOS.split(" "))
+    val process = ProcessBuilder(tokenizeCommand(commandForOS))
         .redirectError(stderrFile)
         .redirectOutput(stdoutFile)
         .start()
@@ -47,3 +47,14 @@ fun executeCommandOrThrowException(
 }
 
 class CommandResult(val stdout: String, val stderr: String)
+
+/**
+ * Splits a command string into its arguments: sections enclosed in double quotes become a single argument and the
+ * quotes are removed. This is needed because [ProcessBuilder] executes the command without a shell, so quotes would
+ * otherwise be passed literally to the executable (e.g. `git --no-pager diff "/path with space/file"` would make git
+ * look for a file named `"/path` and never match).
+ */
+internal fun tokenizeCommand(command: String): List<String> =
+    Regex("\"([^\"]*)\"|(\\S+)").findAll(command)
+        .map { match -> if (match.groupValues[1].isNotEmpty()) match.groupValues[1] else match.groupValues[2] }
+        .toList()

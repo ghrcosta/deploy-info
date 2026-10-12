@@ -106,9 +106,8 @@ Goal ordering: get a working end-to-end POC first. Implementation starts with th
 - [x] Phase 2.11 — Collector: upgrade Gradle (wrapper 9.8.0-`all` → 9.8.1-`bin`, latest stable) and all libraries: Kotlin 2.4.10 → 2.4.20 (aligned with the portal), `com.gradle.plugin-publish` 1.3.1 → 2.2.1, junit-jupiter 5.12.2 → 6.1.3; gson 2.14.0 / mockk 1.14.11 / foojay-resolver-convention 1.0.0 were already latest. Verified: `test`, `functionalTest` (compatibility matrix Gradle 7.6+JDK17 and 9.8.1+JDK21) and `publishToMavenLocal` all pass; `LATEST_SUPPORTED_GRADLE` in `CompatibilityTest.kt` bumped to 9.8.1.
 - [x] Deployment config for the portal: app-gradle-plugin `appengineDeploy` task (fat jar to GAE Standard, Java 21) in `portal/deploy-info-portal/build.gradle.kts` — configurable GCP project (`-PgaeProjectId`) and service (`-PgaeService`, default `default`), version `<portal_version>-<timestamp>` — see [`portal/deploy-info-portal/documentation/deployment.md`](portal/deploy-info-portal/documentation/deployment.md)
 - [x] Frontend served by the portal: the Gradle `bootJar` compiles the frontend (`npm ci` + `ng build`; `npm.cmd` on Windows, `npm` elsewhere) and embeds it into `BOOT-INF/classes/static`; the backend serves it same-origin with a frontend fallback (`portal/deploy-info-portal/documentation/frontend-serving.md`, `infrastructure/frontend/`), and `environment.ts` uses `url: ''` — replacing the previously planned deploy-script approach
-- [ ] `application-prod.properties`: project id, bucket name, CORS origin
+- [x] `application-prod.properties`: project id, bucket name, CORS origin
 - [ ] GCP infra docs/scripts: bucket, Datastore, service accounts + IAM (impersonation; App Engine Viewer / Cloud Run Viewer), Storage lifecycle rule
 - [ ] Root `README.md`
-- [ ] CI (GitHub Actions or similar)
 - [ ] Frontend tests: replace default `.spec.ts` scaffolding with meaningful tests
 

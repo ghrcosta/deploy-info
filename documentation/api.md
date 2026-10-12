@@ -202,11 +202,17 @@ name is the collector's output directory name (e.g. `jdoe_GAE_1735689600000`).
     "gitlog": "commit 1a2b3c ...",
     "gitstatus": "On branch main ...",
     "changes": [
-      { "filepath": "/src/main.kt", "content": "diff --git a/src/main.kt ..." }
+      { "filepath": "/src/main.kt", "content": "diff --git a/src/main.kt ...", "status": "modified" },
+      { "filepath": "/src/new-file.kt", "content": "full file content ...", "status": "new" },
+      { "filepath": "/src/untracked-file.kt", "content": "full file content ...", "status": "untracked" }
     ]
   },
   "extras": [
-    { "filepath": "/docs/readme.md", "content": "# readme" }
+    { "filepath": "/docs/readme.md", "content": "# readme", "status": "modified" }
   ]
 }
 ```
+
+`status` comes from the collector's `git status --porcelain` state as recorded in `uuid-git.csv`:
+`new` (a porcelain code containing `A` — the file was added to the index), `untracked` (porcelain
+code `??`), or `modified` (everything else); extras are always `modified`.

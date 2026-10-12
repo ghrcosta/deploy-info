@@ -43,7 +43,7 @@ When `deployInfoCollect` runs, six steps execute in order:
 2. **`GitCollector`** — if `collectGitStatus == true`, collects git data (see §4).
 3. **`ExtraFilesCollector`** — if `extraFilesToCollect` is set, copies those files (see §5).
 4. **`BucketLookup`** — resolves the upload bucket from the portal via `GET /collector/bucket` (see §6).
-5. **`Uploader`** — writes the uuid-map property files and runs `gcloud storage cp` (see §7).
+5. **`Uploader`** — writes the uuid-map CSV / properties files and runs `gcloud storage cp` (see §7).
 6. **`PortalTrigger`** — notifies the portal that the upload is complete so it can link the deploy (see §8).
 
 Then logs "Done!". Errors in the bucket-lookup step (§6), the upload step (§7) or the trigger step (§8) throw and fail the task.
@@ -55,6 +55,7 @@ Then logs "Done!". Errors in the bucket-lookup step (§6), the upload step (§7)
 - **`CommandUtils.kt`** — `executeCommand` / `executeCommandOrThrowException`: run a shell command via `ProcessBuilder`, capturing stdout/stderr to temp files inside the collector base directory (reading both streams to files prevents the process from blocking on full buffers). Returns `CommandResult(stdout, stderr)`. The plain `executeCommand` swallows `IOException` and returns the error text as output; the `OrThrowException` variant propagates.
 - **`SystemUtils.kt`** — on Windows, maps executables to their `.cmd` equivalents (`gcloud` → `gcloud.cmd`); a no-op elsewhere. All commands go through this.
 - **`FileUtils.kt`** — `File.getContents()` (returns `<FILE IS TOO LARGE (n bytes)>`, `<FILE IS BINARY>` or `<FILE IS BLANK>` placeholders instead of content), `File.isLarge()` (larger than `Context.maxFileSize`), `File.isBinary()` (mime-type sniff via URL connection; text/json/xml/html/yaml treated as text, anything else binary), `createEmptyFile` / `createEmptyDirectory` (the latter deletes an existing dir first so contents of different deploys never mix).
+- **`CsvUtils.kt`** — Escapes `uuid-git.csv`
 - **`Logger.kt`** — thin logging wrapper around the Gradle logger.
 
 ---
@@ -69,7 +70,7 @@ Singleton holding the state for one run:
 | `outputDir`      | `baseDir/<user>_<DEPLOYTYPE>_<epochMillis>/` — everything collected here is what gets uploaded. |
 | `projectRootDir` | The Gradle project root; base for resolving git/extra file paths.                               |
 | `maxFileSize`    | `maxFileSize` task param, or 50KB.                                                              |
-| `gitUuidMap`     | uuid → filepath for files collected by `GitCollector`.                                          |
+| `gitUuidMap`     | uuid → filepath + new/modified/untracked state for files collected by `GitCollector`.                     |
 | `extraUuidMap`   | uuid → filepath for files collected by `ExtraFilesCollector`.                                   |
 
 `Context.init(project, deployType, maxFileSize)`:
@@ -85,9 +86,10 @@ Executed when `collectGitStatus` is true. Writes into `Context.outputDir`:
 1. **`git-status.txt`** — output of `git status --long --branch --untracked-files=normal` (the human-readable status shown on the portal).
 2. **`git-log.txt`** — output of `git log --oneline`.
 3. **Per changed file**: parses `git status --porcelain --untracked-files=normal --no-renames` to get the list of changed paths (supports quoted names with spaces; skips entries that don't resolve to an existing file). Porcelain paths are always relative to the **git repository root** (which may differ from the Gradle project root, e.g. when the repo root is a parent of the module the plugin is applied to). They are resolved to absolute paths against the repository root obtained from `git rev-parse --show-toplevel` (falling back to the Gradle project root if the command fails). This works for any repo/module layout, on both Linux and Windows. For each path:
-   - runs `git --no-pager diff "<path>"`; if the diff is non-blank, saves it;
-   - otherwise (e.g. untracked files have no diff) saves the **full file content** via `File.getContents()` — so large files become `<FILE IS TOO LARGE ...>`, binaries become `<FILE IS BINARY>`, blank files become `<FILE IS BLANK>`.
-   - content is written to a file named by a fresh **`UUID`** (not the real path — avoids path/encoding issues in Storage), and `uuid → "/real/path"` is recorded in `Context.gitUuidMap` (backslashes normalized to `/`).
+   - the porcelain 2-char code decides the file's state: `??` → **untracked**; a code containing `A` (staged addition, e.g. `A `, `AM`) → **new**; any other code (`M`, `MM`, `D`, ...) → **modified**;
+   - for 'modified' files, runs `git --no-pager diff "<path>"`; if the diff is non-blank, saves it;
+   - otherwise (e.g. new/untracked files have no diff) saves the **full file content** via `File.getContents()` — so large files become `<FILE IS TOO LARGE ...>`, binaries become `<FILE IS BINARY>`, blank files become `<FILE IS BLANK>`.
+   - content is written to a file named by a fresh **`UUID`** (not the real path — avoids path/encoding issues in Storage), and `uuid → "/real/path" + git state (new/untracked/modified)` is recorded in `Context.gitUuidMap` (backslashes normalized to `/`).
 
 On `IOException` the error is logged and an `error.txt` with the message is written to the output dir instead of failing the task.
 
@@ -116,8 +118,8 @@ with mockK without touching the network (`action/BucketLookupTests.kt`).
 
 Executed with the bucket name resolved by `BucketLookup` (§6):
 
-1. If `gitUuidMap` is non-empty, writes **`uuid-git.properties`** into the output dir (Java `Properties` format: `<uuid>=<path>`).
-2. If `extraUuidMap` is non-empty, writes **`uuid-extra.properties`** the same way.
+1. If `gitUuidMap` is non-empty, writes **`uuid-git.csv`** into the output dir with header `uuid,filepath,status`.
+2. If `extraUuidMap` is non-empty, writes **`uuid-extra.properties`** the same way (Java `Properties` format: `<uuid>=<path>`).
 3. Runs:
 
 ```
@@ -164,14 +166,17 @@ gs://<bucketName>/
     ├── git-status.txt                     # `git status --long --branch` output
     ├── git-log.txt                        # `git log --oneline` output
     ├── <uuid>                             # diff or full content of one changed file
-    ├── <uuid>                             #   (paths in uuid-git.properties)
+    ├── <uuid>                             #   (paths in uuid-git.csv)
     ├── ...
-    ├── uuid-git.properties                # <uuid>=<path> for all git-collected files
+    ├── uuid-git.csv                       # uuid,filepath,status for all git-collected files
     ├── <uuid>                             # verbatim copy of one extra file
     ├── ...
     ├── uuid-extra.properties              # <uuid>=<path> for all extra files
     └── error.txt                          # only when GitCollector hit an IOException
 ```
 
-`git-status.txt` / `git-log.txt` are absent when `collectGitStatus=false`, and uuid files / maps only exist when something was actually collected. The backend file-content serving (Phase 1) relies on exactly this contract: the directory name encodes user/deployType/timestamp (the portal receives the rest of the metadata — projects, deployType, userEmail — via the trigger request body, see `documentation/api.md`), and file paths for uuid files come from the two properties files.
-
+`git-status.txt` / `git-log.txt` are absent when `collectGitStatus=false`, and uuid files / maps only exist when
+something was actually collected. The backend file-content serving relies on exactly this contract: the directory name
+encodes user/deployType/timestamp (the portal receives the rest of the metadata — projects, deployType, userEmail — via
+the trigger request body, see `documentation/api.md`), and file paths (plus the git new/untracked/modified state) for
+uuid files come from `uuid-git.csv` (git files) and `uuid-extra.properties` (extras).
