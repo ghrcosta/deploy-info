@@ -11,7 +11,7 @@ import io.github.ghrcosta.util.executeCommandOrThrowException
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger as GradleLogger
 import java.io.File
 import java.util.Properties
 import java.util.UUID
@@ -28,20 +28,14 @@ class UploaderTests {
     val buildDir: File = File(testDir, "buildDirTest/").absoluteFile
     val projectRootDir: File = File(testDir, "projectRootDirTest/").absoluteFile
 
-    lateinit var project: Project
-
     @BeforeTest
     fun setup() {
         testDir.mkdir()
         buildDir.mkdirs()
         projectRootDir.mkdirs()
 
-        project = mockk(relaxed = true)
-        every { project.layout.buildDirectory.asFile.get() } returns buildDir
-        every { project.rootDir } returns projectRootDir
-
-        Logger.init(project)
-        Context.init(project, CollectorTask.DeployType.GAE)
+        Logger.init(mockk<GradleLogger>(relaxed = true))
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE)
 
         mockkStatic("io.github.ghrcosta.util.CommandUtilsKt")
         every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns

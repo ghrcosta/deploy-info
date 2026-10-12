@@ -171,7 +171,7 @@ tasks.deployInfoCollect {
       loading a plugin from local maven, you must include the plugin version.
       ```kotlin
       plugins {
-          id("io.github.ghrcosta.deploy-info-collector") version "0.0.1"
+          id("io.github.ghrcosta.deploy-info-collector") version "0.0.3"
       }
 
       tasks.deployInfoCollect {

@@ -13,7 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger as GradleLogger
 import java.io.File
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
@@ -25,8 +25,6 @@ class GitCollectorTests {
     val buildDir: File = File(testDir, "buildDirTest/").absoluteFile
     val projectRootDir: File = File(testDir, "projectRootDirTest/").absoluteFile
 
-    lateinit var project: Project
-
     val gitStatusResponse =  "git status output"
     val gitLogResponse =  "git log output"
     val someFileRelatedContent = "some file related content"
@@ -37,12 +35,8 @@ class GitCollectorTests {
         buildDir.mkdirs()
         projectRootDir.mkdirs()
 
-        project = mockk(relaxed = true)
-        every { project.layout.buildDirectory.asFile.get() } returns buildDir
-        every { project.rootDir } returns projectRootDir
-
-        Logger.init(project)
-        Context.init(project, CollectorTask.DeployType.GAE)
+        Logger.init(mockk<GradleLogger>(relaxed = true))
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE)
 
         mockkStatic("io.github.ghrcosta.util.CommandUtilsKt")
         every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns

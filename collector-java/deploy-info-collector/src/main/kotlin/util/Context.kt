@@ -1,7 +1,6 @@
 package io.github.ghrcosta.util
 
 import io.github.ghrcosta.CollectorTask
-import org.gradle.api.Project
 import java.io.File
 import java.time.Instant
 
@@ -27,8 +26,8 @@ class Context(
 
         fun get(): Context = instance
 
-        fun init(project: Project, deployType: CollectorTask.DeployType, maxFileSize: Int? = null) {
-            val baseDir = createBaseDirectory(project)
+        fun init(rootDir: File, buildDir: File, deployType: CollectorTask.DeployType, maxFileSize: Int? = null) {
+            val baseDir = createBaseDirectory(buildDir)
 
             val gcloudEmail = executeCommandOrThrowException("gcloud config get-value account", baseDir).stdout
             val now = Instant.now().toEpochMilli()
@@ -38,14 +37,14 @@ class Context(
             instance = Context(
                 baseDir = baseDir,
                 outputDir = outputDir,
-                projectRootDir = project.rootDir,
+                projectRootDir = rootDir,
                 maxFileSize = maxFileSize ?: (50 * 1024), // 50KB
                 userEmail = gcloudEmail
             )
         }
 
-        private fun createBaseDirectory(project: Project): File =
-            createEmptyDirectory("collector", project.layout.buildDirectory.asFile.get())
+        private fun createBaseDirectory(buildDir: File): File =
+            createEmptyDirectory("collector", buildDir)
 
         private fun createOutputDirectory(
             baseDir: File,

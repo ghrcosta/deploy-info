@@ -8,7 +8,7 @@ import io.github.ghrcosta.util.executeCommandOrThrowException
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger as GradleLogger
 import java.io.File
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
@@ -23,19 +23,13 @@ class ContextTests {
     val buildDir: File = File(testDir, "buildDirTest/").absoluteFile
     val projectRootDir: File = File(testDir, "projectRootDirTest/").absoluteFile
 
-    lateinit var project: Project
-
     @BeforeTest
     fun setup() {
         testDir.mkdir()
         buildDir.mkdirs()
         projectRootDir.mkdirs()
 
-        Logger.init(mockk(relaxed = true))
-
-        project = mockk(relaxed = true)
-        every { project.layout.buildDirectory.asFile.get() } returns buildDir
-        every { project.rootDir } returns projectRootDir
+        Logger.init(mockk<GradleLogger>(relaxed = true))
 
         mockkStatic("io.github.ghrcosta.util.CommandUtilsKt")
     }
@@ -53,7 +47,7 @@ class ContextTests {
         every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
                 CommandResult(stdout = userEmail, stderr = "")
 
-        Context.init(project, deployType)
+        Context.init(projectRootDir, buildDir, deployType)
 
         assertNotNull(Context.get())
         assertEquals(userEmail, Context.get().userEmail)

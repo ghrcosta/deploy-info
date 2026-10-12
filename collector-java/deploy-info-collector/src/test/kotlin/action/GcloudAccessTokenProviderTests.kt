@@ -3,7 +3,7 @@ package action
 import io.github.ghrcosta.action.GcloudAccessTokenProvider
 import io.github.ghrcosta.util.Logger
 import io.mockk.mockk
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger as GradleLogger
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,7 +13,7 @@ class GcloudAccessTokenProviderTests {
 
     @BeforeTest
     fun setup() {
-        Logger.init(mockk<Project>(relaxed = true))
+        Logger.init(mockk<GradleLogger>(relaxed = true))
     }
 
     @Test

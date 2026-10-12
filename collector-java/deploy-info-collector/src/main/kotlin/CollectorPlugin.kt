@@ -6,6 +6,9 @@ import org.gradle.api.Project
 @Suppress("unused")
 abstract class CollectorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.tasks.register(CollectorTask.TASK_NAME, CollectorTask::class.java)
+        project.tasks.register(CollectorTask.TASK_NAME, CollectorTask::class.java) { task ->
+            task.projectRootDir.set(project.rootDir)
+            task.buildDirectory.set(project.layout.buildDirectory)
+        }
     }
 }

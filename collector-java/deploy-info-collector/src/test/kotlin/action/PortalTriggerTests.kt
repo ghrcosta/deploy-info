@@ -9,7 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.gradle.api.GradleException
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger as GradleLogger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
@@ -36,7 +36,7 @@ class PortalTriggerTests {
     @BeforeTest
     fun setup() {
         // PortalTrigger logs via the static Logger; init it with a relaxed mock (no backend involved).
-        Logger.init(mockk<Project>(relaxed = true))
+        Logger.init(mockk<GradleLogger>(relaxed = true))
     }
 
     private class ConnectionFixture(

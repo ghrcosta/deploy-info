@@ -4,7 +4,7 @@ Documentation of how the Gradle collector plugin (`collector-java/deploy-info-co
 For how to use it, see the plugin's own [README](../README.md).
 For how to run the whole project locally, see [local-development.md](../../../documentation/local-development.md).
 
-Plugin id: `io.github.ghrcosta.deploy-info-collector` · version `0.0.1` · Kotlin 2.4.20 · JVM toolchain 21 (Java 17 bytecode target). Build dependencies are declared in the version catalog at [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) — the only version kept inline is the foojay toolchain resolver in `settings.gradle.kts` (Gradle does not support catalog aliases in the settings plugins block).
+Plugin id: `io.github.ghrcosta.deploy-info-collector`.
 
 ---
 
@@ -12,11 +12,7 @@ Plugin id: `io.github.ghrcosta.deploy-info-collector` · version `0.0.1` · Kotl
 
 ### `CollectorPlugin.kt` (`io.github.ghrcosta`)
 
-Implements Gradle's `Plugin<Project>`. All it does is register the task:
-
-```kotlin
-project.tasks.register(CollectorTask.TASK_NAME, CollectorTask::class.java)
-```
+Implements Gradle's `Plugin<Project>`. All it does is register the data collection task.
 
 ### `CollectorTask.kt` (`io.github.ghrcosta`)
 
@@ -73,7 +69,7 @@ Singleton holding the state for one run:
 | `gitUuidMap`     | uuid → filepath + new/modified/untracked state for files collected by `GitCollector`.                     |
 | `extraUuidMap`   | uuid → filepath for files collected by `ExtraFilesCollector`.                                   |
 
-`Context.init(project, deployType, maxFileSize)`:
+`Context.init(rootDir, buildDir, deployType, maxFileSize)`:
 
 1. Creates `build/collector/` (cleared first via `createEmptyDirectory`).
 2. Runs `gcloud config get-value account` to get the authenticated gcloud email (throws if it fails — so the user **must** have `gcloud` installed and logged in before running the collector).

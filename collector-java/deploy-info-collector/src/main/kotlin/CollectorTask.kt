@@ -10,14 +10,16 @@ import io.github.ghrcosta.util.Context
 import io.github.ghrcosta.util.Logger
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 
 @DisableCachingByDefault(because = "Executes external tools (git, gcloud) and uploads data; not cacheable")
 abstract class CollectorTask : DefaultTask() {
@@ -73,11 +75,21 @@ abstract class CollectorTask : DefaultTask() {
     )
     abstract val projects: ListProperty<String>
 
+    // Set by CollectorPlugin at configuration time (not accessible as an @Option/@Input): reading
+    // Task.project at execution time is deprecated by Gradle (fails in Gradle 10).
+    @get:Internal
+    abstract val projectRootDir: Property<File>
+
+    @get:Internal
+    abstract val buildDirectory: DirectoryProperty
+
     @TaskAction
     fun run() {
         validateParameters()
+        Logger.init(logger)
         TaskImpl(
-            project = project,
+            rootDir = projectRootDir.get(),
+            buildDir = buildDirectory.get().asFile,
             maxFileSize = maxFileSize.orNull,
             collectGitStatus = collectGitStatus.getOrElse(true),
             extraFilesToCollect = extraFilesToCollect.orNull,
@@ -99,7 +111,8 @@ abstract class CollectorTask : DefaultTask() {
     }
 
     class TaskImpl(
-        private val project: Project,
+        private val rootDir: File,
+        private val buildDir: File,
         private val maxFileSize: Int?,
         private val collectGitStatus: Boolean,
         private val extraFilesToCollect: List<String>?,
@@ -110,8 +123,7 @@ abstract class CollectorTask : DefaultTask() {
         private val accessTokenProvider = GcloudAccessTokenProvider()
 
         fun run() {
-            Logger.init(project)
-            Context.init(project, deployType, maxFileSize)
+            Context.init(rootDir, buildDir, deployType, maxFileSize)
 
             collectGitStatusData()
             collectExtraFiles()
