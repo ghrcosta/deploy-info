@@ -24,7 +24,7 @@ fun executeCommandOrThrowException(
     val executableForOS = getExecutableForOS(executable)
     val commandForOS = command.replaceFirst(executable, executableForOS)
 
-    Logger.i("Executing command: ${commandForOS}")
+    Logger.d("Executing command: ${commandForOS}")
 
     // Need to read both stdout and stderr to prevent the process from getting stuck waiting for its buffer to be
     // read. Also, cannot redirect stderr into stdout because it messes up the output of some commands.

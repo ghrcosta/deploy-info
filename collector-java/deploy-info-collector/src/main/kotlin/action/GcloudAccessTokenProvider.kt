@@ -23,7 +23,7 @@ class GcloudAccessTokenProvider(
     fun fetch(): String? = try {
         printAccessToken().trim().takeIf { it.isNotBlank() }
     } catch (e: Exception) {
-        Logger.i(
+        Logger.e(
             "Could not obtain a gcloud access token (${e.message}): the portal may reject the " +
                 "bucket-lookup/trigger calls with HTTP 401/403 if it requires authentication."
         )

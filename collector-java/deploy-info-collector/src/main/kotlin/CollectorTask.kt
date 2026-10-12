@@ -123,7 +123,7 @@ abstract class CollectorTask : DefaultTask() {
             uploadFiles(bucketName)
             triggerPortalProcessing(accessToken)
 
-            Logger.i("Done!")
+            Logger.d("Done!")
         }
 
         private fun collectGitStatusData() {
@@ -140,7 +140,7 @@ abstract class CollectorTask : DefaultTask() {
 
         private fun lookupBucket(accessToken: String?): String {
             val bucketName = BucketLookup(portalUrl, accessToken).execute()
-            Logger.i("Uploads will go to Cloud Storage bucket '$bucketName' (resolved from the portal at $portalUrl).")
+            Logger.i("Uploads will go to Cloud Storage bucket '${bucketName}'.")
             return bucketName
         }
 

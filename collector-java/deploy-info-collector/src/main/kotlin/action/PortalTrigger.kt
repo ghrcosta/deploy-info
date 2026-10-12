@@ -156,11 +156,11 @@ class PortalTrigger(
 
         when (response.status) {
             TriggerResponse.STATUS_CREATED, TriggerResponse.STATUS_ALREADY_LINKED -> Logger.i(
-                "Portal linked '$directoryName' to deploy ${response.status} " +
-                        "(${response.project ?: "?"}, ${response.service ?: "?"}, ${response.version ?: "?"})."
+                "Deploy link result: ${response.status} ('${ directoryName}' -->  " +
+                        "[${response.project ?: "?"}, ${response.service ?: "?"}, ${response.version ?: "?"}])."
             )
             TriggerResponse.STATUS_PENDING -> Logger.i(
-                "Portal accepted the trigger for '$directoryName' as pending (HTTP ${status}): no deploy matched " +
+                "Portal accepted the trigger for '${directoryName}' as pending (HTTP ${status}): no deploy matched " +
                         "yet. The portal will retry matching and may still link the upload or delete its folder."
             )
             else -> throw GradleException(

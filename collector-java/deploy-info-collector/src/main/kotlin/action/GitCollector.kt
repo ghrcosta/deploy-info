@@ -8,6 +8,7 @@ import java.util.*
 
 class GitCollector {
     fun execute() {
+        Logger.i("Collecting diff data...")
         try {
             // Save the "git status" devs are used to, will be visible on the portal
             val gitStatusOutput = executeCommand("git status --long --branch --untracked-files=normal")

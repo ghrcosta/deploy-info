@@ -2,6 +2,7 @@ package io.github.ghrcosta.action
 
 import io.github.ghrcosta.util.Context
 import io.github.ghrcosta.util.CsvUtils
+import io.github.ghrcosta.util.Logger
 import io.github.ghrcosta.util.createEmptyFile
 import io.github.ghrcosta.util.executeCommandOrThrowException
 import java.nio.charset.StandardCharsets
@@ -27,6 +28,7 @@ class Uploader(private val storageBucketName: String) {
             }
         }
 
+        Logger.i("Uploading files...")
         val origin = Context.get().outputDir.absolutePath
         val result = executeCommandOrThrowException("gcloud storage cp --recursive ${origin} gs://${storageBucketName}")
 

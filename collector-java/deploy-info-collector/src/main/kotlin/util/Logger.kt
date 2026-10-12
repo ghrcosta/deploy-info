@@ -10,6 +10,7 @@ class Logger(private val project: Project) {
             instance = Logger(project)
         }
 
+        fun d(message: String) = instance.project.logger.debug(message)
         fun i(message: String) = instance.project.logger.lifecycle(message)
         fun e(message: String) = instance.project.logger.error(message)
     }
