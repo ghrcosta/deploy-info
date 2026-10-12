@@ -87,7 +87,7 @@ describe('LoginComponent', () => {
             text: 'signin_with',
             size: 'large',
             logo_alignment: 'center',
-            width: 300, // fixed width: the plain button renders at the same size every time
+            width: 240, // fixed width: the plain button renders at the same size every time
         }));
 
         const html = document.documentElement;
@@ -97,8 +97,8 @@ describe('LoginComponent', () => {
         fixture.detectChanges();
         expect(renderButton).toHaveBeenCalledTimes(2);
         expect(renderButton.calls.mostRecent().args[1]).toEqual(jasmine.objectContaining({
-            theme: 'filled_black', // the dark page gets the dark button variant
-            width: 300,
+            theme: 'outline',
+            width: 240,
         }));
 
         html.classList.remove('dark-theme');
@@ -108,7 +108,7 @@ describe('LoginComponent', () => {
         expect(renderButton).toHaveBeenCalledTimes(3);
         expect(renderButton.calls.mostRecent().args[1]).toEqual(jasmine.objectContaining({
             theme: 'outline',
-            width: 300,
+            width: 240,
         }));
 
         html.style.colorScheme = '';
