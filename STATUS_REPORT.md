@@ -1,16 +1,36 @@
 # DeployInfo — Project Status Report
 
-> Report based on a full review of the code (collector plugin, portal backend, Angular frontend, git history) and TODO.md, extrapolated against the overall project goal: let users see exactly which commits and local changes were in the code of each GCP AppEngine or CloudRun deploy.
+> Report based on a full review of the code (collector plugin, portal backend, Angular frontend, git history) and
+TODO.md, extrapolated against the overall project goal: let users see exactly which commits and local changes were in
+the code of each GCP AppEngine or CloudRun deploy.
 
 ## 1. High-level picture
 
-| Component | Status |
-|---|---|
-| Gradle collector plugin (`collector-java/deploy-info-collector`) | **~80% done** — collects, uploads, but portal trigger is a stub; missing 2 parameters |
-| Python collector script | **0% — does not exist at all** (no directory anywhere in the workspace) |
-| Portal backend (`portal/deploy-info-portal`) | **~40% done** — Settings CRUD working; GCP deploy-listing clients implemented (with service-account impersonation); the "deploy" linking core is missing |
-| Portal frontend (`portal/deploy-info-portal/ui`) | **~45% done** — full UI shell built on mock data; no real backend integration for the main screen |
-| DevOps / deployment of the portal itself | **~10%** — no app.yaml/Dockerfile, no frontend build integration |
+<table>
+  <tr><th>Component</th><th>Status</th></tr>
+  <tr>
+    <td>Gradle collector plugin (<code>collector-java/deploy-info-collector</code>)</td>
+    <td><strong>~80% done</strong> — collects, uploads, but portal trigger is a stub; missing 2 parameters</td>
+  </tr>
+  <tr>
+    <td>Python collector script</td>
+    <td><strong>0% — does not exist at all</strong> (no directory anywhere in the workspace)</td>
+  </tr>
+  <tr>
+    <td>Portal backend (<code>portal/deploy-info-portal</code>)</td>
+    <td><strong>~40% done</strong> — Settings CRUD working; GCP deploy-listing clients implemented (with
+      service-account impersonation); the "deploy" linking core is missing</td>
+  </tr>
+  <tr>
+    <td>Portal frontend (<code>portal/deploy-info-portal/ui</code>)</td>
+    <td><strong>~45% done</strong> — full UI shell built on mock data; no real backend integration for the main
+      screen</td>
+  </tr>
+  <tr>
+    <td>DevOps / deployment of the portal itself</td>
+    <td><strong>~10%</strong> — no app.yaml/Dockerfile, no frontend build integration</td>
+  </tr>
+</table>
 
 ---
 
@@ -18,32 +38,46 @@
 
 **Implemented and functional:**
 
-- Plugin class + `deployInfoCollect` task registered under group `deployInfo` (`CollectorPlugin.kt`, `CollectorTask.kt`).
-- Parameters: `portalUrl` (the upload bucket is resolved from the portal via `GET /collector/bucket`), `deployType` (GAE/RUN), plus optional `maxFileSize` (default 50KB), `collectGitStatus`, `extraFilesToCollect`.
-- `GitCollector`: saves `git-status.txt`, `git-log.txt`, and per-changed-file diffs (or full content for untracked files) into UUID-named files with a `gitUuidMap` (uuid → filepath).
-- `ExtraFilesCollector`: copies extra files (skips binary/large/missing) with `extraUuidMap`, writes `uuid-extra.properties` / `uuid-git.properties` at upload time (`Uploader`).
+- Plugin class + `deployInfoCollect` task registered under group `deployInfo` (`CollectorPlugin.kt`,
+  `CollectorTask.kt`).
+- Parameters: `portalUrl` (the upload bucket is resolved from the portal via `GET /collector/bucket`), `deployType`
+  (GAE/RUN), plus optional `maxFileSize` (default 50KB), `collectGitStatus`, `extraFilesToCollect`.
+- `GitCollector`: saves `git-status.txt`, `git-log.txt`, and per-changed-file diffs (or full content for untracked
+  files) into UUID-named files with a `gitUuidMap` (uuid → filepath).
+- `ExtraFilesCollector`: copies extra files (skips binary/large/missing) with `extraUuidMap`, writes
+  `uuid-extra.properties` / `uuid-git.properties` at upload time (`Uploader`).
 - `Uploader`: `gcloud storage cp --recursive` of the output dir to the bucket, with stderr error check.
-- `Context`: creates `build/collector/<user>_<deployType>_<timestamp>/`, gets gcloud account email. (`collector.properties` has been removed — the portal gets all metadata from the `PortalTrigger` request body.)
+- `Context`: creates `build/collector/<user>_<deployType>_<timestamp>/`, gets gcloud account email.
+  (`collector.properties` has been removed — the portal gets all metadata from the `PortalTrigger` request body.)
 - Cross-platform command execution (gcloud.cmd on Windows), logging, file utils (binary/large detection).
 - Unit tests exist for GitCollector, ExtraFilesCollector, Uploader, Context.
 - `README.md` with usage documentation; published via `com.gradle.plugin-publish`.
 
 **Missing / incomplete:**
 
-1. **`PortalTrigger` is a stub** — `action/PortalTrigger.kt` is literally `// TODO: Send request to portal`. Nothing calls the portal.
-2. **New parameters (TODO):** `portalUrl` and the list of projects where the code may be deployed. Neither exists in `CollectorTask`.
-3. **Portal trigger body (TODO):** output directory name, user email, list of projects, deploy type — none of this is sent anywhere.
-4. **`collector.properties` has been removed** (TODO: "Remove collector.properties") — `Context.createPropertiesFile` was deleted once the portal trigger carried email/type/timestamp in the request body. Resolved: the info moved entirely into the trigger request; the portal never read the file.
+1. **`PortalTrigger` is a stub** — `action/PortalTrigger.kt` is literally `// TODO: Send request to portal`. Nothing
+calls the portal.
+2. **New parameters (TODO):** `portalUrl` and the list of projects where the code may be deployed. Neither exists in
+`CollectorTask`.
+3. **Portal trigger body (TODO):** output directory name, user email, list of projects, deploy type — none of this is
+sent anywhere.
+4. **`collector.properties` has been removed** (TODO: "Remove collector.properties") — `Context.createPropertiesFile`
+was deleted once the portal trigger carried email/type/timestamp in the request body. Resolved: the info moved entirely
+into the trigger request; the portal never read the file.
 5. Documentation debt: `README.md` parameter table will need the two new parameters added.
 
 ---
 
 ## 3. Python collector — what exists
 
-**Nothing.** There is no Python code anywhere in the workspace (no `collector-python/` or similar directory). This entire component must be created:
+**Nothing.** There is no Python code anywhere in the workspace (no `collector-python/` or similar directory). This
+entire component must be created:
 
-- A script mirroring the Gradle plugin's behavior: git collection, extra files, uuid maps, `gcloud storage cp` upload, and portal trigger POST (once the trigger contract exists — ideally build this **after** the trigger endpoint/body is finalized so both collectors implement the same contract).
-- Open design questions to decide: CLI arg names/defaults, distribution (pip package? single script?), Python version target, and whether it reuses the same bucket output-directory naming convention (`<user>_<deployType>_<timestamp>`).
+- A script mirroring the Gradle plugin's behavior: git collection, extra files, uuid maps, `gcloud storage cp` upload,
+  and portal trigger POST (once the trigger contract exists — ideally build this **after** the trigger endpoint/body is
+  finalized so both collectors implement the same contract).
+- Open design questions to decide: CLI arg names/defaults, distribution (pip package? single script?), Python version
+  target, and whether it reuses the same bucket output-directory naming convention (`<user>_<deployType>_<timestamp>`).
 
 
 ---
@@ -52,8 +86,11 @@
 
 **Implemented:**
 
-- Spring Boot 3.5 + Kotlin 21 app (`DeployInfoPortalApplication.kt`) with local/prod/test profiles; runs on GAE by detecting `GAE_DEPLOYMENT_ID`.
-- **Settings vertical fully working end-to-end:** `Project` domain, `ProjectRepository` interface, `ProjectDatastoreRepository` (Datastore, entity `deploy-info/project`), use cases (Add/Edit/Delete/GetAll) with unit tests, `SettingsController` with DTOs/responses, wired as beans. The UI already calls these endpoints.
+- Spring Boot 3.5 + Kotlin 21 app (`DeployInfoPortalApplication.kt`) with local/prod/test profiles; runs on GAE by
+  detecting `GAE_DEPLOYMENT_ID`.
+- **Settings vertical fully working end-to-end:** `Project` domain, `ProjectRepository` interface,
+  `ProjectDatastoreRepository` (Datastore, entity `deploy-info/project`), use cases (Add/Edit/Delete/GetAll) with unit
+  tests, `SettingsController` with DTOs/responses, wired as beans. The UI already calls these endpoints.
 - Datastore emulator config for local/test; `TraceIdFilter` for logging; CORS config.
 - Build uses version catalog (`libs.versions.toml`) — this TODO item is **done for the portal**.
 
@@ -71,13 +108,20 @@
    impersonation (access tokens per project's service account, via the Google auth library) is
    implemented. See
    `portal/deploy-info-portal/documentation/gcp-deploy-listing.md`.
-4. ~~`AddProjectUseCase` service-account validation~~ — **now implemented**: both `AddProjectUseCase` and `EditProjectUseCase` validate the project's service account via `ServiceAccountValidator` (impersonation + GAE/Cloud Run listing permission checks); on failure the save is skipped and the UI shows a dialog naming the missing permission with grant instructions. See `portal/deploy-info-portal/documentation/plan-service-account-validation.md`.
+4. ~~`AddProjectUseCase` service-account validation~~ — **now implemented**: both `AddProjectUseCase` and
+`EditProjectUseCase` validate the project's service account via `ServiceAccountValidator` (impersonation + GAE/Cloud Run
+listing permission checks); on failure the save is skipped and the UI shows a dialog naming the missing permission with
+grant instructions. See `portal/deploy-info-portal/documentation/plan-service-account-validation.md`.
 5. **`PortalController` is now implemented**: `GET /portal/tree` (group > project > service > version,
    running the cleanup sweep on request when due — `deploy-info.cleanup.enabled=false` refers to the
    standalone scheduler option, see `portal/deploy-info-portal/documentation/deploy-cleanup.md`) and
    `GET /portal/deploy/content?folder=…` (GIT/Extras file content from Cloud Storage, backed by
    `GetDeployContentUseCase`). See `portal/deploy-info-portal/src/main/kotlin/ui/portal/PortalController.kt`.
-6. ~~No login/auth at all~~ — **Done (Phase 2.7)**: servlet-filter authentication (no Spring Security added) — browser callers present a Google Identity Services ID token, the collector a `gcloud auth print-access-token` access token; both are verified via Google's tokeninfo endpoint and then checked against the IAM of the portal's own project with the Cloud Asset API's `AnalyzeIamPolicy` (`expandGroups` — users bound only through a group also pass). See `portal/deploy-info-portal/documentation/authentication.md`.
+6. ~~No login/auth at all~~ — **Done (Phase 2.7)**: servlet-filter authentication (no Spring Security added) — browser
+callers present a Google Identity Services ID token, the collector a `gcloud auth print-access-token` access token; both
+are verified via Google's tokeninfo endpoint and then checked against the IAM of the portal's own project with the Cloud
+Asset API's `AnalyzeIamPolicy` (`expandGroups` — users bound only through a group also pass). See
+`portal/deploy-info-portal/documentation/authentication.md`.
 7. **`application-prod.properties` is empty** — no prod config (project id, bucket name, etc.).
    Note: `deploy-info.cors.allowed-origins` is intentionally empty there — the UI will be served
    from the same deploy (same origin), and an empty `deploy-info.cors.allowed-origins` list
@@ -93,30 +137,62 @@
 **Implemented (Angular 19 + Material):**
 
 - App shell with routing (`/`, `/settings`); dark/light themes, styles.
-- **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; the configuration icon is wired (in-place toggle to the Settings screen via `HomeService`'s `BehaviorSubject`, now in its own `home.service.ts` to break a circular import). The dead standalone `/settings` route was removed.
-- **Authentication UI (Phase 2.7)** — `auth/` folder: `AuthService` (state machine over `BehaviorSubject`: loading / signed-out / no-access / signed-in; token in `sessionStorage`), `authInterceptor` (Bearer header; 401 → sign-in, 403 → no-access), `login` component (Google Identity Services button; no-access screen with remediation text), app initializer fetching `GET /auth/config`; `HomeComponent` renders the login screen instead of the app while not signed in. **Real logout**: the top-bar button revokes the Google grant (`google.accounts.id.revoke` + `disableAutoSelect`) and clears the session; the user's email is shown in the top bar. Auth-disabled portals (local dev) skip the whole flow.
-- **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, now fed by the real `GET /portal/tree` (`deploy-tree.network.service.ts`); note it already implements a "group" level above project which TODO.md doesn't mention.
-- **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes) and Extras, syntax highlighting incl. custom `git` language — now fed by real data: the header comes from the clicked tree version node, the content from `GET /portal/deploy/content` (`deploy-content.network.service.ts`); the fake `DeployData` + `delay(1000)` simulation is gone.
+- **Top bar** (Emporium-style: "DeployInfo" left) — matches TODO; the configuration icon is wired (in-place toggle to
+  the Settings screen via `HomeService`'s `BehaviorSubject`, now in its own `home.service.ts` to break a circular
+  import). The dead standalone `/settings` route was removed.
+- **Authentication UI (Phase 2.7)** — `auth/` folder: `AuthService` (state machine over `BehaviorSubject`: loading /
+  signed-out / no-access / signed-in; token in `sessionStorage`), `authInterceptor` (Bearer header; 401 → sign-in, 403 →
+  no-access), `login` component (Google Identity Services button; no-access screen with remediation text), app
+  initializer fetching `GET /auth/config`; `HomeComponent` renders the login screen instead of the app while not signed
+  in. **Real logout**: the top-bar button revokes the Google grant (`google.accounts.id.revoke` + `disableAutoSelect`)
+  and clears the session; the user's email is shown in the top bar. Auth-disabled portals (local dev) skip the whole
+  flow.
+- **Deploy navigator** (left tree: group > project > service > version) — fully built with sort/highlight logic, now fed
+  by the real `GET /portal/tree` (`deploy-tree.network.service.ts`); note it already implements a "group" level above
+  project which TODO.md doesn't mention.
+- **File viewer** (right panel) — complete UI: deploy header (link, author, timestamp), GIT tabs (log/status/changes)
+  and Extras, syntax highlighting incl. custom `git` language — now fed by real data: the header comes from the clicked
+  tree version node, the content from `GET /portal/deploy/content` (`deploy-content.network.service.ts`); the fake
+  `DeployData` + `delay(1000)` simulation is gone.
 - **Settings screen** — fully wired to real backend (get/add/edit/delete projects, dialogs).
-- ~~`environment.ts` uses `@url@` placeholder~~ — now `url: ''` (same-origin; the Gradle `bootJar` compiles and embeds the frontend, see `portal/deploy-info-portal/documentation/frontend-serving.md`).
+- ~~`environment.ts` uses `@url@` placeholder~~ — now `url: ''` (same-origin; the Gradle `bootJar` compiles and embeds
+  the frontend, see `portal/deploy-info-portal/documentation/frontend-serving.md`).
 
 **Missing:**
 
 1. ~~Logout icon behavior / login flow entirely~~ — **Done (Phase 2.7)**, see the authentication UI above.
-2. ~~Deploy script that replaces `@url@` and copies the built UI into the backend's static resources~~ — done inside the Gradle build instead: `bootJar` compiles the frontend and embeds it into `BOOT-INF/classes/static`, and the backend serves it with a frontend fallback.
-3. The navigator and file-viewer `.spec.ts` files now have meaningful tests; the remaining `.spec.ts` files are still default Angular scaffolding.
+2. ~~Deploy script that replaces `@url@` and copies the built UI into the backend's static resources~~ — done inside the
+Gradle build instead: `bootJar` compiles the frontend and embeds it into `BOOT-INF/classes/static`, and the backend
+serves it with a frontend fallback.
+3. The navigator and file-viewer `.spec.ts` files now have meaningful tests; the remaining `.spec.ts` files are still
+default Angular scaffolding.
 
 ---
 
 ## 6. DevOps / packaging (TODO section)
 
-- ~~"Change build.gradle to use version toml"~~ **Done (Phase 2.10):** the collector now uses the version catalog too (`collector-java/deploy-info-collector/gradle/libs.versions.toml`); only the foojay toolchain resolver keeps its version inline in `settings.gradle.kts` (Gradle does not support catalog aliases in the settings plugins block).
-- ~~"Update libraries"~~ **Done (Phase 2.11):** collector upgraded to Gradle 9.8.1 (wrapper, `-bin`), Kotlin 2.4.20 (aligned with the portal), `com.gradle.plugin-publish` 2.2.1 and JUnit Jupiter 6.1.3; gson 2.14.0 / mockk 1.14.11 / foojay-resolver-convention 1.0.0 were already the latest versions. Verified with `test`, `functionalTest` (compatibility matrix Gradle 7.6+JDK17 and 9.8.1+JDK21) and `publishToMavenLocal`.
-- **Phase 2.7 — Authentication** (portal + frontend + collector): see `portal/deploy-info-portal/documentation/authentication.md`. Config: `deploy-info.auth.{enabled,client-id,collector-require-email-match}` (enabled in the prod profile — the client id must be filled in at deploy time; the portal refuses to start without it). Portal IAM prerequisite: `roles/cloudasset.viewer` (Cloud Asset `analyzeIamPolicy`) for the portal's service account.
+- ~~"Change build.gradle to use version toml"~~ **Done (Phase 2.10):** the collector now uses the version catalog too
+  (`collector-java/deploy-info-collector/gradle/libs.versions.toml`); only the foojay toolchain resolver keeps its
+  version inline in `settings.gradle.kts` (Gradle does not support catalog aliases in the settings plugins block).
+- ~~"Update libraries"~~ **Done (Phase 2.11):** collector upgraded to Gradle 9.8.1 (wrapper, `-bin`), Kotlin 2.4.20
+  (aligned with the portal), `com.gradle.plugin-publish` 2.2.1 and JUnit Jupiter 6.1.3; gson 2.14.0 / mockk 1.14.11 /
+  foojay-resolver-convention 1.0.0 were already the latest versions. Verified with `test`, `functionalTest`
+  (compatibility matrix Gradle 7.6+JDK17 and 9.8.1+JDK21) and `publishToMavenLocal`.
+- **Phase 2.7 — Authentication** (portal + frontend + collector): see
+  `portal/deploy-info-portal/documentation/authentication.md`. Config:
+  `deploy-info.auth.{enabled,client-id,collector-require-email-match}` (enabled in the prod profile — the client id must
+  be filled in at deploy time; the portal refuses to start without it). Portal IAM prerequisite:
+  `roles/cloudasset.viewer` (Cloud Asset `analyzeIamPolicy`) for the portal's service account.
 - **Missing entirely (not in TODO.md but required):**
-  - Deployment config for the portal itself: no `app.yaml`, no Dockerfile, no App Engine/Cloud Run deploy task in `portal/deploy-info-portal/build.gradle.kts` (e.g., app-gradle-plugin), no UI build integration.
-  - GCP infrastructure setup documentation/scripts: bucket creation, Datastore, service accounts + IAM roles (deployInfo project SA needs permission to impersonate each configured project's SA; each SA needs App Engine Viewer / Cloud Run Viewer), Cloud Storage lifecycle rule for cleanup would be a sensible addition.
-  - Top-level documentation (root `README.md` is just `# deploy-info`).
+- Deployment config for the portal itself: no `app.yaml`, no Dockerfile, no App Engine/Cloud Run deploy task in
+    `portal/deploy-info-portal/build.gradle.kts` (e.g., app-gradle-plugin), no UI build integration.
+- ~~GCP infrastructure setup documentation/scripts: bucket creation, Datastore, service accounts + IAM roles (deployInfo
+    project SA needs permission to impersonate each configured project's SA; each SA needs App Engine Viewer / Cloud Run
+    Viewer), Cloud Storage lifecycle rule for cleanup would be a sensible addition.~~ **Done (Phase 2.12):**
+    [`documentation/gcp-infra-setup.md`](documentation/gcp-infra-setup.md) — documentation only (no scripts/gcloud
+    commands, no lifecycle rule; that part of the item was dropped from scope).
+- ~~Top-level documentation (root `README.md` is just `# deploy-info`).~~ **Done (Phase 2.12):** the root README now has
+    the pitch, the end-to-end flow and links to every component/doc, kept deliberately short.
   - CI (no GitHub Actions or similar anywhere).
 
 ---
@@ -125,22 +201,29 @@
 
 1. **Define the trigger contract** (endpoint + request body) — it unblocks both collectors.
 2. Collector plugin: add `portalUrl` + projects-list params, implement `PortalTrigger`, remove `collector.properties`.
-3. Portal: implement `CollectorController` — GCP listing clients (GAE + Cloud Run via impersonated SAs), 5-minute linking rule, Datastore link entity + repository.
+3. Portal: implement `CollectorController` — GCP listing clients (GAE + Cloud Run via impersonated SAs), 5-minute
+linking rule, Datastore link entity + repository.
 4. Portal: implement `PortalController` — tree data + file content from Storage, cleanup of deleted deploys.
 5. Frontend: replace mock data with real endpoints; logout.
 6. ~~Auth: login/permission checks; secure the trigger endpoint~~ — **Done (Phase 2.7)**.
 7. Service-account validation in Add/Edit project use cases; Settings UI already supports the error flags.
 8. Python collector (mirror the final contract).
-9. Packaging/DevOps: version catalog for collector (pending confirmation), UI build/deploy script, app.yaml, prod properties, CORS, READMEs.
+9. Packaging/DevOps: version catalog for collector (pending confirmation), UI build/deploy script, app.yaml, prod
+properties, CORS, READMEs.
 
 ---
 
 ## 8. Open questions to resolve (no guessing)
 
 1. TODO's "version toml" — collector, portal, or both? (Portal looks already done.)
-2. ~~Should `collector.properties` be removed entirely, or kept in the uploaded folder for traceability while the trigger also sends the data?~~ **Resolved: removed** — the portal never read it; the trigger request body and the directory name carry all metadata.
-3. Link table identifier (deploy type + service + version): TODO asks "Separate columns? Single column?" — still undecided.
+2. ~~Should `collector.properties` be removed entirely, or kept in the uploaded folder for traceability while the
+trigger also sends the data?~~ **Resolved: removed** — the portal never read it; the trigger request body and the
+directory name carry all metadata.
+3. Link table identifier (deploy type + service + version): TODO asks "Separate columns? Single column?" — still
+undecided.
 4. For the Python collector: expected distribution (pip package vs standalone script) and arg style?
-5. Is the "group" level in the frontend navigator an intended feature (beyond TODO's project > service > version), backed by `Project.group`? Backend already has the `group` field, so likely yes — but the navigator needs data to populate it.
+5. Is the "group" level in the frontend navigator an intended feature (beyond TODO's project > service > version),
+backed by `Project.group`? Backend already has the `group` field, so likely yes — but the navigator needs data to
+populate it.
 
 ---

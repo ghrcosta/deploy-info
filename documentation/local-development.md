@@ -4,9 +4,11 @@ How to run every component of the project on a local machine: the Gradle collect
 backend (Spring Boot + Datastore emulator), and the Angular frontend. Per-component details live in
 each component's `documentation/` folder:
 
-- Portal backend & frontend: [`portal/deploy-info-portal/documentation/`](../portal/deploy-info-portal/documentation/running-locally.md)
+- Portal backend & frontend:
+  [`portal/deploy-info-portal/documentation/`](../portal/deploy-info-portal/documentation/running-locally.md)
   (also covers the Settings feature and the GCP deploy listing)
-- Collector plugin: [`collector-java/deploy-info-collector/documentation/collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)
+- Collector plugin:
+  [`collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)
 
 > **Current state (Phase 1 / POC stage):** the collector works end to end except the portal trigger
 > (stub); the portal backend has the Settings CRUD working and the GCP deploy-listing clients
@@ -15,16 +17,47 @@ each component's `documentation/` folder:
 
 ## 1. Prerequisites
 
-| Tool | Version used | Notes |
-|---|---|---|
-| JDK | **21** (portal backend) / **17+** (collector plugin — toolchain; Gradle downloads it if needed) | Portal `build.gradle.kts` pins `JavaLanguageVersion.of(21)`. |
-| Node.js + npm | for Angular 22 (Node 18/20/22 work) | Only needed for the frontend. |
-| chrome-headless-shell | 154.x (installed on demand) | Headless browser for the **frontend unit tests only**. Install via `npx @puppeteer/browsers install chrome-headless-shell@154.0.8037.92`, or let `npm test` auto-install it (see step 5 of the checklist). Auto-discovered from `~/.cache/puppeteer`; set `CHROME_BIN` to override. |
-| gcloud CLI | any recent version, on `PATH` | Needed by the collector (`gcloud config get-value account`, `gcloud storage cp`) and for the Datastore emulator (installed with gcloud). |
-| Authenticated gcloud account | `gcloud auth login` done | The collector reads the account email and uploads to a bucket as this user. |
-| GCP project + bucket | any test project | For the collector upload; the portal backend tests run fully local (no GCP access needed). |
+<table>
+  <tr><th>Tool</th><th>Version used</th><th>Notes</th></tr>
+  <tr>
+    <td>JDK</td>
+    <td><strong>21</strong> (portal backend) / <strong>17+</strong> (collector plugin — toolchain; Gradle downloads
+      it if needed)</td>
+    <td>Portal <code>build.gradle.kts</code> pins <code>JavaLanguageVersion.of(21)</code>.</td>
+  </tr>
+  <tr>
+    <td>Node.js + npm</td>
+    <td>for Angular 22 (Node 18/20/22 work)</td>
+    <td>Only needed for the frontend.</td>
+  </tr>
+  <tr>
+    <td>chrome-headless-shell</td>
+    <td>154.x (installed on demand)</td>
+    <td>Headless browser for the <strong>frontend unit tests only</strong>. Install via
+      <code>npx @puppeteer/browsers install chrome-headless-shell@154.0.8037.92</code>, or let <code>npm test</code>
+      auto-install it (see step 5 of the checklist). Auto-discovered from <code>~/.cache/puppeteer</code>; set
+      <code>CHROME_BIN</code> to override.</td>
+  </tr>
+  <tr>
+    <td>gcloud CLI</td>
+    <td>any recent version, on <code>PATH</code></td>
+    <td>Needed by the collector (<code>gcloud config get-value account</code>, <code>gcloud storage cp</code>) and
+      for the Datastore emulator (installed with gcloud).</td>
+  </tr>
+  <tr>
+    <td>Authenticated gcloud account</td>
+    <td><code>gcloud auth login</code> done</td>
+    <td>The collector reads the account email and uploads to a bucket as this user.</td>
+  </tr>
+  <tr>
+    <td>GCP project + bucket</td>
+    <td>any test project</td>
+    <td>For the collector upload; the portal backend tests run fully local (no GCP access needed).</td>
+  </tr>
+</table>
 
-Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`util/SystemUtils.kt`), so plain `gcloud` commands work on both OSes.
+Note (Windows): the code translates `gcloud` → `gcloud.cmd` automatically (`util/SystemUtils.kt`), so plain `gcloud`
+commands work on both OSes.
 
 ## 2. Component documentation
 
@@ -66,7 +99,7 @@ JavaScript origin `http://localhost:4200`), grant your account any role on the p
 project, then run the backend with `deploy-info.auth.enabled=true`, `deploy-info.auth.client-id=<id>`
 and the `GOOGLE_CLOUD_PROJECT` environment variable set to the portal's project id (the App Engine
 runtime sets it automatically; locally it must be provided by hand). See
-[`portal/deploy-info-portal/documentation/authentication.md`](../portal/deploy-info-portal/documentation/authentication.md).
+[`authentication.md`](../portal/deploy-info-portal/documentation/authentication.md).
 
 Gaps found during validation (and what changes once the backend core exists) should be fed back into
 `TODO.md` / `STATUS_REPORT.md`.

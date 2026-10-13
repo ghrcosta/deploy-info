@@ -137,7 +137,8 @@ tasks.deployInfoCollect {
 
 <tr>
 <td>projects</td>
-<td>REQUIRED. List of GCP projects where the code may have been deployed. Must contain at least one non-empty value.</td>
+<td>REQUIRED. List of GCP projects where the code may have been deployed.
+Must contain at least one non-empty value.</td>
 <td>
 
 ```kotlin

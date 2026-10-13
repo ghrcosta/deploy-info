@@ -4,7 +4,8 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Requirements
 
-- Node.js **24.x** (tracked in `.nvmrc`; with [nvm](https://github.com/nvm-sh/nvm) installed, run `nvm use` inside this directory).
+- Node.js **24.x** (tracked in `.nvmrc`; with [nvm](https://github.com/nvm-sh/nvm) installed, run `nvm use` inside this
+  directory).
 - TypeScript ~6.0.x is managed by the Angular tooling in `package.json`.
 
 ## Development server
@@ -15,7 +16,8 @@ To start a local development server, run:
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will
+automatically reload whenever you modify any of the source files.
 
 ## Code scaffolding
 
@@ -39,7 +41,8 @@ To build the project run:
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build
+optimizes your application for performance and speed.
 
 ## Running unit tests
 
@@ -61,4 +64,5 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 
 ## Additional Resources
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview
+and Command Reference](https://angular.dev/tools/cli) page.

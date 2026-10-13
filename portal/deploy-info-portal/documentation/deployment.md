@@ -17,11 +17,24 @@ version name.
 ./gradlew appengineDeploy -PgaeProjectId=<gcp-project> [-PgaeService=<service>] [-PgaePromote=<true|false>]
 ```
 
-| Property       | Default    | Meaning                                                                                                  |
-|----------------|------------|----------------------------------------------------------------------------------------------------------|
-| `gaeProjectId` | (required) | GCP project to deploy to; the build fails fast with a clear error if it is missing                       |
-| `gaeService`   | `default`  | App Engine service to deploy to (injected into the generated `app.yaml`)                                 |
-| `gaePromote`   | `true`     | Route traffic to the new version (and stop the previous one, matching gcloud's pairing of the two flags) |
+<table>
+  <tr><th>Property</th><th>Default</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>gaeProjectId</code></td>
+    <td>(required)</td>
+    <td>GCP project to deploy to; the build fails fast with a clear error if it is missing</td>
+  </tr>
+  <tr>
+    <td><code>gaeService</code></td>
+    <td><code>default</code></td>
+    <td>App Engine service to deploy to (injected into the generated <code>app.yaml</code>)</td>
+  </tr>
+  <tr>
+    <td><code>gaePromote</code></td>
+    <td><code>true</code></td>
+    <td>Route traffic to the new version (and stop the previous one, matching gcloud's pairing of the two flags)</td>
+  </tr>
+</table>
 
 ### Setting the properties permanently
 

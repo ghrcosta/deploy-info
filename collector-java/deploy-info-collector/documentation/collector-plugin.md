@@ -19,13 +19,47 @@ Implements Gradle's `Plugin<Project>`. All it does is register the data collecti
 A `DefaultTask` named **`deployInfoCollect`**, registered under task **group `deployInfo`**
 (description: "Execute collector"). Parameters:
 
-| Parameter             | Type                   | Required | Default            | Meaning                                                                                                                                                                                            |
-|-----------------------|------------------------|----------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `deployType`          | `Property<DeployType>` | required | —                  | Type of deploy being collected. Enum `CollectorTask.DeployType` with values `GAE` (App Engine) and `RUN` (Cloud Run). Used in the output directory name and sent to the portal by `PortalTrigger`. |
-| `portalUrl`           | `Property<String>`     | required | —                  | URL of the portal backend.                                                                                                                                                                         |
-| `maxFileSize`         | `Property<Int>`        | optional | `50 * 1024` (50KB) | Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder.                                                                                           |
-| `collectGitStatus`    | `Property<Boolean>`    | optional | `true`             | Whether git-related data is collected at all.                                                                                                                                                      |
-| `extraFilesToCollect` | `ListProperty<String>` | optional | empty              | Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the file is collected without its parent dirs, so same-name files collide.               |
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>deployType</code></td>
+    <td><code>Property&lt;DeployType&gt;</code></td>
+    <td>required</td>
+    <td>—</td>
+    <td>Type of deploy being collected. Enum <code>CollectorTask.DeployType</code> with values <code>GAE</code>
+      (App Engine) and <code>RUN</code> (Cloud Run). Used in the output directory name and sent to the portal by
+      <code>PortalTrigger</code>.</td>
+  </tr>
+  <tr>
+    <td><code>portalUrl</code></td>
+    <td><code>Property&lt;String&gt;</code></td>
+    <td>required</td>
+    <td>—</td>
+    <td>URL of the portal backend.</td>
+  </tr>
+  <tr>
+    <td><code>maxFileSize</code></td>
+    <td><code>Property&lt;Int&gt;</code></td>
+    <td>optional</td>
+    <td><code>50 * 1024</code> (50KB)</td>
+    <td>Maximum file size (bytes) that may be collected; larger files are skipped / replaced with a placeholder.</td>
+  </tr>
+  <tr>
+    <td><code>collectGitStatus</code></td>
+    <td><code>Property&lt;Boolean&gt;</code></td>
+    <td>optional</td>
+    <td><code>true</code></td>
+    <td>Whether git-related data is collected at all.</td>
+  </tr>
+  <tr>
+    <td><code>extraFilesToCollect</code></td>
+    <td><code>ListProperty&lt;String&gt;</code></td>
+    <td>optional</td>
+    <td>empty</td>
+    <td>Extra files to copy into the upload. Paths are relative to the project root; only files (no directories); the
+      file is collected without its parent dirs, so same-name files collide.</td>
+  </tr>
+</table>
 
 All parameters are also exposed as command-line `@Option`s (e.g. `./gradlew deployInfoCollect --deploy-type=GAE`).
 
@@ -42,15 +76,23 @@ When `deployInfoCollect` runs, six steps execute in order:
 5. **`Uploader`** — writes the uuid-map CSV / properties files and runs `gcloud storage cp` (see §7).
 6. **`PortalTrigger`** — notifies the portal that the upload is complete so it can link the deploy (see §8).
 
-Then logs "Done!". Errors in the bucket-lookup step (§6), the upload step (§7) or the trigger step (§8) throw and fail the task.
+Then logs "Done!". Errors in the bucket-lookup step (§6), the upload step (§7) or the trigger step (§8) throw and fail
+the task.
 
 ---
 
 ## 2. Supporting utilities (`util/`)
 
-- **`CommandUtils.kt`** — `executeCommand` / `executeCommandOrThrowException`: run a shell command via `ProcessBuilder`, capturing stdout/stderr to temp files inside the collector base directory (reading both streams to files prevents the process from blocking on full buffers). Returns `CommandResult(stdout, stderr)`. The plain `executeCommand` swallows `IOException` and returns the error text as output; the `OrThrowException` variant propagates.
-- **`SystemUtils.kt`** — on Windows, maps executables to their `.cmd` equivalents (`gcloud` → `gcloud.cmd`); a no-op elsewhere. All commands go through this.
-- **`FileUtils.kt`** — `File.getContents()` (returns `<FILE IS TOO LARGE (n bytes)>`, `<FILE IS BINARY>` or `<FILE IS BLANK>` placeholders instead of content), `File.isLarge()` (larger than `Context.maxFileSize`), `File.isBinary()` (mime-type sniff via URL connection; text/json/xml/html/yaml treated as text, anything else binary), `createEmptyFile` / `createEmptyDirectory` (the latter deletes an existing dir first so contents of different deploys never mix).
+- **`CommandUtils.kt`** — `executeCommand` / `executeCommandOrThrowException`: run a shell command via `ProcessBuilder`,
+  capturing stdout/stderr to temp files inside the collector base directory (reading both streams to files prevents the
+  process from blocking on full buffers). Returns `CommandResult(stdout, stderr)`. The plain `executeCommand` swallows
+  `IOException` and returns the error text as output; the `OrThrowException` variant propagates.
+- **`SystemUtils.kt`** — on Windows, maps executables to their `.cmd` equivalents (`gcloud` → `gcloud.cmd`); a no-op
+  elsewhere. All commands go through this.
+- **`FileUtils.kt`** — `File.getContents()` (returns `<FILE IS TOO LARGE (n bytes)>`, `<FILE IS BINARY>` or `<FILE IS
+  BLANK>` placeholders instead of content), `File.isLarge()` (larger than `Context.maxFileSize`), `File.isBinary()`
+  (mime-type sniff via URL connection; text/json/xml/html/yaml treated as text, anything else binary), `createEmptyFile`
+  / `createEmptyDirectory` (the latter deletes an existing dir first so contents of different deploys never mix).
 - **`CsvUtils.kt`** — Escapes `uuid-git.csv`
 - **`Logger.kt`** — thin logging wrapper around the Gradle logger.
 
@@ -66,35 +108,52 @@ Singleton holding the state for one run:
 | `outputDir`      | `baseDir/<user>_<DEPLOYTYPE>_<epochMillis>/` — everything collected here is what gets uploaded. |
 | `projectRootDir` | The Gradle project root; base for resolving git/extra file paths.                               |
 | `maxFileSize`    | `maxFileSize` task param, or 50KB.                                                              |
-| `gitUuidMap`     | uuid → filepath + new/modified/untracked state for files collected by `GitCollector`.                     |
+| `gitUuidMap`     | uuid → filepath + new/modified/untracked state for files collected by `GitCollector`. |
 | `extraUuidMap`   | uuid → filepath for files collected by `ExtraFilesCollector`.                                   |
 
 `Context.init(rootDir, buildDir, deployType, maxFileSize)`:
 
 1. Creates `build/collector/` (cleared first via `createEmptyDirectory`).
-2. Runs `gcloud config get-value account` to get the authenticated gcloud email (throws if it fails — so the user **must** have `gcloud` installed and logged in before running the collector).
-3. Output dir name: `<email-part-before-@>_<deployType>_<now-epoch-ms>`, e.g. `johndoe_GAE_1746322088662`. The directory name is the sole carrier of who/what/when: `PortalTrigger` sends it (plus `deployType` and `userEmail`) to the portal, and the portal derives the collection timestamp from the epoch-millis suffix — no metadata file is written into the output directory.
+2. Runs `gcloud config get-value account` to get the authenticated gcloud email (throws if it fails — so the user
+**must** have `gcloud` installed and logged in before running the collector).
+3. Output dir name: `<email-part-before-@>_<deployType>_<now-epoch-ms>`, e.g. `johndoe_GAE_1746322088662`. The directory
+name is the sole carrier of who/what/when: `PortalTrigger` sends it (plus `deployType` and `userEmail`) to the portal,
+and the portal derives the collection timestamp from the epoch-millis suffix — no metadata file is written into the
+output directory.
 
 ## 4. `GitCollector`
 
 Executed when `collectGitStatus` is true. Writes into `Context.outputDir`:
 
-1. **`git-status.txt`** — output of `git status --long --branch --untracked-files=normal` (the human-readable status shown on the portal).
+1. **`git-status.txt`** — output of `git status --long --branch --untracked-files=normal` (the human-readable status
+shown on the portal).
 2. **`git-log.txt`** — output of `git log --oneline`.
-3. **Per changed file**: parses `git status --porcelain --untracked-files=normal --no-renames` to get the list of changed paths (supports quoted names with spaces; skips entries that don't resolve to an existing file). Porcelain paths are always relative to the **git repository root** (which may differ from the Gradle project root, e.g. when the repo root is a parent of the module the plugin is applied to). They are resolved to absolute paths against the repository root obtained from `git rev-parse --show-toplevel` (falling back to the Gradle project root if the command fails). This works for any repo/module layout, on both Linux and Windows. For each path:
-   - the porcelain 2-char code decides the file's state: `??` → **untracked**; a code containing `A` (staged addition, e.g. `A `, `AM`) → **new**; any other code (`M`, `MM`, `D`, ...) → **modified**;
+3. **Per changed file**: parses `git status --porcelain --untracked-files=normal --no-renames` to get the list of
+changed paths (supports quoted names with spaces; skips entries that don't resolve to an existing file). Porcelain paths
+are always relative to the **git repository root** (which may differ from the Gradle project root, e.g. when the repo
+root is a parent of the module the plugin is applied to). They are resolved to absolute paths against the repository
+root obtained from `git rev-parse --show-toplevel` (falling back to the Gradle project root if the command fails). This
+works for any repo/module layout, on both Linux and Windows. For each path:
+- the porcelain 2-char code decides the file's state: `??` → **untracked**; a code containing `A` (staged addition, e.g.
+     `A `, `AM`) → **new**; any other code (`M`, `MM`, `D`, ...) → **modified**;
    - for 'modified' files, runs `git --no-pager diff "<path>"`; if the diff is non-blank, saves it;
-   - otherwise (e.g. new/untracked files have no diff) saves the **full file content** via `File.getContents()` — so large files become `<FILE IS TOO LARGE ...>`, binaries become `<FILE IS BINARY>`, blank files become `<FILE IS BLANK>`.
-   - content is written to a file named by a fresh **`UUID`** (not the real path — avoids path/encoding issues in Storage), and `uuid → "/real/path" + git state (new/untracked/modified)` is recorded in `Context.gitUuidMap` (backslashes normalized to `/`).
+- otherwise (e.g. new/untracked files have no diff) saves the **full file content** via `File.getContents()` — so large
+     files become `<FILE IS TOO LARGE ...>`, binaries become `<FILE IS BINARY>`, blank files become `<FILE IS BLANK>`.
+- content is written to a file named by a fresh **`UUID`** (not the real path — avoids path/encoding issues in Storage),
+     and `uuid → "/real/path" + git state (new/untracked/modified)` is recorded in `Context.gitUuidMap` (backslashes
+     normalized to `/`).
 
-On `IOException` the error is logged and an `error.txt` with the message is written to the output dir instead of failing the task.
+On `IOException` the error is logged and an `error.txt` with the message is written to the output dir instead of failing
+the task.
 
 ## 5. `ExtraFilesCollector`
 
-Executed with the `extraFilesToCollect` list. Each entry is normalized to `/path` with `/` separators, deduplicated, resolved against the project root, and checked against the skip rules:
+Executed with the `extraFilesToCollect` list. Each entry is normalized to `/path` with `/` separators, deduplicated,
+resolved against the project root, and checked against the skip rules:
 
 - skipped (with an error log) if: doesn't exist, is not a regular file, is binary, or is larger than `maxFileSize`.
-- otherwise copied verbatim into `Context.outputDir` under a fresh **UUID** filename, with `uuid → "/path"` recorded in `Context.extraUuidMap`.
+- otherwise copied verbatim into `Context.outputDir` under a fresh **UUID** filename, with `uuid → "/path"` recorded in
+  `Context.extraUuidMap`.
 
 ## 6. `BucketLookup`
 
@@ -115,16 +174,19 @@ with mockK without touching the network (`action/BucketLookupTests.kt`).
 Executed with the bucket name resolved by `BucketLookup` (§6):
 
 1. If `gitUuidMap` is non-empty, writes **`uuid-git.csv`** into the output dir with header `uuid,filepath,status`.
-2. If `extraUuidMap` is non-empty, writes **`uuid-extra.properties`** the same way (Java `Properties` format: `<uuid>=<path>`).
+2. If `extraUuidMap` is non-empty, writes **`uuid-extra.properties`** the same way (Java `Properties` format:
+`<uuid>=<path>`).
 3. Runs:
 
 ```
 gcloud storage cp --recursive <outputDir> gs://<bucketName>
 ```
 
-Since the dir name is unique (`<user>_<type>_<timestamp>`), this creates a new **top-level folder in the bucket** with that name — the folder the portal later reads.
+Since the dir name is unique (`<user>_<type>_<timestamp>`), this creates a new **top-level folder in the bucket** with
+that name — the folder the portal later reads.
 
-4. Inspects the command's **stderr** for lines starting with `ERROR` (deduplicated); if any, throws a `RuntimeException` listing them, failing the Gradle task. (Exit code is not checked; only stderr `ERROR` lines.)
+4. Inspects the command's **stderr** for lines starting with `ERROR` (deduplicated); if any, throws a `RuntimeException`
+listing them, failing the Gradle task. (Exit code is not checked; only stderr `ERROR` lines.)
 
 ## 8. `PortalTrigger`
 

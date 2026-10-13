@@ -18,10 +18,20 @@ protects the API prefixes and delegates to `application/auth/`:
    the token's signature; the portal then checks expiry and, for browser tokens, the audience.
    Two token kinds are accepted:
 
-   | Caller    | Token                                                                                                    | Audience requirement                    |
-   |-----------|----------------------------------------------------------------------------------------------------------|-----------------------------------------|
-   | Browser   | OpenID Connect **ID token** from the Google Identity Services sign-in (the frontend's `login` component) | must equal `deploy-info.auth.client-id` |
-   | Collector | OAuth **access token** from `gcloud auth print-access-token`                                             | none                                    |
+   <table>
+     <tr><th>Caller</th><th>Token</th><th>Audience requirement</th></tr>
+     <tr>
+       <td>Browser</td>
+       <td>OpenID Connect <strong>ID token</strong> from the Google Identity Services sign-in (the frontend's
+         <code>login</code> component)</td>
+       <td>must equal <code>deploy-info.auth.client-id</code></td>
+     </tr>
+     <tr>
+       <td>Collector</td>
+       <td>OAuth <strong>access token</strong> from <code>gcloud auth print-access-token</code></td>
+       <td>none</td>
+     </tr>
+   </table>
 
    Verification results are cached per token (5 minutes); IAM results per email (10 minutes for
    granted access, 1 minute for denials — a newly granted user is not locked out for long).
@@ -89,11 +99,24 @@ account while `userEmail` may report the user — set the property to `false` th
 
 ## Configuration
 
-| Property                                         | Meaning                                             | Default                              |
-|--------------------------------------------------|-----------------------------------------------------|--------------------------------------|
-| `deploy-info.auth.enabled`                       | Whether the filter is active                        | `false` (`true` in the prod profile) |
-| `deploy-info.auth.client-id`                     | OAuth client id (audience of the browser ID tokens) | empty (required when enabled)        |
-| `deploy-info.auth.collector-require-email-match` | Trigger's `userEmail` must equal the token email    | `true`                               |
+<table>
+  <tr><th>Property</th><th>Meaning</th><th>Default</th></tr>
+  <tr>
+    <td><code>deploy-info.auth.enabled</code></td>
+    <td>Whether the filter is active</td>
+    <td><code>false</code> (<code>true</code> in the prod profile)</td>
+  </tr>
+  <tr>
+    <td><code>deploy-info.auth.client-id</code></td>
+    <td>OAuth client id (audience of the browser ID tokens)</td>
+    <td>empty (required when enabled)</td>
+  </tr>
+  <tr>
+    <td><code>deploy-info.auth.collector-require-email-match</code></td>
+    <td>Trigger's <code>userEmail</code> must equal the token email</td>
+    <td><code>true</code></td>
+  </tr>
+</table>
 
 ## API additions
 

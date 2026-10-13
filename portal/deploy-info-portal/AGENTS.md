@@ -32,13 +32,16 @@ The backend follows a Clean Architecture folder structure:
 
 ## Instructions
 
+### General rules
+
+- Avoid creating lines with more than 120 characters. Split lines to respect this limit.
+
 ### Development rules
 
 - Follow Clean Code good practices: the code must be easy to read and to give maintenance.
   - Prefer to create multiple small functions instead of a single big one.
   - The name of each element (constants, variables, functions, files, etc.) must make it clear what its contents and/or
     purpose is.
-  - Avoid creating lines of code with more than 120 characters. Split lines to respect this limit.
   - Only use fully qualified names when required to avoid conflicts. In every other case, add import statements.
   - Remove unused import statements.
 

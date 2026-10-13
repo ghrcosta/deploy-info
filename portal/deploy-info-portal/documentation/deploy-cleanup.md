@@ -60,11 +60,23 @@ accepted as merely **redundant**, not dangerous:
 
 ## Configuration (`deploy-info.*`)
 
-| Property                           | Meaning                                                                                                                                         |
-|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `deploy-info.cleanup.enabled`      | Whether the on-request trigger is active. **`false` in `application.properties`** — no profile turns it on by default; override per environment. |
-| `deploy-info.cleanup.interval`     | Minimum time between completed sweeps (e.g. `PT15M`).                                                                                           |
-| `deploy-info.cleanup.grace-period` | Minimum link age before it may be judged stale (e.g. `PT10M`). Should comfortably exceed one sweep duration.                                     |
+<table>
+  <tr><th>Property</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>deploy-info.cleanup.enabled</code></td>
+    <td>Whether the on-request trigger is active. <strong><code>false</code> in
+      <code>application.properties</code></strong> — no profile turns it on by default; override per environment.</td>
+  </tr>
+  <tr>
+    <td><code>deploy-info.cleanup.interval</code></td>
+    <td>Minimum time between completed sweeps (e.g. <code>PT15M</code>).</td>
+  </tr>
+  <tr>
+    <td><code>deploy-info.cleanup.grace-period</code></td>
+    <td>Minimum link age before it may be judged stale (e.g. <code>PT10M</code>). Should comfortably exceed one sweep
+      duration.</td>
+  </tr>
+</table>
 
 No default values are baked into the code: a profile missing one of these keys fails context startup
 at binding time. `application-local.properties` intentionally does not enable the cleanup.

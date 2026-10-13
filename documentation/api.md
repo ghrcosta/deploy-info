@@ -8,19 +8,46 @@ All bodies are JSON. Base URL depends on the environment (local vs. deployed por
 When the portal has authentication enabled (`deploy-info.auth.enabled` — the prod profile), every
 endpoint below requires an `Authorization: Bearer <token>` header:
 
-| Client    | Token                                                                                        |
-|-----------|----------------------------------------------------------------------------------------------|
-| Collector | gcloud access token (`gcloud auth print-access-token`) of a user present in the IAM of the portal's project (directly or through a group) |
-| Frontend  | Google Identity Services ID token of the same kind of user, obtained via the sign-in flow    |
+<table>
+  <tr><th>Client</th><th>Token</th></tr>
+  <tr>
+    <td>Collector</td>
+    <td>gcloud access token (<code>gcloud auth print-access-token</code>) of a user present in the IAM of the
+      portal's project (directly or through a group)</td>
+  </tr>
+  <tr>
+    <td>Frontend</td>
+    <td>Google Identity Services ID token of the same kind of user, obtained via the sign-in flow</td>
+  </tr>
+</table>
 
 Rejection codes (the same for every protected endpoint):
 
-| Status | Body | Meaning |
-|--------|------|---------|
-| `401 Unauthorized` | `{"error":"unauthenticated"}` | Token missing, malformed, expired or wrongly signed. |
-| `403 Forbidden` | `{"error":"not-permitted","email":"…"}` | Valid token, but the account is not present in the portal project's IAM. |
-| `403 Forbidden` | `{"error":"email-mismatch","tokenEmail":"…","requestUserEmail":"…"}` | Trigger only: the body's `userEmail` does not match the token's account (possible with gcloud service-account impersonation; see `portal/deploy-info-portal/documentation/authentication.md`). |
-| `503 Service Unavailable` | `{"error":"portal-issue"}` | The portal could not run its IAM membership check. |
+<table>
+  <tr><th>Status</th><th>Body</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>401 Unauthorized</code></td>
+    <td><code>{"error":"unauthenticated"}</code></td>
+    <td>Token missing, malformed, expired or wrongly signed.</td>
+  </tr>
+  <tr>
+    <td><code>403 Forbidden</code></td>
+    <td><code>{"error":"not-permitted","email":"…"}</code></td>
+    <td>Valid token, but the account is not present in the portal project's IAM.</td>
+  </tr>
+  <tr>
+    <td><code>403 Forbidden</code></td>
+    <td><code>{"error":"email-mismatch","tokenEmail":"…","requestUserEmail":"…"}</code></td>
+    <td>Trigger only: the body's <code>userEmail</code> does not match the token's account (possible with gcloud
+      service-account impersonation; see
+      <code>portal/deploy-info-portal/documentation/authentication.md</code>).</td>
+  </tr>
+  <tr>
+    <td><code>503 Service Unavailable</code></td>
+    <td><code>{"error":"portal-issue"}</code></td>
+    <td>The portal could not run its IAM membership check.</td>
+  </tr>
+</table>
 
 With authentication disabled (local/test profiles) the header is simply not required.
 
@@ -39,7 +66,7 @@ With authentication disabled (local/test profiles) the header is simply not requ
 | Frontend | `GET /auth/config`, `GET /auth/user`, `GET /portal/tree`, `GET /portal/deploy/content` |
 
 Prerequisite: the folder the deploy-link endpoint points at must follow the upload folder layout documented in
-[`collector-java/deploy-info-collector/documentation/collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)
+[`collector-plugin.md`](../collector-java/deploy-info-collector/documentation/collector-plugin.md)
 (the Cloud Storage folder section) — the content contract depends on it.
 
 ## Collector contract — `POST /collector/handleNewDirectory`
@@ -50,12 +77,37 @@ bucket. The portal then tries to link the upload to the GCP deploy it was built 
 
 ### Request body
 
-| Field           | Type           | Description |
-|-----------------|----------------|-------------|
-| `directoryName` | string         | The collector's output directory name, convention `<user>_<deployType>_<epochMillis>` (e.g. `jdoe_GAE_1735689600000`). The collection timestamp is **not** sent explicitly — the portal derives it from the epoch-millis suffix of this name. |
-| `projects`      | list of string | Candidate GCP projects the code may have been deployed to. The collector cannot know which one (e.g. PROD, DEV or QA), so it sends all of them; the portal matches against the deploys of **all** listed projects together and picks the deploy closest below the collection timestamp, regardless of which project it belongs to. Projects not configured in the portal are silently skipped. |
-| `deployType`    | string         | `GAE` (App Engine) or `RUN` (Cloud Run). Must match the deploy type encoded in `directoryName`. |
-| `userEmail`     | string         | The gcloud account that performed the deploy and the collection. Only deploys created by this user (case-insensitive) are candidates. |
+<table>
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr>
+    <td><code>directoryName</code></td>
+    <td>string</td>
+    <td>The collector's output directory name, convention
+      <code>&lt;user&gt;_&lt;deployType&gt;_&lt;epochMillis&gt;</code>
+      (e.g. <code>jdoe_GAE_1735689600000</code>). The collection timestamp is <strong>not</strong> sent explicitly —
+      the portal derives it from the epoch-millis suffix of this name.</td>
+  </tr>
+  <tr>
+    <td><code>projects</code></td>
+    <td>list of string</td>
+    <td>Candidate GCP projects the code may have been deployed to. The collector cannot know which one (e.g. PROD, DEV
+      or QA), so it sends all of them; the portal matches against the deploys of <strong>all</strong> listed projects
+      together and picks the deploy closest below the collection timestamp, regardless of which project it belongs to.
+      Projects not configured in the portal are silently skipped.</td>
+  </tr>
+  <tr>
+    <td><code>deployType</code></td>
+    <td>string</td>
+    <td><code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run). Must match the deploy type encoded in
+      <code>directoryName</code>.</td>
+  </tr>
+  <tr>
+    <td><code>userEmail</code></td>
+    <td>string</td>
+    <td>The gcloud account that performed the deploy and the collection. Only deploys created by this user
+      (case-insensitive) are candidates.</td>
+  </tr>
+</table>
 
 ```json
 {
@@ -81,13 +133,35 @@ bucket. The portal then tries to link the upload to the GCP deploy it was built 
 
 ### Responses
 
-| Status | Body | Meaning |
-|--------|------|---------|
-| `200 OK` | `{"status":"created","project":…,"service":…,"version":…}` | A plausible deploy was found and linked. |
-| `200 OK` | `{"status":"already-linked","project":…,"service":…,"version":…}` | The matched deploy already had a link; the existing link was left untouched. |
-| `202 Accepted` | `{"status":"pending"}` | No match found (yet); the retry is scheduled and may still link the upload or delete its folder. |
-| `422 Unprocessable Entity` | `{"status":"unknown-project"}` | None of the listed projects is configured in the portal; the upload's folder is deleted after the retry. |
-| `400 Bad Request` | (empty) | The body is invalid, or `directoryName` does not follow the `<user>_<deployType>_<epochMillis>` convention. |
+<table>
+  <tr><th>Status</th><th>Body</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>200 OK</code></td>
+    <td><code>{"status":"created","project":…,"service":…,"version":…}</code></td>
+    <td>A plausible deploy was found and linked.</td>
+  </tr>
+  <tr>
+    <td><code>200 OK</code></td>
+    <td><code>{"status":"already-linked","project":…,"service":…,"version":…}</code></td>
+    <td>The matched deploy already had a link; the existing link was left untouched.</td>
+  </tr>
+  <tr>
+    <td><code>202 Accepted</code></td>
+    <td><code>{"status":"pending"}</code></td>
+    <td>No match found (yet); the retry is scheduled and may still link the upload or delete its folder.</td>
+  </tr>
+  <tr>
+    <td><code>422 Unprocessable Entity</code></td>
+    <td><code>{"status":"unknown-project"}</code></td>
+    <td>None of the listed projects is configured in the portal; the upload's folder is deleted after the retry.</td>
+  </tr>
+  <tr>
+    <td><code>400 Bad Request</code></td>
+    <td>(empty)</td>
+    <td>The body is invalid, or <code>directoryName</code> does not follow the
+      <code>&lt;user&gt;_&lt;deployType&gt;_&lt;epochMillis&gt;</code> convention.</td>
+  </tr>
+</table>
 
 ```json
 {
@@ -106,10 +180,21 @@ bucket parameter of its own).
 
 ### Responses
 
-| Status | Body | Meaning |
-|--------|------|---------|
-| `200 OK` | `{"bucket":"<name>"}` | The configured bucket name (`deploy-info.storage-bucket`); uploads go to `gs://<name>`. |
-| `500 Internal Server Error` | (empty) | The bucket is not configured in the portal — a server misconfiguration, not a caller error. The collector must not attempt any upload. |
+<table>
+  <tr><th>Status</th><th>Body</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>200 OK</code></td>
+    <td><code>{"bucket":"&lt;name&gt;"}</code></td>
+    <td>The configured bucket name (<code>deploy-info.storage-bucket</code>); uploads go to
+      <code>gs://&lt;name&gt;</code>.</td>
+  </tr>
+  <tr>
+    <td><code>500 Internal Server Error</code></td>
+    <td>(empty)</td>
+    <td>The bucket is not configured in the portal — a server misconfiguration, not a caller error. The collector
+      must not attempt any upload.</td>
+  </tr>
+</table>
 
 ```json
 {
@@ -130,19 +215,34 @@ A list of groups. Projects without a group (and links of projects no longer conf
 portal) are under the `""` group, which is sorted last. Every level is sorted by name. Services are
 keyed by deploy type, so the same service name may appear once as a GAE and once as a RUN service.
 
-| Field (per level)                | Type           | Description |
-|----------------------------------|----------------|-------------|
-| `name` (group)                   | string         | The project group (`""` = ungrouped). |
-| `projects[].projectId`           | string         | The GCP project ID. |
-| `projects[].services[].name`     | string         | The service id. |
-| `projects[].services[].type`     | string         | `GAE` or `RUN`. |
-| `versions[].id`                  | string         | The deploy identity key `<project>_<TYPE>_<location|->_<service>_<version>`. Stable identifier for the version node. |
-| `versions[].name`                | string         | The version id (the display name). |
-| `versions[].location`            | string\|null   | Cloud Run region; null for App Engine. |
-| `versions[].url`                 | string\|null   | The deploy's public URL, when known. |
-| `versions[].author`              | string         | The gcloud account that deployed and collected. |
-| `versions[].timestamp`           | number         | Epoch millis of the collection timestamp. |
-| `versions[].storageFolder`       | string         | The upload's storage folder name — pass it to the content endpoint. |
+<table>
+  <tr><th>Field (per level)</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>name</code> (group)</td><td>string</td><td>The project group (<code>""</code> = ungrouped).</td></tr>
+  <tr><td><code>projects[].projectId</code></td><td>string</td><td>The GCP project ID.</td></tr>
+  <tr><td><code>projects[].services[].name</code></td><td>string</td><td>The service id.</td></tr>
+  <tr><td><code>projects[].services[].type</code></td><td>string</td><td><code>GAE</code> or <code>RUN</code>.</td></tr>
+  <tr>
+    <td><code>versions[].id</code></td>
+    <td>string</td>
+    <td>The deploy identity key
+      <code>&lt;project&gt;_&lt;TYPE&gt;_&lt;location|->_&lt;service&gt;_&lt;version&gt;</code>.
+      Stable identifier for the version node.</td>
+  </tr>
+  <tr><td><code>versions[].name</code></td><td>string</td><td>The version id (the display name).</td></tr>
+  <tr><td><code>versions[].location</code></td><td>string|null</td><td>Cloud Run region; null for App Engine.</td></tr>
+  <tr><td><code>versions[].url</code></td><td>string|null</td><td>The deploy's public URL, when known.</td></tr>
+  <tr>
+    <td><code>versions[].author</code></td>
+    <td>string</td>
+    <td>The gcloud account that deployed and collected.</td>
+  </tr>
+  <tr><td><code>versions[].timestamp</code></td><td>number</td><td>Epoch millis of the collection timestamp.</td></tr>
+  <tr>
+    <td><code>versions[].storageFolder</code></td>
+    <td>string</td>
+    <td>The upload's storage folder name — pass it to the content endpoint.</td>
+  </tr>
+</table>
 
 ```json
 [
@@ -189,12 +289,30 @@ name is the collector's output directory name (e.g. `jdoe_GAE_1735689600000`).
 
 ### Responses
 
-| Status | Body | Meaning |
-|--------|------|---------|
-| `200 OK` | `DeployContent` (below) | The collected files. Every part is optional: `git` is null when the upload contains no git data; `extras` is empty when there are none. |
-| `404 Not Found` | (empty) | The folder does not exist (or is empty) — e.g. the cleanup sweep removed it after the tree was loaded. |
-| `502 Bad Gateway` | (empty) | Cloud Storage could not be read (a portal issue, not a user issue). |
-| `400 Bad Request` | (empty) | The `folder` parameter is missing. |
+<table>
+  <tr><th>Status</th><th>Body</th><th>Meaning</th></tr>
+  <tr>
+    <td><code>200 OK</code></td>
+    <td><code>DeployContent</code> (below)</td>
+    <td>The collected files. Every part is optional: <code>git</code> is null when the upload contains no git data;
+      <code>extras</code> is empty when there are none.</td>
+  </tr>
+  <tr>
+    <td><code>404 Not Found</code></td>
+    <td>(empty)</td>
+    <td>The folder does not exist (or is empty) — e.g. the cleanup sweep removed it after the tree was loaded.</td>
+  </tr>
+  <tr>
+    <td><code>502 Bad Gateway</code></td>
+    <td>(empty)</td>
+    <td>Cloud Storage could not be read (a portal issue, not a user issue).</td>
+  </tr>
+  <tr>
+    <td><code>400 Bad Request</code></td>
+    <td>(empty)</td>
+    <td>The <code>folder</code> parameter is missing.</td>
+  </tr>
+</table>
 
 ### Caching
 
