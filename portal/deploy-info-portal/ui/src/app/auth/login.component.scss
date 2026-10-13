@@ -1,50 +1,32 @@
-.login-screen {
+/* All structural login styling (.login-screen, .login-card, .login-brand,
+   .login-logo, .login-state, .btn, .spinner) lives in the global stylesheet
+   (src/sass/_structure.scss), mirroring the mock's base.css. Only the mat-icon
+   sizes the global stylesheet cannot express (mat-icon renders at 24px, so
+   single-class selectors would lose to it) and the Google-button container are
+   component-specific. */
+.login-logo mat-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+}
+
+.login-state-icon mat-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 42px;
+}
+
+.google-button {
+    // Dimensions matching the `renderButton` options (width: 240, size: 'large'), with the
+    // Google-rendered iframe centered inside the container. `min-height` rather than a
+    // fixed height: the personalized "Sign in as <user>" button is a little taller, and
+    // the container must grow around it instead of clipping it.
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    padding: 2rem;
 
-    .panel {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        max-width: 32rem;
-        text-align: center;
-
-        .app-name {
-            font-size: 2rem;
-            font-weight: 500;
-            cursor: default;
-        }
-
-        .message {
-            margin: 0;
-        }
-
-        .email {
-            font-weight: 500;
-        }
-
-        .hint {
-            margin: 0;
-            opacity: 0.7;
-            font-size: 0.9rem;
-        }
-
-        .google-button {
-            // Dimensions matching the `renderButton` options (width: 300, size: 'large'), with the
-            // Google-rendered iframe centered inside the container. `min-height` rather than a
-            // fixed height: the personalized "Sign in as <user>" button is a little taller, and
-            // the container must grow around it instead of clipping it.
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            // The personalized button's iframe paints a light (white) canvas; forcing the
-            // container to light makes that canvas blend in with the surrounding button chrome.
-            color-scheme: light;
-        }
-    }
+    // The personalized button's iframe paints a light (white) canvas; forcing the
+    // container to light makes that canvas blend in with the surrounding button chrome.
+    color-scheme: light;
 }
+

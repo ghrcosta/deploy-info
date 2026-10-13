@@ -10,7 +10,7 @@
 html {
     color-scheme: light dark;
     @include mat.theme((
-        typography: Roboto,
+        typography: Inter,
         density: 0
     ));
     @include mat.theme-overrides((

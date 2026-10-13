@@ -1,63 +1,64 @@
-// Theme generated with https://themes.angular-material.dev/colors
-// Seed colors:
-// - Primary: #0077EB
-// - Secondary: #445f8c
-// - Tertiary: #AC975E
-// - Error: #ba1a1a
-// - Neutral: #747780
-// - Neutral Variant: #717785
-// Note that some of the colors have been modified!
+// Angular Material M3 palette re-seeded to the "Modern Clean" mock
+// (ui-mocks/direction-1-modern-clean/theme.css) so the remaining Material
+// pieces (snackbar, dialog form fields, spinner) match the mock:
+// - Primary/accent: #2f6fed (the mock's --accent)
+// - Background: #f5f7fa (the mock's --bg)
+// - Layered surfaces from --surface/--surface-2/--surface-3
+// - outline/outline-variant from --border-strong/--border
+// - Error: #c5221f (the mock's --danger)
+// Tertiary tracks the mock's --warn family; secondary keeps a neutral
+// blue-gray (the mock has no secondary counterpart).
 
 $palette: (
-    primary: #005cb9,
+    primary: #2f6fed,
     on-primary: #ffffff,
-    primary-container: #d6e3ff,
-    on-primary-container: #001b3e,
-    inverse-primary: #aac7ff,
-    primary-fixed: #d6e3ff,
-    primary-fixed-dim: #aac7ff,
-    on-primary-fixed: #001b3e,
-    on-primary-fixed-variant: #00458e,
+    primary-container: #dbe7fd,
+    on-primary-container: #0f2f66,
+    inverse-primary: #7cabff,
+    primary-fixed: #dbe7fd,
+    primary-fixed-dim: #a9c7fb,
+    on-primary-fixed: #0f2f66,
+    on-primary-fixed-variant: #1d5ad0,
     secondary: #445f8c,
     on-secondary: #ffffff,
-    secondary-container: #d6e3ff,
-    on-secondary-container: #001b3d,
+    secondary-container: #dbe7fd,
+    on-secondary-container: #0f2f66,
     inverse-secondary: #acc7fa,
-    secondary-fixed: #d6e3ff,
+    secondary-fixed: #dbe7fd,
     secondary-fixed-dim: #acc7fa,
-    on-secondary-fixed: #001b3d,
+    on-secondary-fixed: #0f2f66,
     on-secondary-fixed-variant: #2b4772,
-    tertiary: #ecc13e,
+    tertiary: #b06000,
     on-tertiary: #ffffff,
-    tertiary-container: #f9e0a1,
-    on-tertiary-container: #241a00,
-    inverse-tertiary: #dcc587,
-    tertiary-fixed: #f9e0a1,
-    tertiary-fixed-dim: #dcc587,
-    on-tertiary-fixed: #241a00,
-    on-tertiary-fixed-variant: #554514,
-    background: #fcf8f9,
-    on-background: #1c1b1c,
-    surface: #fcf8f9,
-    surface-dim: #dcd9da,
-    surface-bright: #fcf8f9,
-    surface-tint: #5b5e67,
-    on-surface: #1c1b1c,
-    inverse-surface: #313031,
-    inverse-on-surface: #f3f0f0,
-    surface-variant: #e2e2e8,
-    on-surface-variant: #45474c,
+    tertiary-container: #fdf1de,
+    on-tertiary-container: #4a2c00,
+    inverse-tertiary: #f2b855,
+    tertiary-fixed: #fdf1de,
+    tertiary-fixed-dim: #f2b855,
+    on-tertiary-fixed: #4a2c00,
+    on-tertiary-fixed-variant: #6b4400,
+    background: #f5f7fa,
+    on-background: #1b2430,
+    surface: #ffffff,
+    surface-dim: #e4e8ee,
+    surface-bright: #ffffff,
+    surface-tint: #55606e,
+    on-surface: #1b2430,
+    inverse-surface: #2b323d,
+    inverse-on-surface: #f5f7fa,
+    surface-variant: #eef1f5,
+    on-surface-variant: #55606e,
     surface-container-lowest: #ffffff,
-    surface-container-low: #f6f3f3,
-    surface-container: #f0eded,
-    surface-container-high: #ebe7e8,
-    surface-container-highest: #e5e2e2,
+    surface-container-low: #f8fafc,
+    surface-container: #eef1f5,
+    surface-container-high: #e4e8ee,
+    surface-container-highest: #d9dfe7,
     shadow: #000000,
-    scrim: #000000,
-    outline: #76777c,
-    outline-variant: #c6c6cc,
-    error: #ba1a1a,
-    error-container: #ffdad6,
+    scrim: #121c2a,
+    outline: #c9d1db,
+    outline-variant: #e4e8ee,
+    error: #c5221f,
+    error-container: #fdebed,
     on-error: #ffffff,
-    on-error-container: #410002,
-)
+    on-error-container: #9a1b30,
+);

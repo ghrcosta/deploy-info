@@ -1,10 +1,18 @@
+// DeployInfo Portal — global stylesheet.
+//
+// Load order matters for the cascade (Sass emits @use'd module CSS in order):
+// - 'variables' : layout custom properties (:root) from the UI mock
+// - 'mixins'    : Angular Material M3 theme (--mat-sys-* tokens on html)
+// - 'structure' : structural CSS ported from ui-mocks/shared/base.css
+// - 'tokens'    : design tokens + flourishes from
+//                 ui-mocks/direction-1-modern-clean/theme.css — loaded last
+//                 so its rules override the structural defaults (the mock
+//                 links theme.css after base.css too).
 @use 'variables';
 @use 'mixins';
-@use 'highlightjs';
+@use 'structure';
+@use 'tokens';
 @use '@angular/material' as mat;
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .light-theme { color-scheme: light; }
 .dark-theme { color-scheme: dark; }

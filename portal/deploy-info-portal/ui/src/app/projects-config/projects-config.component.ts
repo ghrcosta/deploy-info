@@ -1,35 +1,28 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { ProjectDataDialogComponent, ProjectDataDialogAction } from "./project-data-dialog/project-data-dialog.component";
-import { SettingsNetworkService } from './settings.network.service';
+import { ProjectsConfigNetworkService } from './projects-config.network.service';
 
 @Component({
-    selector: 'settings',
-    templateUrl: './settings.component.html',
-    styleUrl: './settings.component.scss',
+    selector: 'projects-config',
+    templateUrl: './projects-config.component.html',
+    styleUrl: './projects-config.component.scss',
     changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
-        FormsModule,
-        MatCardModule,
-        MatButtonModule,
-        MatExpansionModule,
-        MatFormFieldModule,
         MatIconModule,
-        MatInputModule,
     ],
 })
-export class SettingsComponent {
+export class ProjectsConfigComponent {
     readonly dialog = inject(MatDialog);
-    readonly network = inject(SettingsNetworkService)
+    readonly network = inject(ProjectsConfigNetworkService);
 
     projects: Project[] = [];
+
+    /** Page subtitle with a properly pluralized project count. */
+    get watchedProjectsSubtitle(): string {
+        return `${this.projects.length} ${this.projects.length === 1 ? 'project' : 'projects'} watched for deploys`;
+    }
 
     ngOnInit() {
         this.network.getProjects().subscribe(projects => {

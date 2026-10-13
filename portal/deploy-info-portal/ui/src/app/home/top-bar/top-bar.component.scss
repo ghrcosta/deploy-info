@@ -1,54 +1,17 @@
-@use '@angular/material' as mat;
-
-.bar {
-    background-color: var(--mat-sys-primary);
-    height: var(--home-top-bar-height);
-    width: 100%;
+/* All structural top-bar styling (.topbar, .brand, .brand-mark, .topbar-nav,
+   .topbar-link, .icon-btn, the mobile nav-toggle) lives in the global
+   stylesheet (src/sass/_structure.scss), mirroring the mock's base.css. Only
+   component-specific sizing is defined here: mat-icon renders at 24px by
+   default, while the mock sizes the brand mark's icon at 19px and icon buttons'
+   icons at 20px. */
+.brand-mark mat-icon {
+    width: 19px;
+    height: 19px;
+    font-size: 19px;
 }
 
-.content {
-    width: var(--home-content-width);
-    margin-left: auto;
-    margin-right: auto;
-    display: flex;
-    height: 100%;
-}
-
-.app-name {
-    color: var(--mat-sys-on-primary);
-    font-size: x-large;
-    padding-left: 12px;
-    margin-top: auto;
-    margin-bottom: auto;
-
-    cursor: pointer;
-    user-select: none;
-}
-
-.buttons {
-    margin-left: auto;
-    margin-top: auto;
-.user-email {
-    color: var(--mat-sys-on-primary);
-    margin-top: auto;
-    margin-bottom: auto;
-    opacity: 0.8;
-    font-size: 0.9rem;
-    margin-right: 4px;
-    user-select: none;
-}
-
-.logout-button {
-    margin-left: 40px;
-}
-    margin-bottom: auto;
-
-    @include mat.icon-button-overrides((
-        icon-color: var(--mat-sys-on-primary),
-        ripple-color: var(--mat-sys-primary-container),
-    ));
-}
-
-.logout-button {
-    margin-left: 40px;
+.icon-btn mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
 }

@@ -1,0 +1,67 @@
+<div class="settings-inner">
+    <header class="settings-head">
+        <div>
+            <h2>Manage projects</h2>
+            <p class="settings-sub">{{ watchedProjectsSubtitle }}</p>
+        </div>
+        <button type="button" class="btn primary" (click)="onAddProjectClicked()">
+            <mat-icon class="icon" svgIcon="add" aria-hidden="true"></mat-icon>
+            <span>Add project</span>
+        </button>
+    </header>
+
+    @if (projects.length === 0) {
+        <div class="empty-state settings-empty">
+            <mat-icon class="icon empty-icon" svgIcon="project" aria-hidden="true"></mat-icon>
+            <h3>No projects yet</h3>
+            <p>Add the first GCP project to start watching its deploys.</p>
+            <button type="button" class="btn primary" (click)="onAddProjectClicked()">
+                <mat-icon class="icon" svgIcon="add" aria-hidden="true"></mat-icon>
+                <span>Add project</span>
+            </button>
+        </div>
+    } @else {
+        <div class="project-grid">
+            @for (project of projects; track project.projectId) {
+                <article class="project-card">
+                    <header class="project-card-head">
+                        <mat-icon class="icon project-icon" svgIcon="project" aria-hidden="true"></mat-icon>
+                        <h3 class="mono">{{ project.projectId }}</h3>
+                        <div class="project-actions">
+                            <button type="button" class="icon-btn small" (click)="onEditProjectClicked(project)"
+                                    [attr.aria-label]="'Edit ' + project.projectId">
+                                <mat-icon class="icon" svgIcon="edit" aria-hidden="true"></mat-icon>
+                            </button>
+                            <button type="button" class="icon-btn small danger" (click)="onDeleteProjectClicked(project)"
+                                    [attr.aria-label]="'Delete ' + project.projectId">
+                                <mat-icon class="icon" svgIcon="delete" aria-hidden="true"></mat-icon>
+                            </button>
+                        </div>
+                    </header>
+                    <dl class="project-fields">
+                        <div class="project-field">
+                            <dt>
+                                <mat-icon class="icon" svgIcon="group" aria-hidden="true"></mat-icon>
+                                <span>Group</span>
+                            </dt>
+                            <dd>
+                                @if (project.group) {
+                                    {{ project.group }}
+                                } @else {
+                                    <span class="muted">No group</span>
+                                }
+                            </dd>
+                        </div>
+                        <div class="project-field">
+                            <dt>
+                                <mat-icon class="icon" svgIcon="service_account" aria-hidden="true"></mat-icon>
+                                <span>Service account</span>
+                            </dt>
+                            <dd class="mono">{{ project.serviceAccount }}</dd>
+                        </div>
+                    </dl>
+                </article>
+            }
+        </div>
+    }
+</div>

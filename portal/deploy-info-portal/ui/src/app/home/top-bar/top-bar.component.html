@@ -1,22 +1,30 @@
-<div class="bar">
-    <div class="content">
-        <span class="app-name" (click)="openDeployViewer()">DeployInfo</span>
+<header class="topbar">
+    <button class="icon-btn nav-toggle" type="button" aria-label="Toggle navigator" aria-controls="navigator"
+            (click)="toggleNavigator()">
+        <mat-icon>menu</mat-icon>
+    </button>
 
-        <div class="buttons">
-            @if (userEmail) {
-                <span class="user-email">{{ userEmail }}</span>
+    <a class="brand" href="" (click)="openView('deploys', $event)">
+        <span class="brand-mark"><mat-icon svgIcon="deployed_code"></mat-icon></span>
+        <span class="brand-name">DeployInfo</span>
+    </a>
+
+    <nav class="topbar-nav" aria-label="Main navigation">
+        <a class="topbar-link" [class.active]="view === 'deploys'" href="" (click)="openView('deploys', $event)">Deploys</a>
+        <a class="topbar-link" [class.active]="view === 'projects'" href="" (click)="openView('projects', $event)">Projects</a>
+        <a class="topbar-link topbar-help" [class.active]="view === 'help'" href="" (click)="openView('help', $event)">Help</a>
+    </nav>
+
+    <div class="topbar-actions">
+        <button class="icon-btn" type="button" aria-label="Toggle theme" (click)="toggleDarkMode()">
+            @if (isDarkMode) {
+                <mat-icon>light_mode</mat-icon>
+            } @else {
+                <mat-icon>dark_mode</mat-icon>
             }
-            <button mat-icon-button (click)="toggleDarkMode()">
-                <mat-icon>
-                    @if (isDarkMode) { dark_mode } @else { light_mode }
-                </mat-icon>
-            </button>
-            <button mat-icon-button (click)="openSettings()">
-                <mat-icon>settings</mat-icon>
-            </button>
-            <button mat-icon-button class="logout-button" (click)="logout()">
-                <mat-icon>logout</mat-icon>
-            </button>
-        </div>
+        </button>
+        <button class="icon-btn" type="button" aria-label="Sign out" (click)="logout()">
+            <mat-icon>logout</mat-icon>
+        </button>
     </div>
-</div>
+</header>

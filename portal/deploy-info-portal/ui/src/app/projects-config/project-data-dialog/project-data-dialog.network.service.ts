@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Project } from "../settings.component";
+import { Project } from "../projects-config.component";
 import { AddProjectResult, EditProjectResult } from './project-data-dialog.component';
 import { Observable } from 'rxjs';
 

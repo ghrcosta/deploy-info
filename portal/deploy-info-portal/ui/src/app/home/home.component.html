@@ -1,11 +1,11 @@
 <div class="home">
     @if (signedIn) {
-        <div class="bar">
-            <top-bar></top-bar>
-        </div>
+        <top-bar></top-bar>
         <div class="content">
-            @if (showSettings) {
-                <settings></settings>
+            @if (view === 'projects') {
+                <projects-config></projects-config>
+            } @else if (view === 'help') {
+                <help></help>
             } @else {
                 <deploy-viewer></deploy-viewer>
             }

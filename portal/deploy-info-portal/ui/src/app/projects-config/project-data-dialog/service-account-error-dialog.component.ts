@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 
 /**
@@ -12,7 +12,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 @Component({
     selector: 'service-account-error-dialog',
     imports: [
-        MatButtonModule,
+        MatIconModule,
         MatExpansionModule,
         MatDialogTitle,
         MatDialogContent,

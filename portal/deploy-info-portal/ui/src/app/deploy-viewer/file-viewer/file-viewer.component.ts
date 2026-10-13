@@ -1,42 +1,49 @@
-import { Component, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { Highlight, HighlightAuto, HighlightJS } from 'ngx-highlightjs';
-import { HighlightLineNumbers } from 'ngx-highlightjs/line-numbers';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DeployViewerService, DeploySelection } from '../deploy-viewer.component';
+import { DeployViewerService, DeploySelection } from '../deploy-viewer.service';
 import { DeployContentNetworkService } from '../deploy-content.network.service';
-import { DeployContent } from '../content-model';
+import { ContentFile, DeployContent, GitFileStatus } from '../content-model';
+import { fmtTime, timeAgo } from '../time-ago';
 
-import highlightGitLanguage from '../../highlightjs/git.js';
+/** One rendered code line of a `.code` block, matching the mock's renderer. */
+interface CodeLine {
+    /** 1-based line number. */
+    n: number;
+    text: string;
+    /** Diff tint class: `cl-add`/`cl-del`/`cl-hunk`, or '' for unhighlighted lines. */
+    cls: string;
+}
 
+/** A `.file-block`'s view model: header fields plus pre-rendered code lines. */
+interface FileBlock {
+    filepath: string;
+    status: GitFileStatus;
+    lines: CodeLine[];
+}
+
+/**
+ * File viewer of the "Modern Clean" mock: a deploy card with crumb chips, the
+ * segmented Git/Extras tabs and the per-file blocks with the mock's per-line
+ * code renderer (diff tinting), replacing the previous mat-tabs/
+ * mat-expansion-panel/ngx-highlightjs markup (see UI-REFACTOR-PLAN.md, step C).
+ */
 @Component({
     selector: 'file-viewer',
     imports: [
-        Highlight,
-        HighlightAuto,
-        HighlightLineNumbers,
-        MatExpansionModule,
         MatIconModule,
         MatProgressSpinnerModule,
-        MatTabsModule,
-        MatTooltipModule,
     ],
     templateUrl: './file-viewer.component.html',
     changeDetection: ChangeDetectionStrategy.Eager,
     styleUrl: './file-viewer.component.scss'
 })
 export class FileViewerComponent {
-    constructor(
-        private deployViewerService: DeployViewerService,
-        private contentNetworkService: DeployContentNetworkService,
-        private highlightService: HighlightJS,
-        private destroyRef: DestroyRef,
-    ) {}
+    private deployViewerService = inject(DeployViewerService);
+    private contentNetworkService = inject(DeployContentNetworkService);
+    private destroyRef = inject(DestroyRef);
 
     /** Header data of the currently selected version, straight from the tree (see `tree-model.ts`). */
     selection: DeploySelection | null = null;
@@ -48,13 +55,49 @@ export class FileViewerComponent {
     /** True on any other content-fetch error (e.g. a Cloud Storage failure surfaces as 502). */
     loadFailed = false;
 
-    ngOnInit() {
-        this.highlightService.registerLanguage('git', highlightGitLanguage);
+    /** The active segmented tab: the GIT section or the extras. */
+    activeTab: 'git' | 'extras' = 'git';
 
+    /** Pre-rendered code lines of the GIT section blocks (built once per loaded content). */
+    gitLogLines: CodeLine[] = [];
+    gitStatusLines: CodeLine[] = [];
+    changeBlocks: FileBlock[] = [];
+    extraBlocks: FileBlock[] = [];
+
+    /** Number of files in the GIT section tab (log + status + changes). */
+    get gitCount(): number {
+        return this.changeBlocks.length
+            + (this.gitLogLines.length > 0 ? 1 : 0)
+            + (this.gitStatusLines.length > 0 ? 1 : 0);
+    }
+
+    /** Relative/absolute timestamp formatters shared with the navigator. */
+    timeAgo = timeAgo;
+    fmtTime = fmtTime;
+
+    ngOnInit() {
         this.deployViewerService.deployClickedEventObservable
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(selection => this.loadContent(selection));
     }
+
+    setTab = (tab: 'git' | 'extras') => {
+        this.activeTab = tab;
+    };
+
+    /** Chip class of a git file state (see the mock's `statusChip`). */
+    statusChipClass = (status: GitFileStatus) =>
+        status === 'new' ? 'st-new'
+        : status === 'untracked' ? 'st-untracked'
+        : status === 'modified' ? 'st-modified'
+        : '';
+
+    /** Chip label of a git file state (see the mock's `statusChip`). */
+    statusChipLabel = (status: GitFileStatus) =>
+        status === 'new' ? 'New'
+        : status === 'untracked' ? 'Untracked'
+        : status === 'modified' ? 'Modified'
+        : status;
 
     private loadContent(selection: DeploySelection) {
         this.selection = selection;
@@ -62,11 +105,13 @@ export class FileViewerComponent {
         this.notFound = false;
         this.loadFailed = false;
         this.isLoading = true;
+        this.activeTab = 'git';
 
         this.contentNetworkService.getContent(selection.version.storageFolder).subscribe({
             next: content => {
                 if (this.selection !== selection) return; // A newer selection superseded this request
                 this.content = content;
+                this.buildViewModels(content);
                 this.isLoading = false;
             },
             error: (error: HttpErrorResponse) => {
@@ -78,5 +123,35 @@ export class FileViewerComponent {
         });
     }
 
-    timestampToUtc = (timestamp: number) => new Date(timestamp).toUTCString();
+    /** Pre-render the code lines once per content, instead of per change-detection pass. */
+    private buildViewModels(content: DeployContent) {
+        this.gitLogLines = content.git?.gitlog ? toCodeLines(content.git.gitlog, false) : [];
+        this.gitStatusLines = content.git?.gitstatus ? toCodeLines(content.git.gitstatus, false) : [];
+        this.changeBlocks = (content.git?.changes ?? []).map(change => toFileBlock(change, true));
+        this.extraBlocks = content.extras.map(extra => toFileBlock(extra, false));
+    }
+}
+
+/**
+ * The mock's per-line code renderer (ui-mocks/shared/app.js, `codeBlock`): every
+ * line becomes a `.cl` span with a `.cln` number and a `.clt` text; when `diff`
+ * is set, lines starting with +, - or @@ get the `cl-add`/`cl-del`/`cl-hunk`
+ * tint classes driven by the add/del/hunk design tokens.
+ */
+function toCodeLines(text: string, diff: boolean): CodeLine[] {
+    const lines = text.split('\n');
+    if (lines.length && lines[lines.length - 1] === '') lines.pop();
+    return lines.map((line, i) => {
+        let cls = '';
+        if (diff) {
+            if (line.startsWith('+')) cls = 'cl-add';
+            else if (line.startsWith('-')) cls = 'cl-del';
+            else if (line.startsWith('@@')) cls = 'cl-hunk';
+        }
+        return { n: i + 1, text: line, cls };
+    });
+}
+
+function toFileBlock(file: ContentFile, diff: boolean): FileBlock {
+    return { filepath: file.filepath, status: file.status, lines: toCodeLines(file.content, diff) };
 }

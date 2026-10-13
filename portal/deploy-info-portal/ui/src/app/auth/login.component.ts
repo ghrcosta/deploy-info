@@ -1,15 +1,16 @@
 import { Component, ElementRef, ViewChild, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService, AuthState } from './auth.service';
 
 /**
- * The sign-in screen: a Google Identity Services sign-in button while signed out, and an
- * explanation with a way out when the signed-in account has no access to the portal.
+ * The sign-in screen of the "Modern Clean" mock: a branded card with the Google
+ * Identity Services sign-in button while signed out, a spinner while loading,
+ * and an explanation with a way out when the signed-in account has no access.
  */
 @Component({
     selector: 'login',
     imports: [
-        MatButtonModule,
+        MatIconModule,
     ],
     templateUrl: './login.component.html',
     styleUrl: './login.component.scss',

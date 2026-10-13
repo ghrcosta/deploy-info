@@ -1,13 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
-import { provideHighlightOptions } from 'ngx-highlightjs';
 
 import { FileViewerComponent } from './file-viewer.component';
 import { DeployContentNetworkService } from '../deploy-content.network.service';
-import { DeployViewerService } from '../deploy-viewer.component';
+import { DeployViewerService } from '../deploy-viewer.service';
 import { DeployContent } from '../content-model';
 import { VersionEntry } from '../tree-model';
+
+// Minimal stand-ins for the SVG icons the file viewer renders; the real ones are
+// registered by AppComponent at runtime, which the specs don't include.
+const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
+const registerStubIcons = (registry: MatIconRegistry, sanitizer: DomSanitizer) =>
+    ['project', 'GAE', 'RUN', 'deployed_code', 'deployed_code_alert', 'no_data', 'search', 'chevron_right', 'link', 'arrow_outward', 'person', 'schedule']
+        .forEach(name => registry.addSvgIconLiteral(name, sanitizer.bypassSecurityTrustHtml(STUB_SVG)));
 
 describe('FileViewerComponent', () => {
   let component: FileViewerComponent;
@@ -24,15 +32,15 @@ describe('FileViewerComponent', () => {
 
   const FULL_CONTENT: DeployContent = {
     git: {
-      gitlog: 'commit 1a2b3c ...',
+      gitlog: 'commit 1a2b3c ...\n',
       gitstatus: 'On branch main ...',
       changes: [
-        { filepath: '/src/main.kt', content: 'diff --git a/src/main.kt ...', status: 'modified' },
-        { filepath: '/src/new-file.kt', content: 'full file content ...', status: 'new' },
-        { filepath: '/src/untracked-file.kt', content: 'full file content ...', status: 'untracked' },
+        { filepath: '/src/main.kt', content: 'diff --git a/x b/x\n@@ -1,1 +1,1 @@\n-old line\n+new line\nkept line\n', status: 'modified' },
+        { filepath: '/src/new-file.kt', content: 'full file content\n', status: 'new' },
+        { filepath: '/src/untracked-file.kt', content: 'untracked file content\n', status: 'untracked' },
       ],
     },
-    extras: [{ filepath: '/docs/readme.md', content: '# readme', status: 'modified' }],
+    extras: [{ filepath: '/docs/readme.md', content: '# readme\n', status: 'modified' }],
   };
   const EMPTY_CONTENT: DeployContent = { git: null, extras: [] };
 
@@ -44,13 +52,11 @@ describe('FileViewerComponent', () => {
       imports: [FileViewerComponent],
       providers: [
         { provide: DeployContentNetworkService, useValue: networkService },
-        provideHighlightOptions({
-          fullLibraryLoader: () => import('highlight.js'),
-          lineNumbersLoader: () => import('ngx-highlightjs/line-numbers'),
-        }),
       ],
     })
     .compileComponents();
+
+    registerStubIcons(TestBed.inject(MatIconRegistry), TestBed.inject(DomSanitizer));
 
     fixture = TestBed.createComponent(FileViewerComponent);
     component = fixture.componentInstance;
@@ -58,17 +64,23 @@ describe('FileViewerComponent', () => {
     fixture.detectChanges();
   });
 
+  const element = () => fixture.nativeElement as HTMLElement;
   const select = (version: VersionEntry) => {
     deployViewerService.newDeployClickedEvent({ project: 'proj-qa', service: 'web', version });
   };
+  const blockWithPath = (path: string) =>
+    Array.from(element().querySelectorAll('.file-block'))
+      .find(block => block.querySelector('.file-path')!.textContent!.includes(path))!;
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should show nothing until a version is selected', () => {
+  it('should show the no-selection empty state until a version is selected', () => {
     expect(component.selection).toBeNull();
     expect(networkService.getContent).not.toHaveBeenCalled();
+    expect(element().querySelector('.empty-state')!.textContent).toContain('No deploy selected');
+    expect(element().querySelector('.deploy-card')).toBeNull();
   });
 
   it('should fetch the selected version\'s content and render the header from the tree', () => {
@@ -80,52 +92,124 @@ describe('FileViewerComponent', () => {
 
     fixture.detectChanges();
 
-    const element = fixture.nativeElement as HTMLElement;
-    const header = element.querySelector('.deploy-id')!.textContent!;
-    expect(header).toContain('proj-qa');
-    expect(header).toContain('web');
-    expect(header).toContain('v42');
-    expect(element.querySelector('.link')!.textContent).toContain(VERSION.url!);
-    expect(element.querySelector('.author')!.textContent).toContain(VERSION.author);
-    expect(element.querySelector('.date')!.textContent).toContain(new Date(VERSION.timestamp).toUTCString());
+    const el = element();
+    const card = el.querySelector('.deploy-card')!.textContent!;
+    expect(card).toContain('proj-qa');
+    expect(card).toContain('web');
+    expect(card).toContain('v42');
+
+    const link = el.querySelector('.meta-link') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toEqual(VERSION.url!);
+    expect(link.textContent).toContain(VERSION.url);
+    expect(el.querySelector('.deploy-meta')!.textContent).toContain(VERSION.author);
+    expect((el.querySelector('.meta-time') as HTMLElement).getAttribute('title')).toContain('UTC');
   });
 
-  it('should render the GIT expansion panels (log, status, changes)', () => {
+  it('should render the GIT file blocks (log, status, changes) as the default tab', () => {
     select(VERSION);
     fixture.detectChanges();
 
-    const panels = (fixture.nativeElement as HTMLElement).querySelectorAll('mat-expansion-panel');
-    expect(panels.length).toEqual(5);
-    expect(panels[0].textContent).toContain('git log');
-    expect(panels[1].textContent).toContain('git status');
-    expect(panels[2].textContent).toContain('/src/main.kt');
-    expect(panels[3].textContent).toContain('/src/new-file.kt');
-    expect(panels[4].textContent).toContain('/src/untracked-file.kt');
+    const blocks = element().querySelectorAll('.file-block');
+    expect(blocks.length).toEqual(5);
+    expect(blocks[0].querySelector('.file-path')!.textContent).toContain('git log');
+    expect(blocks[1].querySelector('.file-path')!.textContent).toContain('git status');
+    expect(blocks[2].querySelector('.file-path')!.textContent).toContain('/src/main.kt');
+    expect(blocks[3].querySelector('.file-path')!.textContent).toContain('/src/new-file.kt');
+    expect(blocks[4].querySelector('.file-path')!.textContent).toContain('/src/untracked-file.kt');
+    expect(element().querySelectorAll('[aria-label="Extras"] .file-block').length).toEqual(0);
   });
 
-  it('should mark each git change panel with a new/untracked/modified icon (extras get none)', () => {
+  it('should mark the file blocks with the git status chips (extras get their own)', () => {
     select(VERSION);
     fixture.detectChanges();
 
-    const panels = (fixture.nativeElement as HTMLElement).querySelectorAll('mat-expansion-panel');
-    expect(panels[2].querySelector('.file-state-icon.modified')).toBeTruthy();
-    expect(panels[2].querySelector('.file-state-icon.new')).toBeNull();
-    expect(panels[3].querySelector('.file-state-icon.new')).toBeTruthy();
-    expect(panels[3].querySelector('.file-state-icon.modified')).toBeNull();
-    expect(panels[4].querySelector('.file-state-icon.untracked')).toBeTruthy();
-    expect(panels[4].querySelector('.file-state-icon.new')).toBeNull();
-    expect(panels[0].querySelector('.file-state-icon')).toBeNull(); // git log panel
-    expect(panels[1].querySelector('.file-state-icon')).toBeNull(); // git status panel
+    const blocks = element().querySelectorAll('.file-block');
+    expect(blocks[0].querySelector('.status-chip')).toBeNull(); // git log carries no chip
+    expect(blocks[1].querySelector('.status-chip')).toBeNull(); // git status carries no chip
+    expect(blocks[2].querySelector('.status-chip.st-modified')!.textContent).toContain('Modified');
+    expect(blocks[2].querySelector('.status-chip.st-new')).toBeNull();
+    expect(blocks[3].querySelector('.status-chip.st-new')!.textContent).toContain('New');
+    expect(blocks[4].querySelector('.status-chip.st-untracked')!.textContent).toContain('Untracked');
   });
 
-  it('should show the no-data alert when there is no git data and no extras', () => {
+  it('should render numbered code lines and the diff tints of changed files', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    const logLines = blockWithPath('git log').querySelectorAll('.cl');
+    expect(logLines.length).toEqual(1);
+    expect(logLines[0].querySelector('.cln')!.textContent).toEqual('1');
+    expect(logLines[0].querySelector('.clt')!.textContent).toContain('commit 1a2b3c');
+    expect(logLines[0].className).not.toContain('cl-add');
+
+    const diffLines = blockWithPath('/src/main.kt').querySelectorAll('.cl');
+    expect(diffLines.length).toEqual(5);
+    expect(diffLines[1].classList).toContain('cl-hunk');
+    expect(diffLines[2].classList).toContain('cl-del');
+    expect(diffLines[3].classList).toContain('cl-add');
+    expect(diffLines[4].classList).not.toContain('cl-');
+    expect(diffLines[4].querySelector('.cln')!.textContent).toEqual('5');
+
+    // Changed files render diff-tinted, but a line without +/-/@@ prefix stays plain
+    expect(blockWithPath('/src/new-file.kt').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
+  });
+
+  it('should show the tab counts and switch between the Git and Extras panels', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    const tabs = element().querySelectorAll('.tab-btn');
+    expect(tabs[0].textContent).toContain('5');
+    expect(tabs[1].textContent).toContain('1');
+    expect(tabs[0].classList.contains('active')).toBeTrue();
+
+    (tabs[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const activeTabs = element().querySelectorAll('.tab-btn');
+    expect(activeTabs[1].classList.contains('active')).toBeTrue();
+    expect(activeTabs[0].classList.contains('active')).toBeFalse();
+    const extrasPanel = element().querySelector('[aria-label="Extras"]')!;
+    expect(extrasPanel.querySelector('.file-path')!.textContent).toContain('/docs/readme.md');
+    expect(extrasPanel.querySelector('.status-chip.st-extra')!.textContent).toContain('Extra');
+  });
+
+  it('should render collapsible file blocks, closed by default and without copy buttons', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    const blocks = Array.from(element().querySelectorAll('details.file-block')) as HTMLDetailsElement[];
+    expect(blocks.length).toEqual(5);
+    blocks.forEach(block => expect(block.open).withContext('closed by default').toBeFalse());
+    expect(element().querySelector('.copy-btn')).withContext('no copy button').toBeNull();
+  });
+
+  it('should expand a file block to reveal its code when the header is clicked', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    const block = blockWithPath('/src/main.kt') as HTMLDetailsElement;
+    expect(block.open).toBeFalse();
+    expect(block.querySelector('.code')!.checkVisibility()).toBeFalse(); // closed: code hidden
+
+    (block.querySelector('.file-head') as HTMLElement).click();
+    expect(block.open).toBeTrue();
+    expect(block.querySelectorAll('.cl').length).toEqual(5);
+  });
+
+  it('should show the no-data empty state when there is no git data and no extras', () => {
     networkService.getContent.and.returnValue(of(EMPTY_CONTENT));
     select(VERSION);
     fixture.detectChanges();
 
-    const element = fixture.nativeElement as HTMLElement;
+    const el = element();
     expect(component.content).toEqual(EMPTY_CONTENT);
-    expect(element.querySelectorAll('.no-data-alert').length).toEqual(1); // the GIT tab is the active one
+    expect(el.querySelector('[aria-label="Git"] .empty-state')!.textContent).toContain('No data found');
+
+    (el.querySelectorAll('.tab-btn')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('[aria-label="Extras"] .empty-state')!.textContent)
+      .toContain('No extra files were collected');
   });
 
   it('should show the not-found state when the folder is gone (404)', () => {
@@ -160,6 +244,7 @@ describe('FileViewerComponent', () => {
 
     select(VERSION_2);
     expect(component.content).toEqual(EMPTY_CONTENT);
+    expect(component.activeTab).toEqual('git');
 
     pending.next(FULL_CONTENT); // late response for the superseded selection
 

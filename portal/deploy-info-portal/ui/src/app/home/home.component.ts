@@ -1,8 +1,9 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { TopBarComponent } from "./top-bar/top-bar.component";
 import { DeployViewerComponent } from '../deploy-viewer/deploy-viewer.component';
-import { SettingsComponent } from '../settings/settings.component'
-import { HomeService } from './home.service';
+import { ProjectsConfigComponent } from '../projects-config/projects-config.component';
+import { HelpComponent } from '../help/help.component';
+import { HomeService, HomeView } from './home.service';
 import { AuthService } from '../auth/auth.service';
 import { LoginComponent } from '../auth/login.component';
 
@@ -14,7 +15,8 @@ import { LoginComponent } from '../auth/login.component';
     imports: [
         TopBarComponent,
         DeployViewerComponent,
-        SettingsComponent,
+        ProjectsConfigComponent,
+        HelpComponent,
         LoginComponent,
     ],
 })
@@ -25,14 +27,15 @@ export class HomeComponent {
 
     private authService = inject(AuthService);
 
-    showSettings = false;
+    /** The view currently shown in the content area. */
+    view: HomeView = 'deploys';
 
     /** True when authentication is disabled (local dev) or the user is signed in. */
     signedIn = false;
 
     ngOnInit() {
-        this.homeService.showSettingsEventObservable.subscribe(showSettings => {
-            this.showSettings = showSettings;
+        this.homeService.viewObservable.subscribe(view => {
+            this.view = view;
         })
         this.authService.authState$.subscribe(state => {
             this.signedIn = state.status === 'signed-in';

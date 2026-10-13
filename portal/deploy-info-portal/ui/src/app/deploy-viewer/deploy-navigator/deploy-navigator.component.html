@@ -1,49 +1,63 @@
-<div class="content">
-    @if (groupList.length == 0) {
-        <div class="no-data-alert">
-            <mat-icon svgIcon="deployed_code_alert" aria-label="No deploys found" class="alert-icon"></mat-icon>
-            <span>No data found</span>
+@if (groupList.length > 0) {
+    <div class="nav-search">
+        <mat-icon class="icon" svgIcon="search" aria-hidden="true"></mat-icon>
+        <input #navSearchInput type="search" placeholder="Filter projects, services, versions…"
+               aria-label="Filter deploys" (input)="onSearchInput($event)">
+    </div>
+}
+<nav class="nav-tree" aria-label="Deploy navigator">
+    @if (groupList.length === 0) {
+        <div class="empty-state nav-empty">
+            <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
+            <h3>No deploys found</h3>
+            <p>Deploys of the projects watched by the portal will appear here.</p>
+            <button type="button" class="btn outlined" (click)="openProjectsView()">Manage projects</button>
         </div>
     } @else {
         @for (group of groupList; track group.name) {
-            @if (groupList.length > 1 || group.name) {
-                <div class="group-list">
-                    <span>@if (group.name) { {{group.name}} } @else { &lt;No Group&gt; }</span>
-                </div>
-            }
-            <div class="project-list">
+            <section class="nav-group">
+                <h3 class="nav-group-label">
+                    @if (group.name) { {{ group.name }} } @else { <span class="nav-group-none">No group</span> }
+                </h3>
                 @for (project of group.projects; track project.projectId) {
-                    <mat-expansion-panel>
-                        <mat-expansion-panel-header>
-                            <mat-panel-title>
-                                <span>{{ project.projectId }}</span>
-                            </mat-panel-title>
-                        </mat-expansion-panel-header>
-
-                        <mat-tree #tree [dataSource]="project.services" [childrenAccessor]="childrenAccessor">
-                            <!-- Version format -->
-                            <mat-tree-node *matTreeNodeDef="let node"
-                                           [attr.id]="node.id" class="version-node"
-                                           (click)="onDeployClicked($event, node)">
-                                <div class="version-entry">
-                                    <mat-icon svgIcon="deployed_code" aria-label="Deploy" class="icon"/>
-                                    <span>{{node.name}}</span>
-                                </div>
-                            </mat-tree-node>
-
-                            <!-- Service format -->
-                            <mat-tree-node *matTreeNodeDef="let node;when: hasChild" matTreeNodeToggle
-                                            [cdkTreeNodeTypeaheadLabel]="node.id">
-                                <div class="service-entry">
-                                    <mat-icon svgIcon={{node.icon}} class="icon"
-                                              [attr.aria-label]="'Deploy of type ' + node.icon"/>
-                                    <span>{{node.name}}</span>
-                                </div>
-                            </mat-tree-node>
-                        </mat-tree>
-                    </mat-expansion-panel>
+                    <details class="nav-project" open>
+                        <summary>
+                            <span class="nav-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                            <mat-icon class="icon nav-project-icon" svgIcon="project" aria-hidden="true"></mat-icon>
+                            <span class="nav-project-name">{{ project.projectId }}</span>
+                        </summary>
+                        <ul class="nav-services">
+                            @for (service of project.services; track service.name) {
+                                <li>
+                                    <details class="nav-service" open>
+                                        <summary>
+                                            <span class="nav-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                                            <mat-icon class="icon nav-service-icon" [svgIcon]="service.type" [attr.aria-label]="'Deploy of type ' + service.type"></mat-icon>
+                                            <span class="nav-service-name">{{ service.name }}</span>
+                                            <span class="nav-count">{{ service.versions.length }}</span>
+                                        </summary>
+                                        <ul class="nav-versions">
+                                            @for (version of service.versions; track version.id) {
+                                                <li>
+                                                    <button type="button" class="nav-version"
+                                                            [attr.id]="version.id"
+                                                            [class.selected]="version.id === selectedVersionId"
+                                                            [attr.aria-current]="version.id === selectedVersionId ? 'true' : 'false'"
+                                                            (click)="selectVersion(version)">
+                                                        <mat-icon class="icon nav-version-icon" svgIcon="deployed_code" aria-hidden="true"></mat-icon>
+                                                        <span class="nav-version-name">{{ version.name }}</span>
+                                                        <span class="nav-time">{{ timeAgo(version.deployTimestamp) }}</span>
+                                                    </button>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </details>
+                                </li>
+                            }
+                        </ul>
+                    </details>
                 }
-            </div>
+            </section>
         }
     }
-</div>
+</nav>

@@ -1,22 +1,28 @@
-<div class="login-screen">
-    <div class="panel">
-        <h1 class="app-name">DeployInfo</h1>
+<main class="login-screen">
+    <div class="login-card">
+        <div class="login-brand">
+            <span class="login-logo"><mat-icon svgIcon="deployed_code" aria-hidden="true"></mat-icon></span>
+            <h1>DeployInfo</h1>
+        </div>
 
         @if (isNoAccess) {
-            <p class="message">
-                Signed in as <span class="email">{{ noAccessEmail }}</span>,
-                but that account has no access to this portal.
-            </p>
-            <p class="hint">
-                Ask the portal administrator to grant the account a role on the portal's
-                GCP project — directly, or through a Google Group listed in the project's IAM.
-            </p>
-            <button mat-stroked-button (click)="signOut()">Sign out / switch account</button>
+            <div class="login-state login-state-warning">
+                <span class="login-state-icon"><mat-icon svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon></span>
+                <h2>No access</h2>
+                <p>Signed in as <strong class="login-email">{{ noAccessEmail }}</strong>, but that account has no access to this portal.</p>
+                <p class="login-hint">Ask the portal administrator to grant the account a role on the portal's GCP project.</p>
+                <button type="button" class="btn outlined" (click)="signOut()">Sign out / switch account</button>
+            </div>
         } @else if (isSignedOut) {
-            <p class="message">Sign in with your Google account to continue.</p>
-            <div #googleButton class="google-button"></div>
+            <div class="login-state">
+                <div #googleButton class="google-button"></div>
+                <p class="login-hint">Access requires IAM role on the GCP project</p>
+            </div>
         } @else {
-            <p class="message">Loading…</p>
+            <div class="login-state">
+                <div class="spinner" aria-label="Loading"></div>
+                <p class="login-hint">Checking your access…</p>
+            </div>
         }
     </div>
-</div>
+</main>

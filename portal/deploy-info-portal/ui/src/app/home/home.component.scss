@@ -1,31 +1,17 @@
-@use '@angular/material' as mat;
-
+/* Shell layout of the "Modern Clean" mock: a sticky top bar (its .topbar
+   structural styles live in src/sass/_structure.scss) above fluid content.
+   Unlike the previous layout there is no fixed-width centering: the deploy
+   viewer's shell grid and the settings page fill the available width. */
 .home {
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: auto;
-}
-
-.bar {
-    height: var(--home-top-bar-height);
+    overflow: hidden;
 }
 
 .content {
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-    overflow: auto;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    background: var(--mat-sys-surface);
-}
-
-deploy-viewer {
-    margin-left: auto;
-    margin-right: auto;
-}
-settings {
-    margin-left: auto;
-    margin-right: auto;
+    overflow: auto;
 }

@@ -1,0 +1,31 @@
+/* The dialog chrome (surface radius, surface color, border, shadow and the
+   mock's .dialog inner padding) is overridden globally in
+   src/sass/_structure.scss; the .field/.dialog-form/.dialog-actions layout
+   comes from there too. Only the dialog's width and small per-dialog bits
+   live here. */
+
+.project-add-or-edit,
+.project-delete {
+    width: 480px;
+    max-width: calc(100vw - 48px);
+
+    @media (max-width: 640px) {
+        width: auto;
+    }
+}
+
+.button-spinner circle {
+    // The spinner sits on the accent-colored primary button — stroke it with
+    // the on-accent color instead of the accent itself.
+    stroke: var(--on-accent, #fff) !important;
+}
+
+.field-error {
+    font-size: .78rem;
+    color: var(--danger, #b3261e);
+}
+
+::ng-deep .mat-mdc-dialog-surface {
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+}

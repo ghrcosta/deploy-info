@@ -1,23 +1,16 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
-import { FormsModule, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Project } from "../settings.component";
+import { Project } from "../projects-config.component";
 import { ProjectDataDialogNetworkService } from './project-data-dialog.network.service';
 import { ServiceAccountErrorDialogComponent, ServiceAccountErrorDialogData } from './service-account-error-dialog.component';
 
 @Component({
     selector: 'project-data-dialog',
     imports: [
-        FormsModule,
         ReactiveFormsModule,
-        MatButtonModule,
-        MatInputModule,
-        MatFormFieldModule,
         MatProgressSpinnerModule,
         MatDialogTitle,
         MatDialogContent,

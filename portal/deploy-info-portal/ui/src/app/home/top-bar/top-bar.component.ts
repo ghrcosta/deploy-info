@@ -1,14 +1,14 @@
 import { Component, OnInit, inject, Renderer2, ChangeDetectionStrategy } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { HighlightLoader } from 'ngx-highlightjs';
-import { HomeService } from '../home.service'
+import { HomeService, HomeView } from '../home.service'
 import { AuthService } from '../../auth/auth.service'
+
+/** localStorage key under which the theme choice persists across reloads. */
+const THEME_STORAGE_KEY = 'deploy-info-theme';
 
 @Component({
     selector: 'top-bar',
     imports: [
-        MatButtonModule,
         MatIconModule,
     ],
     templateUrl: './top-bar.component.html',
@@ -21,44 +21,57 @@ export class TopBarComponent implements OnInit {
         private authService: AuthService,
     ) {}
 
+    /** The view whose nav link is shown as active. */
+    view: HomeView = 'deploys';
+
     isDarkMode = false;
 
-    /** The signed-in user's email; empty while authentication is disabled (local dev). */
-    userEmail = '';
+    private readonly renderer = inject(Renderer2);
 
     ngOnInit() {
-        this.authService.authState$.subscribe(state => {
-            this.userEmail = state.status === 'signed-in' ? state.email ?? '' : '';
+        this.homeService.viewObservable.subscribe(view => {
+            this.view = view;
         })
+        // Restore the persisted theme choice (see app.component.ts for the
+        // startup application of the same key).
+        this.isDarkMode = localStorage.getItem(THEME_STORAGE_KEY) === 'dark';
+        this.applyThemeClasses();
     }
 
-    private readonly renderer = inject(Renderer2);
-    private readonly highlightjsLoader: HighlightLoader = inject(HighlightLoader);
+    /** The mock's mobile menu toggle: shows/hides the navigator drawer (step C's navigator). */
+    toggleNavigator = () => {
+        this.renderer.selectRootElement('body', true).classList.toggle('nav-open');
+    }
+
+    openView = (view: HomeView, event?: Event) => {
+        event?.preventDefault();
+        this.homeService.openView(view);
+    }
 
     toggleDarkMode = () => {
         this.isDarkMode = !this.isDarkMode;
-
-        const body = this.renderer.selectRootElement('html', true);
-        if (this.isDarkMode) {
-            this.renderer.addClass(body, 'dark-theme');
-            this.renderer.removeClass(body, 'light-theme');
-            this.highlightjsLoader.setTheme('assets/highlightjs/atom-one-dark.min.css');
-        } else {
-            this.renderer.addClass(body, 'light-theme');
-            this.renderer.removeClass(body, 'dark-theme');
-            this.highlightjsLoader.setTheme('assets/highlightjs/atom-one-light.min.css');
-        }
-    }
-
-    openDeployViewer = () => {
-        this.homeService.showSettingsClickedEvent(false);
-    }
-
-    openSettings = () => {
-        this.homeService.showSettingsClickedEvent(true);
+        this.applyThemeClasses();
+        localStorage.setItem(THEME_STORAGE_KEY, this.isDarkMode ? 'dark' : 'light');
     }
 
     logout = () => {
         this.authService.logout();
+    }
+
+    /**
+     * Keeps the existing html.light-theme/dark-theme class mechanism: the login
+     * component's Google-button re-render MutationObserver depends on it, and
+     * both the custom design tokens and Material's light-dark() palette key off
+     * these classes.
+     */
+    private applyThemeClasses() {
+        const html = this.renderer.selectRootElement('html', true);
+        if (this.isDarkMode) {
+            this.renderer.addClass(html, 'dark-theme');
+            this.renderer.removeClass(html, 'light-theme');
+        } else {
+            this.renderer.addClass(html, 'light-theme');
+            this.renderer.removeClass(html, 'dark-theme');
+        }
     }
 }

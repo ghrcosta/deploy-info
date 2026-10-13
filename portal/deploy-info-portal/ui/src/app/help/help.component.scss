@@ -1,0 +1,14 @@
+/* Structural styles (.help-inner, .help-card, .help-head, .help-intro,
+   .help-steps, and the shared .code block) live in the global stylesheet
+   (src/sass/_structure.scss), mirroring the mock's base.css. Only the margin
+   above the hints and the :host display are component-specific. */
+
+:host {
+    display: block;
+}
+
+/* The "Roles & permissions" hint (and the other step hints) need a little
+   breathing room from the paragraph above them. */
+.help-hint {
+    margin-top: 6px;
+}

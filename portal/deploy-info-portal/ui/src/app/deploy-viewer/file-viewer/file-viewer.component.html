@@ -1,120 +1,137 @@
-<div class="content">
-    @if (selection) {
-        <div class="deploy-id">
-            <mat-icon class="type-icon" svgIcon="project" aria-label="Project"/>
-            <span>{{selection.project}}</span>
-            <mat-icon class="separator-icon">chevron_right</mat-icon>
-            <mat-icon class="type-icon" svgIcon={{selection.version.type}} [attr.aria-label]="'Deploy of type ' + selection.version.type"/>
-            <span>{{selection.service}}</span>
-            <mat-icon class="separator-icon">chevron_right</mat-icon>
-            <mat-icon class="type-icon" svgIcon="deployed_code" aria-label="Deploy"/>
-            <span>{{selection.version.name}}</span>
-        </div>
-        <div class="deploy-details">
-            @if (selection.version.url) {
-                <div class="link">
-                    <mat-icon>link</mat-icon>
-                    <span><a [href]="selection.version.url">{{selection.version.url}}</a></span>
-                </div>
-            }
-            <div class="author">
-                <mat-icon>person_outline</mat-icon>
-                <span>{{selection.version.author}}</span>
+@if (selection) {
+    <div class="viewer-inner">
+        <header class="deploy-card">
+            <div class="deploy-crumbs">
+                <span class="chip crumb">
+                    <mat-icon class="icon" svgIcon="project" aria-hidden="true"></mat-icon>
+                    <span>{{ selection.project }}</span>
+                </span>
+                <span class="crumb-sep"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                <span class="chip crumb crumb-type">
+                    <mat-icon class="icon" [svgIcon]="selection.version.type" [attr.aria-label]="'Deploy of type ' + selection.version.type"></mat-icon>
+                    <span>{{ selection.service }}</span>
+                </span>
+                <span class="crumb-sep"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                <span class="chip crumb crumb-version">
+                    <mat-icon class="icon" svgIcon="deployed_code" aria-hidden="true"></mat-icon>
+                    <span class="mono">{{ selection.version.name }}</span>
+                </span>
             </div>
-            <div class="date">
-                <mat-icon>schedule</mat-icon>
-                <span>{{timestampToUtc(selection.version.timestamp)}}</span>
+            <div class="deploy-meta">
+                @if (selection.version.url) {
+                    <a class="meta-item meta-link" [href]="selection.version.url" target="_blank" rel="noopener">
+                        <mat-icon class="icon" svgIcon="link" aria-hidden="true"></mat-icon>
+                        <span>{{ selection.version.url }}</span>
+                        <mat-icon class="icon" svgIcon="arrow_outward" aria-hidden="true"></mat-icon>
+                    </a>
+                }
+                <span class="meta-item meta-author">
+                    <mat-icon class="icon" svgIcon="person" aria-hidden="true"></mat-icon>
+                    <span>{{ selection.version.author }}</span>
+                </span>
+                <span class="meta-item meta-time" [title]="fmtTime(selection.version.timestamp)">
+                    <mat-icon class="icon" svgIcon="schedule" aria-hidden="true"></mat-icon>
+                    <span>{{ timeAgo(selection.version.timestamp) }}</span>
+                </span>
             </div>
-        </div>
+        </header>
+
         @if (isLoading) {
-            <mat-spinner></mat-spinner>
-        }
-        @else if (notFound) {
-            <div class="no-data-alert">
-                <mat-icon svgIcon="no_data" aria-label="Deploy not found" class="alert-icon"></mat-icon>
-                <span>Deploy not found — it may have been cleaned up</span>
+            <div class="viewer-loading">
+                <mat-spinner [diameter]="26"></mat-spinner>
             </div>
-        }
-        @else if (loadFailed) {
-            <div class="no-data-alert">
-                <mat-icon svgIcon="no_data" aria-label="Error loading the deploy data" class="alert-icon"></mat-icon>
-                <span>Failed to load the deploy data</span>
+        } @else if (notFound) {
+            <div class="empty-state">
+                <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
+                <h3>Deploy not found</h3>
+                <p>It may have been cleaned up after the navigator was loaded.</p>
             </div>
-        }
-        @else if (content) {
-            <mat-tab-group>
-                <mat-tab label="GIT">
+        } @else if (loadFailed) {
+            <div class="empty-state">
+                <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
+                <h3>Failed to load the deploy data</h3>
+            </div>
+        } @else if (content) {
+            <div class="tabs" role="tablist" aria-label="Deploy content">
+                <button type="button" class="tab-btn" role="tab"
+                        [class.active]="activeTab === 'git'"
+                        [attr.aria-selected]="activeTab === 'git'"
+                        (click)="setTab('git')">
+                    Git <span class="tab-count">{{ gitCount }}</span>
+                </button>
+                <button type="button" class="tab-btn" role="tab"
+                        [class.active]="activeTab === 'extras'"
+                        [attr.aria-selected]="activeTab === 'extras'"
+                        (click)="setTab('extras')">
+                    Extras <span class="tab-count">{{ extraBlocks.length }}</span>
+                </button>
+            </div>
+
+            @if (activeTab === 'git') {
+                <section class="tab-panel" role="tabpanel" aria-label="Git">
                     @if (content.git) {
-                        @if (content.git.gitlog) {
-                            <mat-expansion-panel>
-                                <mat-expansion-panel-header>
-                                    <mat-panel-title>git log</mat-panel-title>
-                                </mat-expansion-panel-header>
-
-                                <pre class="code-area">
-                                  <code [highlight]="content.git.gitlog" language="git" lineNumbers></code>
-                                </pre>
-                            </mat-expansion-panel>
+                        @if (gitLogLines.length > 0) {
+                            <details class="file-block">
+                                <summary class="file-head">
+                                    <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                                    <span class="file-path mono">git log</span>
+                                </summary>
+                                <pre class="code"><code>@for (line of gitLogLines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                            </details>
                         }
-                        @if (content.git.gitstatus) {
-                            <mat-expansion-panel>
-                                <mat-expansion-panel-header>
-                                    <mat-panel-title>git status</mat-panel-title>
-                                </mat-expansion-panel-header>
-
-                                <pre class="code-area">
-                                  <code [highlight]="content.git.gitstatus" language="git" lineNumbers></code>
-                                </pre>
-                            </mat-expansion-panel>
+                        @if (gitStatusLines.length > 0) {
+                            <details class="file-block">
+                                <summary class="file-head">
+                                    <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                                    <span class="file-path mono">git status</span>
+                                </summary>
+                                <pre class="code"><code>@for (line of gitStatusLines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                            </details>
                         }
-                        @for (change of content.git.changes; track change.filepath) {
-                            <mat-expansion-panel>
-                                <mat-expansion-panel-header>
-                                    <mat-panel-title>
-                                        @if (change.status === 'new') {
-                                            <mat-icon class="file-state-icon new" matTooltip="New file">fiber_new</mat-icon>
-                                        } @else if (change.status === 'untracked') {
-                                            <mat-icon class="file-state-icon untracked" matTooltip="Untracked file">question_mark</mat-icon>
-                                        } @else {
-                                            <mat-icon class="file-state-icon modified" matTooltip="Modified file">published_with_changes</mat-icon>
-                                        }
-                                        {{change.filepath}}
-                                    </mat-panel-title>
-                                </mat-expansion-panel-header>
-
-                                <pre class="code-area">
-                                  <code [highlightAuto]="change.content" lineNumbers></code>
-                                </pre>
-                            </mat-expansion-panel>
+                        @for (block of changeBlocks; track block.filepath) {
+                            <details class="file-block">
+                                <summary class="file-head">
+                                    <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                                    <span class="chip status-chip" [class]="statusChipClass(block.status)">{{ statusChipLabel(block.status) }}</span>
+                                    <span class="file-path mono">{{ block.filepath }}</span>
+                                </summary>
+                                <pre class="code"><code>@for (line of block.lines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                            </details>
                         }
                     } @else {
-                        <div class="no-data-alert">
-                            <mat-icon svgIcon="no_data" aria-label="No data found" class="alert-icon"></mat-icon>
-                            <span>No data found</span>
+                        <div class="empty-state">
+                            <mat-icon class="icon empty-icon" svgIcon="no_data" aria-hidden="true"></mat-icon>
+                            <p>No data found</p>
                         </div>
                     }
-                </mat-tab>
-                <mat-tab label="Extras">
-                    @if (content.extras.length > 0) {
-                        @for (extra of content.extras; track extra.filepath) {
-                            <mat-expansion-panel>
-                                <mat-expansion-panel-header>
-                                    <mat-panel-title>{{extra.filepath}}</mat-panel-title>
-                                </mat-expansion-panel-header>
-
-                                <pre class="code-area">
-                                  <code [highlightAuto]="extra.content" lineNumbers></code>
-                                </pre>
-                            </mat-expansion-panel>
+                </section>
+            } @else {
+                <section class="tab-panel" role="tabpanel" aria-label="Extras">
+                    @if (extraBlocks.length > 0) {
+                        @for (block of extraBlocks; track block.filepath) {
+                            <details class="file-block">
+                                <summary class="file-head">
+                                    <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
+                                    <span class="chip status-chip st-extra">Extra</span>
+                                    <span class="file-path mono">{{ block.filepath }}</span>
+                                </summary>
+                                <pre class="code"><code>@for (line of block.lines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                            </details>
                         }
                     } @else {
-                        <div class="no-data-alert">
-                            <mat-icon svgIcon="no_data" aria-label="No data found" class="alert-icon"></mat-icon>
-                            <span>No data found</span>
+                        <div class="empty-state">
+                            <mat-icon class="icon empty-icon" svgIcon="no_data" aria-hidden="true"></mat-icon>
+                            <p>No extra files were collected for this deploy.</p>
                         </div>
                     }
-                </mat-tab>
-            </mat-tab-group>
+                </section>
+            }
         }
-    }
-</div>
+    </div>
+} @else {
+    <div class="empty-state">
+        <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
+        <h3>No deploy selected</h3>
+        <p>Pick a deploy from the navigator on the left</p>
+    </div>
+}

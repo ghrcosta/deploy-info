@@ -1,26 +1,6 @@
-.content {
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-    overflow: auto;
-    height: 100%;
-
-    & .left-side {
-        overflow: auto;
-        scrollbar-width: none;
-        width: var(--home-content-left-side-width);
-    }
-
-    & .right-side {
-        display: flex;
-        width: var(--home-content-right-side-width);
-        margin-left: var(--home-content-margin);
-
-        & file-viewer {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            overflow-y: auto;
-        }
-    }
+/* All shell styles (the .shell grid, the .navigator column, the .viewer column,
+   including the mobile drawer) are structural and live in the global stylesheet
+   (src/sass/_structure.scss), mirroring the mock's base.css. */
+:host {
+    display: block;
 }

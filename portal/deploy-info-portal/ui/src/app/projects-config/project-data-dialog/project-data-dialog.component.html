@@ -1,0 +1,56 @@
+@if (isActionAdd() || isActionEdit()) {
+    <div class="project-add-or-edit">
+        <h2 mat-dialog-title class="dialog-title">@if (isActionAdd()) {Add new project} @else {Edit project}</h2>
+        <mat-dialog-content>
+            <div class="dialog-form">
+                <label class="field">
+                    <span class="field-label">GCP project ID @if (isActionEdit()) {(cannot be changed)}</span>
+                    <input type="text" [formControl]="projectIdFormControl" placeholder="my-gcp-project">
+                    <span class="field-hint">The exact GCP project ID — not the console display name</span>
+                    @if (projectIdFormControl.touched && projectIdFormControl.hasError('required')) {
+                        <span class="field-error">Field required</span>
+                    }
+                </label>
+                <label class="field">
+                    <span class="field-label">Group</span>
+                    <input type="text" [formControl]="groupFormControl" placeholder="Platform">
+                    <span class="field-hint">Optional — used to group projects in the navigator</span>
+                </label>
+                <label class="field">
+                    <span class="field-label">Service account</span>
+                    <input type="email" [formControl]="serviceAccountFormControl" placeholder="collector@my-gcp-project.iam.gserviceaccount.com">
+                    <span class="field-hint">The account the backend will use to read deploy information</span>
+                    @if (serviceAccountFormControl.touched && serviceAccountFormControl.hasError('email')) {
+                        <span class="field-error">Enter a valid service account email address</span>
+                    } @else if (serviceAccountFormControl.touched && serviceAccountFormControl.hasError('required')) {
+                        <span class="field-error">Field required</span>
+                    }
+                </label>
+            </div>
+        </mat-dialog-content>
+        <mat-dialog-actions class="dialog-actions">
+            <button type="button" class="btn ghost" (click)="onCancelClicked()">Cancel</button>
+            <button type="button" class="btn primary" [disabled]="isFormInvalid() || isRequestOngoing" (click)="onSaveClicked()">
+                @if (isRequestOngoing) {
+                    <mat-spinner class="button-spinner" [diameter]="16"></mat-spinner>
+                } @else if (isActionAdd()) {
+                    Add
+                } @else {
+                    Save
+                }
+            </button>
+        </mat-dialog-actions>
+    </div>
+
+} @else if (isActionDelete()) {
+    <div class="project-delete">
+        <h2 mat-dialog-title class="dialog-title">Delete project</h2>
+        <mat-dialog-content>
+            <p class="dialog-text">Are you sure you want to delete <strong class="mono">{{data.project.projectId}}</strong>? Collected deploy data is kept in the bucket but the project stops being watched.</p>
+        </mat-dialog-content>
+        <mat-dialog-actions class="dialog-actions">
+            <button type="button" class="btn ghost" (click)="onCancelClicked()">Cancel</button>
+            <button type="button" class="btn danger" (click)="onSaveClicked()">Delete</button>
+        </mat-dialog-actions>
+    </div>
+}

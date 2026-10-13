@@ -1,110 +1,32 @@
-@use '@angular/material' as mat;
+/* Structural styles (.nav-search, .nav-group, .nav-project, .nav-service,
+   .nav-version with the selected and filtered-out states, .empty-state) live in
+   the global stylesheet (src/sass/_structure.scss), mirroring the mock's
+   base.css. Only the host layout, the vertical centering of the empty state and
+   the icon sizes the global stylesheet cannot express (mat-icon renders at
+   24px, so single-class selectors would lose to it) are component-specific. */
 
-.content {
+:host {
     display: flex;
     flex-direction: column;
-    padding-left: 10px;
-    padding-right: 10px;
     min-height: 100%;
 }
 
-.group-list {
-    padding-top: 20px;
-
-    & > span {
-        margin-left: 10px;
-        font-weight: bold;
-        color: var(--mat-sys-on-surface);
-    }
-
-    &:first-of-type {
-        padding-top: 10px;
-    }
-}
-
-.project-list {
-    padding-top: 10px;
-    padding-bottom: 10px;
-
-    & mat-expansion-panel {
-        background: var(--mat-sys-surface-container-high);
-        & mat-tree {
-            background: var(--mat-sys-surface-container-high);
-        }
-    }
-
-    & mat-panel-title {
-        & span {
-            flex: 1;
-            // Despite being unofficial, these are supported by all major browsers: https://stackoverflow.com/a/13924997
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            line-clamp: 1;
-            -webkit-box-orient: vertical;
-        }
-    }
-}
-mat-expansion-panel + mat-expansion-panel {
-    margin-top: 10px;
-}
-
-.icon {
-    margin-right: 4px;
-    font-size: 20px;
-    height: 20px;
-    width: 20px;
-
-    @include mat.icon-overrides((
-        color: var(--mat-sys-primary),
-    ));
-}
-
-.service-entry {
-    display: flex;
-
-    & > span {
-        margin-left: 4px;
-        flex: 1;
-    }
-}
-
-.version-entry {
-    display: flex;
-    margin-left: 24px;
-
-    & > span {
-        flex: 1;
-    }
-}
-
-mat-tree-node {
-    cursor: pointer;
-    user-select: none;
-}
-
-.version-node-highlighted {
-    background-color: var(--mat-sys-tertiary-container);
-    font-weight: bold;
-}
-
-.no-data-alert {
+.nav-tree {
+    flex: 1;
     display: flex;
     flex-direction: column;
+}
 
-    align-items: center;
-    margin-top: auto;
-    margin-bottom: auto;
+.nav-empty {
+    margin: auto 0;
+}
 
-    & > mat-icon {
-        font-size: 50px;
-        height: 50px;
-        width: 50px;
-        margin-bottom: 6px;
-        color: var(--mat-sys-on-primary-container);
+.nav-project-icon {
+    width: 17px;
+    height: 17px;
+}
 
-        @include mat.icon-overrides((
-            color: var(--mat-sys-on-primary-container),
-        ));
-    }
+.nav-service-icon {
+    width: 17px;
+    height: 17px;
 }

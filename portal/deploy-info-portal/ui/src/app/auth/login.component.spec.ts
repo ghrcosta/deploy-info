@@ -1,9 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from '../../environments/environment';
 import { LoginComponent } from './login.component';
 import { AuthService } from './auth.service';
+
+// Minimal stand-ins for the SVG icons the login card renders; the real ones are
+// registered by AppComponent at runtime, which the specs don't include.
+const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0Z"/></svg>';
 
 describe('LoginComponent', () => {
     let httpMock: HttpTestingController;
@@ -22,6 +28,10 @@ describe('LoginComponent', () => {
                 provideHttpClientTesting(),
             ],
         }).compileComponents();
+        const iconRegistry = TestBed.inject(MatIconRegistry);
+        const sanitizer = TestBed.inject(DomSanitizer);
+        ['deployed_code', 'deployed_code_alert']
+            .forEach(name => iconRegistry.addSvgIconLiteral(name, sanitizer.bypassSecurityTrustHtml(STUB_SVG)));
         httpMock = TestBed.inject(HttpTestingController);
     });
 
@@ -35,7 +45,7 @@ describe('LoginComponent', () => {
      * `authState$` subscription field, overwriting the synchronously replayed state back
      * to 'loading' — the deployed sign-in screen was stuck on the loading message forever.
      */
-    it('renders the sign-in screen with the Google button container when the auth state is signed-out', async () => {
+    it('renders the sign-in screen with the branded card and the Google button container when the auth state is signed-out', async () => {
         const authService = TestBed.inject(AuthService);
         const initialized = authService.initialize();
         flushAuthConfig(); // enabled, no stored token: initialize() ends in signed-out
@@ -45,11 +55,12 @@ describe('LoginComponent', () => {
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
-        expect(compiled.textContent).toContain('Sign in with your Google account');
+        expect(compiled.querySelector('.login-card')).withContext('the mock\'s branded login card').toBeTruthy();
+        expect(compiled.querySelector('.login-brand')!.textContent).toContain('DeployInfo');
+        expect(compiled.querySelector('.login-state')!.textContent).toContain('Access requires IAM role');
         expect(compiled.querySelector('.google-button'))
             .withContext('the container the Google Identity Services button is rendered into')
             .toBeTruthy();
-        expect(compiled.textContent).not.toContain('Loading');
     });
 
     /**
@@ -123,7 +134,8 @@ describe('LoginComponent', () => {
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
-        expect(compiled.textContent).toContain('Loading');
+        expect(compiled.querySelector('.spinner')).toBeTruthy();
+        expect(compiled.textContent).toContain('Checking your access');
         expect(compiled.textContent).not.toContain('Sign in with');
 
         flushAuthConfig(); // no pending requests left for verify()
@@ -146,8 +158,10 @@ describe('LoginComponent', () => {
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.querySelector('.login-state-warning')).toBeTruthy();
+        expect(compiled.textContent).toContain('No access');
         expect(compiled.textContent).toContain('no access to this portal');
         expect(compiled.textContent).toContain('user@example.com');
-        expect(compiled.textContent).not.toContain('Loading');
+        expect(compiled.querySelector('.btn.outlined')!.textContent).toContain('Sign out / switch account');
     });
 });
