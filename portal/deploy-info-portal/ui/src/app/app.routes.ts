@@ -4,7 +4,7 @@ import { HomeComponent } from './home/home.component';
 export const routes: Routes = [
     {
         path: '',
-        title: 'Home',
+        title: 'DeployInfo',
         component: HomeComponent,
     }
 ];

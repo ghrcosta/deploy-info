@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.ghrcosta"
-version = "0.0.1-SNAPSHOT"
+version = "1.0.0"
 
 java {
 	toolchain {
@@ -73,9 +73,9 @@ val uiBuildOutput = uiDirectory.dir("dist/ui/browser")
 val uiStaticResources = layout.buildDirectory.dir("ui-static")
 
 // `npm` is only available as a .bat wrapper (npm.cmd) on Windows, which a plain Exec task cannot
-// spawn — the same cross-platform concern handled for gcloud in the backend code.
+// spawn — the same cross-platform concern the collectors handle for gcloud.
 val npmCommand: String =
-if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
+	if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
 
 val npmInstallUi = tasks.register<Exec>("npmInstallUi") {
 	group = "build"
@@ -114,10 +114,8 @@ val packageUi = tasks.register<Copy>("packageUi") {
 	into(uiStaticResources)
 }
 
-// The UI lives in `BOOT-INF/classes/static` at runtime — Spring Boot's default classpath static
-// location, served with the frontend fallback registered in FrontendServingConfiguration. It is embedded only
-// in the bootJar: `bootRun` and `test` keep working without Node/npm (the local dev pairing is
-// `ng serve` on 4200 + backend on 8080, per the documentation).
+// The UI is embedded only in the bootJar: `bootRun` and `test` keep working without Node/npm.
+// Serving details: documentation/development/frontend-serving.md.
 tasks.bootJar {
 	dependsOn(packageUi)
 	from(uiStaticResources) {

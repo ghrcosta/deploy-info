@@ -63,3 +63,19 @@ The template lives in `src/main/appengine/app.yaml`. The final file staged for d
 build time, which replaces the service placeholder with the `gaeService` property — so the target service
 is configurable from the command line without editing the template. Staging copies the generated `app.yaml`
 and the boot jar into the staged directory that `appengineDeploy` deploys.
+
+## Troubleshooting: `npm` not found during the deploy
+
+The frontend-embedding tasks need Node/npm on the `PATH` (see [running-locally.md](running-locally.md)).
+If `appengineDeploy` fails on the `npmInstallUi` task with an error saying `npm` could not be found, the
+root cause might be that Gradle daemon can't see it. By killing the daemon and setting up Node, gradle
+should be able to see it on the next execution. Steps:
+
+```
+cd portal/deploy-info-portal
+./gradlew --stop
+cd ui
+nvm use
+cd ..
+./gradlew appengineDeploy
+```

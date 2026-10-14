@@ -22,7 +22,7 @@ describe('HelpComponent', () => {
 
     it('renders the getting-started card with the three steps', () => {
         const el = fixture.nativeElement as HTMLElement;
-        expect(el.querySelector('.help-head h1')?.textContent).toBe('Getting started');
+        expect(el.querySelector('.help-head h1')?.textContent).toBe('Three steps to see your deploys here:');
         expect(el.querySelectorAll('.help-steps > li').length).toBe(3);
     });
 
