@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, ElementRef, NgZone, ViewChild, inject, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService, AuthState } from './auth.service';
 
@@ -25,6 +25,7 @@ export class LoginComponent implements OnDestroy {
     state: AuthState = { status: 'loading' };
 
     private authService = inject(AuthService);
+    private zone = inject(NgZone);
     private stateSubscription = this.authService.authState$.subscribe(state => {
         this.state = state;
         // The button container appears/disappears with the state — (re)render once it is there.
@@ -72,8 +73,17 @@ export class LoginComponent implements OnDestroy {
             google.accounts.id.initialize({
                 client_id: clientId,
                 callback: response => {
-                    this.authService.signIn(response.credential);
+                    // Google's FedCM credential callback fires outside Angular's zone (the gsi
+                    // client and its FedCM promise/message handlers all register there). Without
+                    // re-entering the zone, the `signIn` HTTP call and the auth-state emissions
+                    // complete with no change detection, leaving the login screen shown until a
+                    // reload (which restores the session inside the zone via the app initializer).
+                    // Running inside the zone also puts the HttpClient request's XHR completion in
+                    // it, so the transition to the deploy view renders without a manual tick.
+                    this.zone.run(() => this.authService.signIn(response.credential));
                 },
+                use_fedcm_for_button: true,
+                button_auto_select: true,
             });
             this.googleInitialized = true;
         }

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { NgZone } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MatIconRegistry } from '@angular/material/icon';
@@ -82,6 +83,13 @@ describe('LoginComponent', () => {
         await fixture.whenStable(); // let the deferred Google button render run
         fixture.detectChanges();
         await new Promise(resolve => setTimeout(resolve)); // let the async render finish
+        expect(initialize).toHaveBeenCalledTimes(1);
+        expect(initialize.calls.first().args[0]).toEqual(jasmine.objectContaining({
+            // The FedCM button flow is required for auto-select: without it the personalized
+            // "Sign in as <user>" button opens the Account Chooser popup on every click.
+            use_fedcm_for_button: true,
+            button_auto_select: true,
+        }));
         expect(renderButton).toHaveBeenCalledTimes(1);
         expect(renderButton.calls.first().args[1]).toEqual(jasmine.objectContaining({
             type: 'standard',
@@ -154,5 +162,58 @@ describe('LoginComponent', () => {
         expect(compiled.textContent).toContain('no access to this portal');
         expect(compiled.textContent).toContain('user@example.com');
         expect(compiled.querySelector('.btn.outlined')!.textContent).toContain('Sign out / switch account');
+    });
+
+    it('leaves the sign-in screen when the FedCM callback fires outside the Angular zone', async () => {
+        // Regression: Google's gsi client dispatches the FedCM credential callback outside
+        // Angular's zone. The callback must re-enter the zone (`NgZone.run`), otherwise the
+        // `signIn` HTTP call and the auth-state emissions complete without any change
+        // detection and the sign-in screen stays up until a reload.
+        const renderButton = jasmine.createSpy('renderButton');
+        let fedcmCallback!: (response: { credential: string }) => void;
+        const initialize = jasmine.createSpy('initialize')
+            .and.callFake((config: { callback: (response: { credential: string }) => void }) => {
+                fedcmCallback = config.callback;
+            });
+        (window as { google?: unknown }).google = {
+            accounts: { id: { initialize, renderButton } },
+        };
+        spyOn(document.head, 'appendChild').and.callFake(
+            ((script: HTMLScriptElement) => {
+                script.onload?.(new Event('load'));
+                return script;
+            }) as unknown as typeof document.head.appendChild,
+        );
+
+        const authService = TestBed.inject(AuthService);
+        const initialized = authService.initialize();
+        flushAuthConfig(); // enabled, no stored token: initialize() ends in signed-out
+        await initialized;
+
+        const fixture = TestBed.createComponent(LoginComponent);
+        fixture.autoDetectChanges(true); // CD runs only through the zone from here on
+        fixture.detectChanges();
+        // The button (and with it the captured initialize() callback) is rendered from a
+        // setTimeout scheduled by the auth-state subscription — let it fire first.
+        await new Promise(resolve => setTimeout(resolve));
+
+        // The Google button is rendered: invoke its credential callback the way FedCM does —
+        // outside the Angular zone.
+        const signInSpy = spyOn(authService, 'signIn').and.callThrough();
+        TestBed.inject(NgZone).runOutsideAngular(() => fedcmCallback({ credential: 'fedcm-id-token' }));
+        expect(signInSpy).toHaveBeenCalledWith('fedcm-id-token');
+        const signedIn = signInSpy.calls.mostRecent().returnValue as Promise<void>;
+
+        httpMock.expectOne(`${environment.url}/auth/user`).flush({ email: 'user@example.com' });
+        await signedIn;
+
+        // No manual detectChanges(): the DOM must have moved past the sign-in state on its own,
+        // through the change detection the re-entered zone triggered.
+        const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.querySelector('.google-button'))
+            .withContext('the sign-in state must be gone without a reload or manual CD')
+            .toBeNull();
+
+        delete (window as { google?: unknown }).google;
     });
 });
