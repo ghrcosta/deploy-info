@@ -163,6 +163,77 @@ describe('LoginComponent', () => {
         expect(compiled.textContent).toContain('user@example.com');
         expect(compiled.querySelector('.btn.outlined')!.textContent).toContain('Sign out / switch account');
     });
+    it('renders the portal-unavailable screen when the portal fails its own permission check (503 portal-issue)', async () => {
+        // Regression: a 503 {"error":"portal-issue"} used to fall into the generic error path,
+        // dropping the token and showing the sign-in screen again, as if the sign-in did nothing.
+        const authService = TestBed.inject(AuthService);
+        sessionStorage.setItem('deploy-info.id-token', 'stored-id-token');
+        const initialized = authService.initialize();
+        flushAuthConfig();
+        // Let initialize() resume after the flushed config and issue the session request.
+        await new Promise(resolve => setTimeout(resolve));
+        httpMock.expectOne(`${environment.url}/auth/user`).flush(
+            { error: 'portal-issue' },
+            { status: 503, statusText: 'Service Unavailable' },
+        );
+        await initialized;
+
+        const fixture = TestBed.createComponent(LoginComponent);
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.querySelector('.login-state-warning')).toBeTruthy();
+        expect(compiled.textContent).toContain('Portal unavailable');
+        expect(compiled.textContent).toContain('portal-side problem');
+        expect(compiled.querySelector('.btn.outlined')!.textContent).toContain('Try again');
+        // The token survives: a retry can restore the session without a new sign-in.
+        expect(sessionStorage.getItem('deploy-info.id-token')).toBe('stored-id-token');
+    });
+
+    it('surfaces an unreachable portal the same way (no HTTP answer at all)', async () => {
+        const authService = TestBed.inject(AuthService);
+        sessionStorage.setItem('deploy-info.id-token', 'stored-id-token');
+        const initialized = authService.initialize();
+        flushAuthConfig();
+        // Let initialize() resume after the flushed config and issue the session request.
+        await new Promise(resolve => setTimeout(resolve));
+        httpMock.expectOne(`${environment.url}/auth/user`).error(new ProgressEvent('network error'));
+        await initialized;
+
+        const fixture = TestBed.createComponent(LoginComponent);
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.textContent).toContain('Portal unavailable');
+        expect(sessionStorage.getItem('deploy-info.id-token')).toBe('stored-id-token');
+    });
+
+    it('recovers to the signed-in state through the Try again button after a portal-side failure', async () => {
+        const authService = TestBed.inject(AuthService);
+        sessionStorage.setItem('deploy-info.id-token', 'stored-id-token');
+        const initialized = authService.initialize();
+        flushAuthConfig();
+        // Let initialize() resume after the flushed config and issue the session request.
+        await new Promise(resolve => setTimeout(resolve));
+        httpMock.expectOne(`${environment.url}/auth/user`).flush(
+            { error: 'portal-issue' },
+            { status: 503, statusText: 'Service Unavailable' },
+        );
+        await initialized;
+
+        const fixture = TestBed.createComponent(LoginComponent);
+        fixture.detectChanges();
+        (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.btn.outlined')!.click();
+        fixture.detectChanges(); // the click switched the state to 'loading'
+        httpMock.expectOne(`${environment.url}/auth/user`).flush({ email: 'user@example.com' });
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.querySelector('.login-state-warning')).toBeNull();
+        expect(compiled.querySelector('.google-button')).toBeNull();
+    });
+
 
     it('leaves the sign-in screen when the FedCM callback fires outside the Angular zone', async () => {
         // Regression: Google's gsi client dispatches the FedCM credential callback outside

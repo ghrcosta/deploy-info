@@ -14,6 +14,7 @@ export type AuthState =
     | { status: 'loading' }
     | { status: 'signed-out' }
     | { status: 'no-access'; email: string }
+    | { status: 'unavailable' }
     | { status: 'signed-in'; email: string | null };
 
 const TOKEN_STORAGE_KEY = 'deploy-info.id-token';
@@ -89,6 +90,17 @@ export class AuthService {
         this.stateSubject.next({ status: 'no-access', email });
     }
 
+    /**
+     * Re-runs the session validation after a portal-side failure (`unavailable` state): emits
+     * `loading` and validates the kept token again. A no-op without a stored token.
+     */
+    async retrySession(): Promise<void> {
+        const stored = this.token;
+        if (stored === null) return;
+        this.stateSubject.next({ status: 'loading' });
+        await this.restoreOrDrop(stored);
+    }
+
     /** The top-bar logout button. A no-op while authentication is disabled (local dev). */
     logout(): void {
         if (!this.authConfig.enabled) return;
@@ -124,7 +136,15 @@ export class AuthService {
                 this.stateSubject.next({ status: 'no-access', email: httpError.error?.email ?? '' });
                 return;
             }
-            // 401 (token no longer valid) or the backend being unreachable: back to sign-in.
+            if (httpError.status === 0 || (httpError.status !== undefined && httpError.status >= 500)) {
+                // The portal could not run its permission check (5xx: portal-side problem; 0:
+                // unreachable/offline). Not the token's fault — keep it so a retry can restore
+                // the session without a new sign-in, and tell the user instead of silently
+                // returning them to the sign-in screen.
+                this.stateSubject.next({ status: 'unavailable' });
+                return;
+            }
+            // 401 (token no longer valid) or anything else: back to sign-in.
             sessionStorage.removeItem(TOKEN_STORAGE_KEY);
             this.stateSubject.next({ status: 'signed-out' });
         }

@@ -49,6 +49,12 @@ export class LoginComponent implements OnDestroy {
         return this.state.status === 'no-access' ? this.state.email : '';
     }
 
+    get isUnavailable(): boolean {
+        return this.state.status === 'unavailable';
+    }
+
+    retry = () => this.authService.retrySession();
+
     signOut = () => this.authService.logout();
 
     ngOnDestroy(): void {

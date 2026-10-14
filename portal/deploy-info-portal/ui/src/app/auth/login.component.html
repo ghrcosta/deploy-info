@@ -13,6 +13,14 @@
                 <p class="login-hint">Ask the portal administrator to grant the account a role on the portal's GCP project.</p>
                 <button type="button" class="btn outlined" (click)="signOut()">Sign out / switch account</button>
             </div>
+        } @else if (isUnavailable) {
+            <div class="login-state login-state-warning">
+                <span class="login-state-icon"><mat-icon svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon></span>
+                <h2>Portal unavailable</h2>
+                <p>The portal could not run its permission check — a portal-side problem, not yours.</p>
+                <p class="login-hint">Your sign-in was kept; try again, and contact the portal administrator if this keeps failing.</p>
+                <button type="button" class="btn outlined" (click)="retry()">Try again</button>
+            </div>
         } @else if (isSignedOut) {
             <div class="login-state">
                 <div #googleButton class="google-button"></div>
