@@ -22,7 +22,8 @@ The collector authenticates against the portal with a gcloud access token of the
 ```
 python3 deploy_info_collector.py --deploy-type GAE --portal-url https://deploy-info-portal.example.com \
     --projects proj-prod,proj-dev,proj-qa \
-    [--project-dir .] [--max-file-size 50] [--collect-git-status | --no-collect-git-status] \
+    [--project-dir .] [--max-file-size 50] [--max-git-log-lines 30] \
+    [--collect-git-status | --no-collect-git-status] \
     [--extra-files src/config.yaml NOTES.md] [--verbose]
 ```
 
@@ -64,6 +65,12 @@ Exit code is `0` on success, `1` on any failure, `2` on malformed arguments.
       <td><code>--max-file-size</code></td>
       <td>
         OPTIONAL. Maximum size of files that can be included, in KB. Default is 50.
+      </td>
+    </tr>
+    <tr>
+      <td><code>--max-git-log-lines</code></td>
+      <td>
+        OPTIONAL. Maximum number of lines collected from <code>git log --oneline</code>. Default is 30.
       </td>
     </tr>
     <tr>

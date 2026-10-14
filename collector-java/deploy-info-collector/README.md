@@ -47,6 +47,12 @@ Parameters:
     <td>OPTIONAL. Maximum size of files that can be included, in KB. Default is 50.</td>
   </tr>
   <tr>
+    <td>maxGitLogLines</td>
+    <td>
+      OPTIONAL. Maximum number of lines collected from <code>git log --oneline</code>. Default is 30.
+    </td>
+  </tr>
+  <tr>
     <td>collectGitStatus</td>
     <td>OPTIONAL. Whether git-related data is collected. Default is <code>true</code>.</td>
   </tr>

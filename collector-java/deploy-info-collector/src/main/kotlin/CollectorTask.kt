@@ -41,6 +41,13 @@ abstract class CollectorTask : DefaultTask() {
 
     @get:Input
     @get:Option(
+        description = "Maximum number of lines collected from 'git log --oneline'. Default is 30."
+    )
+    @get:Optional
+    abstract val maxGitLogLines: Property<Int>
+
+    @get:Input
+    @get:Option(
         description = "If git-related data must be collected. Default is 'true'."
     )
     @get:Optional
@@ -93,6 +100,7 @@ abstract class CollectorTask : DefaultTask() {
             rootDir = projectRootDir.get(),
             buildDir = buildDirectory.get().asFile,
             maxFileSizeInKb = maxFileSize.orNull,
+            maxGitLogLines = maxGitLogLines.orNull,
             collectGitStatus = collectGitStatus.getOrElse(true),
             extraFilesToCollect = trimmedExtraFiles,
             portalUrl = trimmedPortalUrl,
@@ -120,12 +128,17 @@ abstract class CollectorTask : DefaultTask() {
             if (maxSizeInKb < 1)
                 throw GradleException("'maxFileSize' must be at least 1 (in KB), got: '${maxSizeInKb}'.")
         }
+        maxGitLogLines.orNull?.let { maxLines ->
+            if (maxLines < 1)
+                throw GradleException("'maxGitLogLines' must be at least 1, got: '${maxLines}'.")
+        }
     }
 
     class TaskImpl(
         private val rootDir: File,
         private val buildDir: File,
         private val maxFileSizeInKb: Int?,
+        private val maxGitLogLines: Int?,
         private val collectGitStatus: Boolean,
         private val extraFilesToCollect: List<String>?,
         private val portalUrl: String,
@@ -135,7 +148,7 @@ abstract class CollectorTask : DefaultTask() {
         private val accessTokenProvider = GcloudAccessTokenProvider()
 
         fun run() {
-            Context.init(rootDir, buildDir, deployType, maxFileSizeInKb)
+            Context.init(rootDir, buildDir, deployType, maxFileSizeInKb, maxGitLogLines)
 
             collectGitStatusData()
             collectExtraFiles()

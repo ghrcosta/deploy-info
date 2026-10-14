@@ -44,6 +44,13 @@ abstract class ProbeTask : DefaultTask() {
 
     @get:Input
     @get:Option(
+        description = "Maximum number of lines collected from 'git log --oneline'. Default is 30."
+    )
+    @get:Optional
+    abstract val maxGitLogLines: Property<Int>
+
+    @get:Input
+    @get:Option(
         description = "If git-related data must be collected. Default is 'true'."
     )
     @get:Optional
@@ -82,7 +89,8 @@ abstract class ProbeTask : DefaultTask() {
 
         // Only reads the configured properties and logs. No external commands, no network, no file writes.
         logger.lifecycle(
-            "deployInfoProbe OK: maxFileSize=${maxFileSize.orNull}, collectGitStatus=${collectGitStatus.getOrElse(true)}, " +
+            "deployInfoProbe OK: maxFileSize=${maxFileSize.orNull}, maxGitLogLines=${maxGitLogLines.orNull}, " +
+                    "collectGitStatus=${collectGitStatus.getOrElse(true)}, " +
                     "extraFilesToCollect=${extraFilesToCollect.orNull}, " +
                     "deployType=${deployType.get()}, portalUrl=${portalUrl.orNull}, projects=${projects.get()}"
         )

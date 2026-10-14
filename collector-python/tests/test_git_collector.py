@@ -28,6 +28,7 @@ class GitCollectorTests(CollectorTestCase):
         porcelain: str,
         diff_response,
         repo_root: str | None = None,
+        log_response: str = GIT_LOG_RESPONSE,
     ) -> list[str]:
         """Java mirror of `everyExecuteCommandAnswers(...)`: dispatch on the executed command,
         record every `git --no-pager diff` path and fail on any unexpected command."""
@@ -36,8 +37,8 @@ class GitCollectorTests(CollectorTestCase):
         def fake_run_command(command: str, temp_dir=None) -> str:
             if command == "git status --long --branch --untracked-files=normal":
                 return GIT_STATUS_RESPONSE
-            if command == "git log --oneline":
-                return GIT_LOG_RESPONSE
+            if command.startswith("git log --oneline"):
+                return log_response
             if command == "git rev-parse --show-toplevel":
                 return repo_root if repo_root is not None else str(self.test_dir)
             if command == "git status --porcelain --untracked-files=normal --no-renames":
@@ -147,6 +148,18 @@ class GitCollectorTests(CollectorTestCase):
             [SOME_FILE_RELATED_CONTENT, SOME_FILE_RELATED_CONTENT],
             self.uuid_contents_of(git_uuid_map, ("file01", "file02")),
         )
+
+    def test_caps_the_git_log_output_to_the_configured_number_of_lines_with_an_omission_marker(self):
+        self.init_context(max_git_log_lines=5)  # Java: Context.init(..., maxGitLogLines = 5)
+        long_log = "".join(f"abc1234 commit {i}\n" for i in range(1, 8))
+        self.patch_git_commands(porcelain="", diff_response=lambda path: "", log_response=long_log)
+
+        dic.collect_git_status()
+
+        # The mocked `git log` answers 7 entries (more than the 6 requested by the capped command):
+        # the file keeps the first 5 and gets the omission marker.
+        expected = "\n".join(f"abc1234 commit {i}" for i in range(1, 6)) + "\n... (older commits omitted)\n"
+        self.assertEqual(expected, (dic.Context.get().output_dir / "git-log.txt").read_text())
 
     def test_generates_main_files_and_ignores_files_that_do_not_exist(self):
         (self.project_root_dir / "file01").touch()

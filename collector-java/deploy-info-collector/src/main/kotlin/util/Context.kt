@@ -13,6 +13,8 @@ class Context(
     val projectRootDir: File,
     /** Files larger than this size will not be collected */
     val maxFileSize: Int,
+    /** Maximum number of entries collected from `git log --oneline` by [io.github.ghrcosta.action.GitCollector] */
+    val maxGitLogLines: Int,
     /** The gcloud account that performed the deploy and the collection */
     val userEmail: String,
     /** Map of UUID for files collected by [io.github.ghrcosta.action.GitCollector], their real path and git state (new/modified) */
@@ -26,7 +28,13 @@ class Context(
 
         fun get(): Context = instance
 
-        fun init(rootDir: File, buildDir: File, deployType: CollectorTask.DeployType, maxFileSizeInKb: Int? = null) {
+        fun init(
+            rootDir: File,
+            buildDir: File,
+            deployType: CollectorTask.DeployType,
+            maxFileSizeInKb: Int? = null,
+            maxGitLogLines: Int? = null,
+        ) {
             val baseDir = createBaseDirectory(buildDir)
 
             val gcloudEmail = executeCommandOrThrowException("gcloud config get-value account", baseDir).stdout
@@ -39,6 +47,7 @@ class Context(
                 outputDir = outputDir,
                 projectRootDir = rootDir,
                 maxFileSize = (maxFileSizeInKb ?: 50) * 1024, // value in KB, converted to bytes
+                maxGitLogLines = maxGitLogLines ?: 30,
                 userEmail = gcloudEmail
             )
         }

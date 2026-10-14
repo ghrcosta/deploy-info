@@ -214,6 +214,29 @@ describe('FileViewerComponent', () => {
     expect(block.querySelectorAll('.cl').length).toEqual(5);
   });
 
+  it('should not scroll the git log block while it has at most 30 lines', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    expect((blockWithPath('git log') as HTMLDetailsElement).querySelector('.code')!.classList)
+      .not.toContain('code-scroll');
+  });
+
+  it('should scroll the git log block when its content has more than 30 lines', () => {
+    const longLog = Array.from({ length: 31 }, (_, i) => `abc1234 commit ${i + 1}`).join('\n');
+    networkService.getContent.and.returnValue(
+      of({ ...FULL_CONTENT, git: { ...FULL_CONTENT.git!, gitlog: longLog } }));
+    select(VERSION);
+    fixture.detectChanges();
+
+    const logCode = (blockWithPath('git log') as HTMLDetailsElement).querySelector('.code')!;
+    expect(logCode.querySelectorAll('.cl').length).toEqual(31);
+    expect(logCode.classList).toContain('code-scroll');
+    // Only the git log block scrolls: the git status block keeps its natural height.
+    expect((blockWithPath('git status') as HTMLDetailsElement).querySelector('.code')!.classList)
+      .not.toContain('code-scroll');
+  });
+
   it('should show the no-data empty state when there is no git data and no extras', () => {
     networkService.getContent.and.returnValue(of(EMPTY_CONTENT));
     select(VERSION);

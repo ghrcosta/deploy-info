@@ -29,6 +29,7 @@ const COLLECTOR_SNIPPET = [
     '    projects.set(listOf("proj-prod", "proj-dev"))     // GCP projects the code deploys to',
     '    maxFileSize.set(50)                               // Max collected file size in KB (default 50)',
     '    collectGitStatus.set(true)                        // Collect git log/status/diffs (default true)',
+    '    maxGitLogLines.set(30)                            // Max git log entries collected (default 30)',
     '    extraFilesToCollect.set(listOf("path/to/file"))   // Extra project files to include',
     '}',
     '',

@@ -246,6 +246,7 @@ class Context:
     output_dir: Path  # files in this directory are uploaded to the portal
     project_root_dir: Path  # base to resolve the git/extra-file paths
     max_file_size: int  # in bytes; larger files are not collected
+    max_git_log_lines: int  # cap of the entries collected from `git log --oneline` into git-log.txt
     user_email: str  # the gcloud account that performed the deploy and the collection
     git_uuid_map: dict[str, GitCollectedFile] = field(default_factory=dict)
     extra_uuid_map: dict[str, str] = field(default_factory=dict)
@@ -264,6 +265,7 @@ class Context:
         project_root_dir: Path,
         max_file_size_kb: int,
         deploy_type: DeployType,
+        max_git_log_lines: int = 30,
     ) -> "Context":
         """Prepare the output directories and detect the gcloud account (hard prerequisite).
 
@@ -283,6 +285,7 @@ class Context:
             output_dir=output_dir,
             project_root_dir=project_root_dir,
             max_file_size=max_file_size_kb * 1024,  # 50 KB default → 51200 bytes
+            max_git_log_lines=max_git_log_lines,
             user_email=user_email,
         )
         return cls._instance
@@ -352,6 +355,19 @@ def create_empty_directory(directory_name: str, destination_dir: Path | None = N
 # --- GitCollector (GitCollector.kt) ---------------------------------------------
 
 
+def cap_git_log_lines(git_log_output: str, max_lines: int) -> str:
+    """Cap the ``git log --oneline`` output at ``max_lines`` entries.
+
+    When more entries exist, the rest is dropped and an omission line is appended (a huge history
+    must not bloat the upload). The entry requested beyond the cap makes the cut detectable; short
+    non-log output (e.g. a command-failure string) passes through unchanged for any reasonable cap.
+    """
+    lines = git_log_output.removesuffix("\n").split("\n")
+    if len(lines) <= max_lines:
+        return git_log_output
+    return "\n".join(lines[:max_lines] + ["... (older commits omitted)"]) + "\n"
+
+
 def collect_git_status() -> None:
     """Port of ``action/GitCollector.execute()``.
 
@@ -365,8 +381,12 @@ def collect_git_status() -> None:
         git_status_output = run_command("git status --long --branch --untracked-files=normal")
         create_empty_file("git-status.txt").write_text(git_status_output, encoding="utf-8")
 
-        git_log_output = run_command("git log --oneline")
-        create_empty_file("git-log.txt").write_text(git_log_output, encoding="utf-8")
+        max_git_log_lines = Context.get().max_git_log_lines
+        # One extra entry is requested from git, so a cut history is detected in the same call.
+        git_log_output = run_command(f"git log --oneline -n {max_git_log_lines + 1}")
+        create_empty_file("git-log.txt").write_text(
+            cap_git_log_lines(git_log_output, max_git_log_lines), encoding="utf-8"
+        )
 
         # "git status --porcelain" is better for automations, use it to list (and process) files
         git_status_porcelain = run_command("git status --porcelain --untracked-files=normal --no-renames")
@@ -751,6 +771,8 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
                              "output (default: the current directory).")
     parser.add_argument("--max-file-size", default="50", metavar="N",
                         help="Maximum size of files that can be included, in KB (default: 50).")
+    parser.add_argument("--max-git-log-lines", default="30", metavar="N",
+                        help="Maximum number of lines collected from 'git log --oneline' (default: 30).")
     parser.add_argument("--collect-git-status", action=argparse.BooleanOptionalAction, default=True,
                         help="If git-related data must be collected (default: true).")
     parser.add_argument("--extra-files", nargs="*", action="append", default=None, metavar="PATH",
@@ -784,15 +806,29 @@ def parse_max_file_size_kb(raw: str) -> int:
     return value
 
 
-def validate_parameters(args: argparse.Namespace) -> int:
-    """Mirror of ``CollectorTask.validateParameters()``; returns the validated max file size in KB."""
+def parse_max_git_log_lines(raw: str) -> int:
+    """Validate ``--max-git-log-lines``: must parse as an int and be >= 1."""
+    try:
+        value = int(raw)
+    except ValueError:
+        raise CollectorError(f"'maxGitLogLines' must be an integer, got: '{raw}'.") from None
+    if value < 1:
+        raise CollectorError(f"'maxGitLogLines' must be at least 1, got: '{raw}'.")
+    return value
+
+
+def validate_parameters(args: argparse.Namespace) -> tuple[int, int]:
+    """Mirror of ``CollectorTask.validateParameters()``.
+
+    Returns the validated ``(maxFileSize in KB, maxGitLogLines)`` pair.
+    """
     if not args.portal_url.strip():
         raise CollectorError("'portalUrl' must not be empty.")
     if not args.projects:
         raise CollectorError("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
     if any(not project for project in args.projects):
         raise CollectorError("'projects' must not contain empty values.")
-    return parse_max_file_size_kb(args.max_file_size)
+    return parse_max_file_size_kb(args.max_file_size), parse_max_git_log_lines(args.max_git_log_lines)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -800,14 +836,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_arguments(argv)
     Logger.init(verbose=args.verbose)
     try:
-        max_file_size_kb = validate_parameters(args)
+        max_file_size_kb, max_git_log_lines = validate_parameters(args)
 
         # The Gradle plugin runs its commands with the project root as working directory; mirror
         # that so git resolves the right repository and relative paths behave the same.
         os.chdir(args.project_dir)
         project_root = Path.cwd()
 
-        Context.init(project_root, max_file_size_kb, args.deploy_type)
+        Context.init(project_root, max_file_size_kb, args.deploy_type, max_git_log_lines)
 
         if args.collect_git_status:
             collect_git_status()

@@ -16,6 +16,7 @@ def make_args(**overrides) -> argparse.Namespace:
         portal_url="https://deploy-info-portal.example.com",
         projects=["proj-prod", "proj-dev"],
         max_file_size="50",
+        max_git_log_lines="30",
     )
     values.update(overrides)
     return argparse.Namespace(**values)
@@ -45,8 +46,18 @@ class CollectorTaskTests(unittest.TestCase):
             dic.validate_parameters(make_args(projects=[]))
         self.assertIn("'projects' must not be empty", str(raised.exception))
 
-    def test_valid_parameters_return_the_max_file_size_in_kb(self):
-        self.assertEqual(50, dic.validate_parameters(make_args()))
+    def test_valid_parameters_return_the_max_file_size_and_git_log_lines(self):
+        self.assertEqual((50, 30), dic.validate_parameters(make_args()))
+
+    def test_non_integer_max_git_log_lines_is_rejected(self):
+        with self.assertRaises(dic.CollectorError) as raised:
+            dic.validate_parameters(make_args(max_git_log_lines="abc"))
+        self.assertIn("'maxGitLogLines' must be an integer", str(raised.exception))
+
+    def test_max_git_log_lines_below_one_is_rejected(self):
+        with self.assertRaises(dic.CollectorError) as raised:
+            dic.validate_parameters(make_args(max_git_log_lines="0"))
+        self.assertIn("'maxGitLogLines' must be at least 1", str(raised.exception))
 
     def test_non_integer_max_file_size_is_rejected(self):
         with self.assertRaises(dic.CollectorError) as raised:

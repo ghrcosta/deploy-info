@@ -49,7 +49,7 @@ gradlePlugin {
         create("deployInfoCollectorPlugin") {
             id = "${group}.deploy-info-collector"
             displayName = "DeployInfo Collector"
-            description = "Used to collect the data shown on DeployInfo portal."
+            description = "Collects git state and uploads to your own deploy of DeployInfo portal."
             tags = listOf("git", "build-info")
             implementationClass = "${group}.CollectorPlugin"
             compatibility {

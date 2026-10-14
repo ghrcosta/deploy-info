@@ -41,6 +41,16 @@ class ContextTests(CollectorTestCase):
 
         self.assertEqual(50 * 1024, context.max_file_size)
 
+    def test_collector_defaults_the_max_git_log_lines_to_30(self):
+        args = dic.parse_arguments(
+            ["--deploy-type", "GAE", "--portal-url", self.PORTAL_URL, "--projects", "proj-prod"]
+        )
+        self.assertEqual("30", args.max_git_log_lines)
+
+        context = self.init_context(max_git_log_lines=dic.parse_max_git_log_lines(args.max_git_log_lines))
+
+        self.assertEqual(30, context.max_git_log_lines)
+
     def test_get_before_init_fails(self):
         # Python-specific: Context.get() without init raises instead of returning null.
         with self.assertRaises(RuntimeError):

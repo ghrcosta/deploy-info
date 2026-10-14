@@ -14,9 +14,11 @@ class GitCollector {
             val gitStatusOutputFile = createEmptyFile("git-status.txt")
             gitStatusOutputFile.writeText(gitStatusOutput)
 
-            val gitLogOutput = executeCommand("git log --oneline")
+            val maxGitLogLines = Context.get().maxGitLogLines
+            // One extra entry is requested from git, so a cut history is detected in the same call.
+            val gitLogOutput = executeCommand("git log --oneline -n ${maxGitLogLines + 1}")
             val gitLogOutputFile = createEmptyFile("git-log.txt")
-            gitLogOutputFile.writeText(gitLogOutput)
+            gitLogOutputFile.writeText(capGitLogLines(gitLogOutput, maxGitLogLines))
 
             // "git status --porcelain" is better for automations, use it to list (and process) files
             val gitStatusPorcelain = executeCommand("git status --porcelain --untracked-files=normal --no-renames")
@@ -38,6 +40,18 @@ class GitCollector {
             val errorOutputFile = createEmptyFile("error.txt")
             errorOutputFile.writeText("Error: ${e.message}")
         }
+    }
+
+    /**
+     * Caps the `git log --oneline` output at [maxLines] entries: when more exist, the rest is
+     * dropped and an omission line is appended (a huge history must not bloat the upload). The
+     * entry requested beyond the cap makes the cut detectable; short non-log output (e.g. a
+     * command-failure string) passes through unchanged for any reasonable cap.
+     */
+    private fun capGitLogLines(gitLogOutput: String, maxLines: Int): String {
+        val lines = gitLogOutput.removeSuffix("\n").split("\n")
+        if (lines.size <= maxLines) return gitLogOutput
+        return lines.take(maxLines).joinToString("\n") + "\n... (older commits omitted)\n"
     }
 
     /** One entry of `git status --porcelain`: the file path plus its git state. */

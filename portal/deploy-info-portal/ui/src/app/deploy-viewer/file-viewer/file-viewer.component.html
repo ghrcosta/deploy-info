@@ -76,7 +76,7 @@
                                     <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
                                     <span class="file-path mono">git log</span>
                                 </summary>
-                                <pre class="code"><code>@for (line of gitLogLines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                                <pre class="code" [class.code-scroll]="gitLogLines.length > 30"><code>@for (line of gitLogLines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
                             </details>
                         }
                         @if (gitStatusLines.length > 0) {

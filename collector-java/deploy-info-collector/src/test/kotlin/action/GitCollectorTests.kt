@@ -222,6 +222,22 @@ class GitCollectorTests {
         assertFilesFromUuidMapExist(gitUuidMap)
     }
 
+    @Test
+    fun `Caps the git log output with an omission marker when the history is longer`() {
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE, maxGitLogLines = 5)
+        val longLog = (1..8).joinToString("") { "abc1234 commit ${it}\n" }
+
+        every { executeCommand("git status --long --branch --untracked-files=normal") } returns gitStatusResponse
+        every { executeCommand("git log --oneline -n 6") } returns longLog
+        every { executeCommand("git rev-parse --show-toplevel") } returns testDir.absolutePath
+        every { executeCommand("git status --porcelain --untracked-files=normal --no-renames") } returns ""
+
+        GitCollector().execute()
+
+        val expected = (1..5).joinToString("") { "abc1234 commit ${it}\n" } + "... (older commits omitted)\n"
+        assertEquals(expected, File(Context.get().outputDir, "git-log.txt").readText())
+    }
+
     private fun everyExecuteCommandAnswers(
         gitStatusPorcelainResponse: () -> String,
         gitDiffResponse: (String) -> String,
@@ -235,7 +251,7 @@ class GitCollectorTests {
                 (command == "git status --long --branch --untracked-files=normal") -> {
                     gitStatusResponse
                 }
-                (command == "git log --oneline") -> {
+                command.startsWith("git log --oneline") -> {
                     gitLogResponse
                 }
                 (command == "git rev-parse --show-toplevel") -> {

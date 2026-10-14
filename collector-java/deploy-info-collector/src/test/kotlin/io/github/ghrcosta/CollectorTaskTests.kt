@@ -56,6 +56,19 @@ class CollectorTaskTests {
     }
 
     @Test
+    fun `maxGitLogLines below one is rejected`() {
+        val task = createTask()
+        task.portalUrl.set("https://deploy-info-portal.example.com")
+        task.projects.set(listOf("proj-prod"))
+        task.maxGitLogLines.set(0)
+
+        val (portalUrl, projects, _) = task.trimmedInputs()
+
+        val exception = assertFailsWith<GradleException> { task.validateParameters(portalUrl, projects) }
+        assertEquals("'maxGitLogLines' must be at least 1, got: '0'.", exception.message)
+    }
+
+    @Test
     fun `Whitespace-only project is rejected as an empty value after stripping`() {
         val task = createTask()
         task.portalUrl.set("https://deploy-info-portal.example.com")

@@ -65,6 +65,26 @@ class ContextTests {
     }
 
     @Test
+    fun `Context keeps the configured max git log lines`() {
+        every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
+                CommandResult(stdout = "user@email.com", stderr = "")
+
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE, maxGitLogLines = 7)
+
+        assertEquals(7, Context.get().maxGitLogLines)
+    }
+
+    @Test
+    fun `Context defaults the max git log lines to 30`() {
+        every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
+                CommandResult(stdout = "user@email.com", stderr = "")
+
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE)
+
+        assertEquals(30, Context.get().maxGitLogLines)
+    }
+
+    @Test
     fun `Context defaults the max file size to 50KB`() {
         every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
                 CommandResult(stdout = "user@email.com", stderr = "")

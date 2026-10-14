@@ -66,6 +66,7 @@ class CollectorTestCase(unittest.TestCase):
         self,
         *,
         max_file_size_kb: int = 50,
+        max_git_log_lines: int = 30,
         deploy_type: dic.DeployType = dic.DeployType.GAE,
         user_email: str = "user@email.com",
     ) -> dic.Context:
@@ -74,7 +75,7 @@ class CollectorTestCase(unittest.TestCase):
         with mock.patch.object(
             dic, "run_command_or_throw", return_value=dic.CommandResult(stdout=user_email, stderr="")
         ):
-            return dic.Context.init(self.project_root_dir, max_file_size_kb, deploy_type)
+            return dic.Context.init(self.project_root_dir, max_file_size_kb, deploy_type, max_git_log_lines)
 
     def fake_response(self, *, status: int = 200, body: bytes = b"", read_error: Exception | None = None):
         """A mocked HTTP response usable as a `urllib.request.urlopen` return value.

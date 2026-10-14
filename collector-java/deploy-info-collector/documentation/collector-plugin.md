@@ -38,7 +38,8 @@ Writes into the output directory:
 
 - `git-status.txt` — output of `git status --long --branch` (the human-readable status shown in the
   portal).
-- `git-log.txt` — output of `git log --oneline`.
+- `git-log.txt` — output of `git log --oneline`, capped at the configured `maxGitLogLines` entries
+  (default 30); when the history was cut, the file ends with a `... (older commits omitted)` line.
 - Per changed file: the porcelain status lists the changed paths (relative to the **git repository
   root**, which may differ from the Gradle project root, e.g. when the repo root is a parent of the
   module). Each file is stored under a fresh UUID file name (avoids path/encoding issues in Storage),
