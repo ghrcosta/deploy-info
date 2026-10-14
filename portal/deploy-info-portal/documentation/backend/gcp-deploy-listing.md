@@ -37,8 +37,6 @@ GCP permissions.
 
 ## IAM setup
 
-For each configured project, the portal's own service account needs the
-`roles/iam.serviceAccountTokenCreator` role on that project's service account (to impersonate it), and
-each impersonated service account needs read access to the listing APIs (App Engine Viewer / Cloud Run
-Viewer). The full setup is described in
+The roles the portal's service account needs on each watched project's service account (impersonation
+and viewer access) are part of the overall setup described in
 [gcp-infra-setup.md](../../../../documentation/gcp-infra-setup.md).

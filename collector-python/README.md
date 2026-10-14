@@ -13,12 +13,9 @@ How it works internally: [documentation/python-collector.md](documentation/pytho
 - `gcloud` on PATH and logged in (`gcloud auth login` or `gcloud auth application-default login`) — it
   provides both the account identity and the Cloud Storage upload
 
-**Authentication:** the collector authenticates itself against the portal with a gcloud access token of
-the active gcloud account — the same account that performs the upload, so there is nothing extra to
-configure. The portal verifies that the account is present in the IAM of the portal's project and rejects
-the calls with actionable errors otherwise. Portals with authentication disabled (local development) are
-unaffected; if no token can be obtained, the calls are sent without the Authorization header so those
-portals still work.
+The collector authenticates against the portal with a gcloud access token of the active gcloud account
+(details: [documentation/python-collector.md](documentation/python-collector.md) and the portal's
+[authentication.md](../portal/deploy-info-portal/documentation/backend/authentication.md)).
 
 ## Usage
 
@@ -88,13 +85,4 @@ Exit code is `0` on success, `1` on any failure, `2` on malformed arguments.
   </tbody>
 </table>
 
-## Notes
-
-- The collector writes its output to `<project-dir>/build/collector/` and clears that directory at the
-  start of every run, so contents of different deploys never mix.
-- Large files become `<FILE IS TOO LARGE (n bytes)>` placeholders, binaries `<FILE IS BINARY>`, blank
-  files `<FILE IS BLANK>` — mirroring the Gradle plugin byte-for-byte.
-- The resulting Cloud Storage folder layout is the same contract the portal serving relies on (see
-  [documentation/python-collector.md](documentation/python-collector.md)).
-- Windows is supported by construction (mapping `gcloud` → `gcloud.cmd` is the only OS branch; all I/O is
-  explicit UTF-8); run with `py -3 deploy_info_collector.py …`.
+Windows is supported; run with `py -3 deploy_info_collector.py …`.

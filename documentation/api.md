@@ -280,7 +280,7 @@ runs first, therefore the request takes longer to complete. Otherwise, it is a p
 
 ## Main-screen contract — `GET /portal/deploy/content?folder=<storageFolder>`
 
-Returns the collected files (GIT section and extras) of one upload folder -- the `storageFolder` from the tree's version
+Returns the collected files (GIT section and extras) of one upload folder — the `storageFolder` from the tree's version
 node. Since the content is always the same, the request response is cached.
 
 <table>

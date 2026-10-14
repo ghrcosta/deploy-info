@@ -11,7 +11,7 @@ links it to the deploy it was built for and shows it in a web UI.
 - [`portal/deploy-info-portal`](portal/deploy-info-portal) — Spring Boot backend + Angular frontend
   ([API contracts](documentation/api.md) ·
   [deploy to GAE](portal/deploy-info-portal/documentation/development/deployment.md) ·
-  [backend docs](portal/deploy-info-portal/documentation/development/running-locally.md))
+  [run the portal locally](portal/deploy-info-portal/documentation/development/running-locally.md))
 
 Run it locally: [documentation/local-development.md](documentation/local-development.md).
 Production GCP setup: [documentation/gcp-infra-setup.md](documentation/gcp-infra-setup.md).

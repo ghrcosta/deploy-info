@@ -59,7 +59,7 @@ Engine version IDs must start with a letter and may only contain lowercase lette
 
 ## app.yaml
 
-The template lives in `src/main/appengine/app.yaml` . The final file staged for deploy is generated at
+The template lives in `src/main/appengine/app.yaml`. The final file staged for deploy is generated at
 build time, which replaces the service placeholder with the `gaeService` property — so the target service
 is configurable from the command line without editing the template. Staging copies the generated `app.yaml`
 and the boot jar into the staged directory that `appengineDeploy` deploys.

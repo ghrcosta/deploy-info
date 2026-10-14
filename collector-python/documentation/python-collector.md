@@ -15,8 +15,8 @@ bucket lookup, upload, and the portal trigger. One gcloud access token is fetche
 and reused for both; if it cannot be obtained, the calls are sent without the `Authorization` header (a
 portal with authentication disabled works unchanged).
 
-Errors in the bucket lookup, the upload or the trigger fail the run (exit code 1; exit code 2 means
-malformed arguments — see the README for the full exit-code list).
+Errors in the bucket lookup, the upload or the trigger fail the run (exit codes: see the
+[README](../README.md)).
 
 The output directory is named `<user>_<DEPLOYTYPE>_<epochMillis>`; the name is the sole carrier of
 who/what/when — no metadata file is written.
@@ -29,8 +29,6 @@ who/what/when — no metadata file is written.
   error text is used as output) except where a failure must abort the run. Exit codes of spawned commands
   are not checked anywhere.
 - On Windows, `gcloud` maps to `gcloud.cmd`; there is no other OS branch.
-- Files above the size cap, binaries and blank files are recorded as `<FILE IS TOO LARGE (n bytes)>`,
-  `<FILE IS BINARY>` and `<FILE IS BLANK>` placeholders instead of content.
 - `uuid-git.csv` uses RFC 4180 escaping; `uuid-extra.properties` replicates Java's Properties format
   (`#<date>` comment first, `<uuid>=<path>` per entry) because the portal parses it with a Java
   Properties loader.
@@ -42,8 +40,6 @@ stderr-`ERROR`-lines-only failure check that ignores the exit code), same `POST
 /collector/handleNewDirectory` trigger with the same response handling, same `error.txt` on git
 collection failure, same token-less fallback. The only intentional differences:
 
-- **CLI surface**: `--max-file-size` is in **KB** (default 50); the plugin takes bytes. Downstream
-  behavior keeps byte parity.
 - **No Gradle up-to-date checking** — a script run always executes.
 - **`--project-dir`** replaces the plugin's project/build-directory pair; output always goes to
   `<project-dir>/build/collector/`.

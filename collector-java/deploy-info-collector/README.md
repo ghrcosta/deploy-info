@@ -2,10 +2,10 @@
 
 Gradle plugin to collect files and make them available to the portal.
 
-After uploading the collected files to Cloud Storage, the plugin notifies the portal backend
-([trigger contract](../../documentation/api.md)), which links the upload to the GCP deploy it was built
-for. The upload bucket is not configured on the collector: it is resolved from the portal via
-`GET /collector/bucket`.
+After uploading the collected files to Cloud Storage, the plugin notifies the portal backend, which
+links the upload to the GCP deploy it was built for. The upload bucket is not configured on the
+collector: it is resolved from the portal. Both endpoint contracts are specified in
+[api.md](../../documentation/api.md).
 
 How it works internally:
 [documentation/collector-plugin.md](documentation/collector-plugin.md).
@@ -18,12 +18,9 @@ parameters (table below). A typical setup sets `deployType`, `portalUrl` and `pr
 automatically after every deploy. All parameters are also available as command-line options (e.g.
 `./gradlew deployInfoCollect --deploy-type=GAE`).
 
-The collector authenticates itself against the portal with a gcloud
-access token of the active gcloud account — the same account that performs the Cloud Storage upload, so
-there is nothing extra to configure. The portal verifies that the account is present in the IAM of the
-portal's project (directly or through a group) and rejects the calls with actionable errors otherwise;
-a rejected bucket lookup or trigger fails the build with a message naming the fix. Portals with
-authentication disabled (local development) are unaffected. See the portal's
+The collector authenticates against the portal with a gcloud access token of the active gcloud account
+(details: [collector-plugin.md](documentation/collector-plugin.md)); the portal's verification rules and
+error handling are described in
 [authentication.md](../../portal/deploy-info-portal/documentation/backend/authentication.md).
 
 Parameters:
@@ -47,7 +44,7 @@ Parameters:
   </tr>
   <tr>
     <td>maxFileSize</td>
-    <td>OPTIONAL. Maximum size of files that can be included, in KB. Default is 50KB.</td>
+    <td>OPTIONAL. Maximum size of files that can be included, in KB. Default is 50.</td>
   </tr>
   <tr>
     <td>collectGitStatus</td>

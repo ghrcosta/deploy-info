@@ -73,10 +73,10 @@ refuses to start with auth enabled and the client id blank.
 
 ## Collector
 
-The collector fetches the token with `gcloud auth print-access-token` (the same account that performs
-the upload — gcloud is a hard prerequisite anyway) and sends it as the `Authorization: Bearer` header on
-both portal calls. When no token can be obtained, the request is sent without the header — a portal with
-auth disabled (local development) works unchanged, and a portal with auth enabled rejects the call.
+The collectors obtain the gcloud access token of the active account themselves and send it as the
+`Authorization: Bearer` header on both portal calls — see the [Gradle plugin's
+documentation](../../../../collector-java/deploy-info-collector/documentation/collector-plugin.md) and the
+[Python collector's documentation](../../../../collector-python/documentation/python-collector.md).
 
 ### userEmail match (defense in depth)
 

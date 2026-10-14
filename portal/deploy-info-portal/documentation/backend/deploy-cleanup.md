@@ -1,6 +1,6 @@
 # Deploy cleanup
 
-A sweep that detects deploy links whose deploy no longer exists in GCP and removes them -- both the
+A sweep that detects deploy links whose deploy no longer exists in GCP and removes them — both the
 Datastore entry and the corresponding Cloud Storage folder.
 
 ## Trigger

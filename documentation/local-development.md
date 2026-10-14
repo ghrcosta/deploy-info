@@ -26,7 +26,7 @@ in [running-locally.md](../portal/deploy-info-portal/documentation/development/r
     </tr>
     <tr>
       <td>Node.js + npm</td>
-      <td>for Angular 22 (Node 18/20/22 work)</td>
+      <td>Node 24.x, pinned in the frontend's <code>ui/.nvmrc</code></td>
       <td>Only needed for the frontend.</td>
     </tr>
     <tr>
@@ -48,20 +48,17 @@ in [running-locally.md](../portal/deploy-info-portal/documentation/development/r
 ## End-to-end validation checklist
 
 1. `./gradlew test` in `collector-java/deploy-info-collector` — unit tests pass (no gcloud needed).
-2. `./gradlew test` in `portal/deploy-info-portal` — unit tests pass (no GCP credentials, no Datastore
-   emulator, no internet needed).
-3. `./gradlew bootRun` in `portal/deploy-info-portal` — backend up on 8080 with a Datastore emulator on 8090.
-   ⚠️ Requires ADC (`gcloud auth application-default login`), otherwise startup fails.
+2. `./gradlew test` in `portal/deploy-info-portal` — unit tests pass (requirements: see
+   [running-locally.md](../portal/deploy-info-portal/documentation/development/running-locally.md)).
+3. `./gradlew bootRun` in `portal/deploy-info-portal` — backend up on 8080 with a Datastore emulator on
+   8090 (requirements: see
+   [running-locally.md](../portal/deploy-info-portal/documentation/development/running-locally.md)).
 4. `npm start` in `ui` — UI up on 4200, talking to the backend. Alternatively, `./gradlew bootJar` in
    `portal/deploy-info-portal` compiles the frontend, embeds it into the fat jar and serves it on 8080
    from the same origin as the API (see
    [frontend-serving.md](../portal/deploy-info-portal/documentation/development/frontend-serving.md)).
-5. `npm test` in `ui` — frontend unit tests pass, always headless.
+5. `npm test` in `ui` — frontend unit tests pass.
 
-Authentication is **disabled in the local profile** — every step above runs without a Google sign-in. To
-exercise it locally: create an OAuth client id (web application, authorized JavaScript origin
-`http://localhost:4200`), grant your account any role on the portal's GCP project, then run the backend
-with `deploy-info.auth.enabled=true`, `deploy-info.auth.client-id=<id>` and the `GOOGLE_CLOUD_PROJECT`
-environment variable set to the portal's project ID (the App Engine runtime sets it automatically;
-locally it must be provided by hand). See
+Authentication is **disabled in the local profile** — every step above runs without a Google sign-in.
+To exercise authentication locally, follow the portal's
 [authentication.md](../portal/deploy-info-portal/documentation/backend/authentication.md).

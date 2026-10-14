@@ -34,7 +34,8 @@ and uses in-memory fakes/mocks instead: no GCP credentials, no Datastore emulato
 
 ## Frontend (`ui/`)
 
-Angular 22 + Material:
+Angular 22 + Material; requires Node.js **24.x**, pinned in `ui/.nvmrc` (with
+[nvm](https://github.com/nvm-sh/nvm) installed, run `nvm use` inside `ui/`):
 
 ```
 cd portal/deploy-info-portal/ui
