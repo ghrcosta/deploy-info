@@ -1,8 +1,8 @@
 # deploy-info
 
-See exactly which commits and local changes were in the code of each GCP App Engine or Cloud Run deploy: a
+See exactly which commits and local changes were in the code of each GCP App Engine or Cloud Run deployment: a
 collector gathers the git/extra-file data of a build, uploads it to Cloud Storage and tells the portal, which
-links it to the deploy it was built for and shows it in a web UI.
+links it to the deployment it was built for and shows it in a web UI.
 
 - [`collector-java/deploy-info-collector`](collector-java/deploy-info-collector/README.md) — Gradle plugin
   ([how it works](collector-java/deploy-info-collector/documentation/collector-plugin.md))

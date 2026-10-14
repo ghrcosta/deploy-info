@@ -83,7 +83,7 @@ documentation](../../../../collector-java/deploy-info-collector/documentation/co
 In the standard flow, both the trigger request's `userEmail` and the token derive from the same active
 gcloud account, so they always match. The portal still compares them
 (`deploy-info.auth.collector-require-email-match`, default `true`) so a hand-crafted request cannot use a
-valid token of an IAM-permitted account to attribute its upload to another user's deploy identity.
+valid token of an IAM-permitted account to attribute its upload to another user's deployment identity.
 Environments that deploy via gcloud service-account impersonation (`gcloud config set
 auth/impersonate_service_account`) produce a token whose email is the service account while `userEmail`
 may report the user — set the property to `false` there.

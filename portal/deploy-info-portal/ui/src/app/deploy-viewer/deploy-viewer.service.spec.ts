@@ -8,7 +8,7 @@ const SELECTION: DeploySelection = {
 };
 
 describe('DeployViewerService', () => {
-  it('delivers each deploy selection to the subscribers', () => {
+  it('delivers each deployment selection to the subscribers', () => {
     const service = new DeployViewerService();
     const received: DeploySelection[] = [];
     service.deployClickedEventObservable.subscribe(event => received.push(event));

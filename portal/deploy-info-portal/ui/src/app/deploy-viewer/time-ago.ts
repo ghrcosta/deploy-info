@@ -1,5 +1,5 @@
 /**
- * Timestamp helpers shared by the deploy navigator and the file viewer, with
+ * Timestamp helpers shared by the deployment navigator and the file viewer, with
  * UTC rendering (the collector stores epoch milliseconds).
  */
 

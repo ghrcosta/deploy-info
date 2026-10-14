@@ -3,7 +3,7 @@
 Gradle plugin to collect files and make them available to the portal.
 
 After uploading the collected files to Cloud Storage, the plugin notifies the portal backend, which
-links the upload to the GCP deploy it was built for. The upload bucket is not configured on the
+links the upload to the GCP deployment it was built for. The upload bucket is not configured on the
 collector: it is resolved from the portal. Both endpoint contracts are specified in
 [api.md](../../documentation/api.md).
 
@@ -15,7 +15,7 @@ How it works internally:
 Apply the plugin (`io.github.ghrcosta.deploy-info-collector`) and configure the `deployInfoCollect` task's
 parameters (table below). A typical setup sets `deployType`, `portalUrl` and `projects`, and hooks
 `deployInfoCollect` with `finalizedBy` on the deploy task (e.g. `appengineDeploy`) so the collection runs
-automatically after every deploy. All parameters are also available as command-line options (e.g.
+automatically after every deployment. All parameters are also available as command-line options (e.g.
 `./gradlew deployInfoCollect --deploy-type=GAE`).
 
 The collector authenticates against the portal with a gcloud access token of the active gcloud account
@@ -32,7 +32,7 @@ Parameters:
   </tr>
   <tr>
     <td>deployType</td>
-    <td>REQUIRED. Type of deploy: <code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run).</td>
+    <td>REQUIRED. Type of deployment: <code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run).</td>
   </tr>
   <tr>
     <td>portalUrl</td>

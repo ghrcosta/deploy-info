@@ -7,7 +7,7 @@ What must exist in GCP for a production deploy-info setup. For running everythin
 Everything happens in two kinds of projects:
 
 - the **portal project** — runs the portal (App Engine), its Datastore database and the upload bucket;
-- any number of **watched projects** — the GCP projects whose App Engine / Cloud Run deploys are shown
+- any number of **watched projects** — the GCP projects whose App Engine / Cloud Run deployments are shown
   in the portal.
 
 ## 1. Portal project
@@ -35,12 +35,12 @@ Everything happens in two kinds of projects:
     </tr>
     <tr>
       <td>Cloud Firestore API (in <strong>Datastore mode</strong>)</td>
-      <td>The Datastore database holding the configured projects and deploy links</td>
+      <td>The Datastore database holding the configured projects and deployment links</td>
     </tr>
     <tr>
       <td>App Engine Admin API</td>
       <td>
-        The portal runs on App Engine Standard (and lists App Engine deploys of watched projects through
+        The portal runs on App Engine Standard (and lists App Engine deployments of watched projects through
         impersonation)
       </td>
     </tr>
@@ -77,7 +77,7 @@ On App Engine the portal runs as the project's **App Engine default service acco
       <td>Datastore User (<code>roles/datastore.user</code>)</td>
       <td>portal project</td>
       <td>
-        Read/write the configured projects, the deploy links and the cleanup state (see
+        Read/write the configured projects, the deployment links and the cleanup state (see
         <a href="../portal/deploy-info-portal/documentation/backend/deploy-cleanup.md">deploy-cleanup.md</a>)
       </td>
     </tr>
@@ -90,7 +90,7 @@ On App Engine the portal runs as the project's **App Engine default service acco
       <td>Storage Object Admin (<code>roles/storage.objectAdmin</code>)</td>
       <td>the upload bucket</td>
       <td>
-        Delete a deploy's upload folder once the deploy is gone — the link cleanup sweep and the
+        Delete a deployment's upload folder once the deployment is gone — the link cleanup sweep and the
         unlinkable-upload cleanup
       </td>
     </tr>
@@ -99,7 +99,7 @@ On App Engine the portal runs as the project's **App Engine default service acco
 
 ### People and credentials
 
-- **Portal users** — anyone who should see the deploy information needs *any* IAM role on the portal
+- **Portal users** — anyone who should see the deployment information needs *any* IAM role on the portal
   project, directly or through a Google Group (group membership is expanded by the authentication check).
   No extra configuration exists or is needed.
 - **Collector users** — the account that runs the collector needs object-creation permission on the
@@ -120,8 +120,8 @@ project therefore needs:
 1. **A service account to impersonate** — the project's default App Engine / compute service account
    works, or a dedicated one. This service account must have the following:
    - Roles:
-     - App Engine Viewer (`roles/appengine.appViewer`): To access data from App Engine deploys.
-     - Cloud Run Viewer (`roles/run.viewer`): To access data from Cloud Run deploys.
+     - App Engine Viewer (`roles/appengine.appViewer`): To access data from App Engine deployments.
+     - Cloud Run Viewer (`roles/run.viewer`): To access data from Cloud Run deployments.
    - Permissions:
      - The **portal's** service account needs to be granted the Service Account Token Creator
        (`roles/iam.serviceAccountTokenCreator`) permission **on the watched project's service account**.

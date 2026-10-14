@@ -95,7 +95,7 @@ describe('DeployViewerComponent', () => {
   });
 
   it('shows the no-selection empty state until a version is picked', () => {
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No deploy selected');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No deployment selected');
     expect(contentNetwork.getContent).not.toHaveBeenCalled();
   });
 
@@ -117,7 +117,7 @@ describe('DeployViewerComponent', () => {
     expect(contentNetwork.getContent).toHaveBeenCalledWith('folder-42');
   });
 
-  it('renders the picked deploy\'s header from the tree and its content blocks', () => {
+  it('renders the picked deployment\'s header from the tree and its content blocks', () => {
     versionButton().click();
     fixture.detectChanges();
 
@@ -131,7 +131,7 @@ describe('DeployViewerComponent', () => {
     // git log block + git status block + one change block
     expect(el.querySelectorAll('details.file-block').length).toBe(3);
     expect(el.textContent).toContain('src/app/app.component.ts');
-    expect(el.textContent).not.toContain('No deploy selected');
+    expect(el.textContent).not.toContain('No deployment selected');
   });
 
   describe('while the tree request is in flight', () => {
@@ -153,8 +153,8 @@ describe('DeployViewerComponent', () => {
       const el = pending.nativeElement as HTMLElement;
       expect(el.querySelector('.shell-loading mat-spinner')).toBeTruthy();
       expect(el.querySelector('.shell')).toBeNull();
-      expect(el.textContent).not.toContain('No deploys found');
-      expect(el.textContent).not.toContain('No deploy selected');
+      expect(el.textContent).not.toContain('No deployments found');
+      expect(el.textContent).not.toContain('No deployment selected');
       expect(contentNetwork.getContent).not.toHaveBeenCalled();
 
       treeSubject.next(TREE);
@@ -162,7 +162,7 @@ describe('DeployViewerComponent', () => {
 
       expect(el.querySelector('.shell-loading')).toBeNull();
       expect(el.querySelector('.shell')).toBeTruthy();
-      expect(el.textContent).toContain('No deploy selected');
+      expect(el.textContent).toContain('No deployment selected');
     });
 
     it('shows the navigator empty state when the tree request fails', () => {
@@ -173,7 +173,7 @@ describe('DeployViewerComponent', () => {
       const el = pending.nativeElement as HTMLElement;
       expect(el.querySelector('.shell-loading')).toBeNull();
       expect(el.querySelector('.shell')).toBeTruthy();
-      expect(el.textContent).toContain('No deploys found');
+      expect(el.textContent).toContain('No deployments found');
     });
   });
 });

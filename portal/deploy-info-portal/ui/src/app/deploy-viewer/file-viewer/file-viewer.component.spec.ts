@@ -79,7 +79,7 @@ describe('FileViewerComponent', () => {
   it('should show the no-selection empty state until a version is selected', () => {
     expect(component.selection).toBeNull();
     expect(networkService.getContent).not.toHaveBeenCalled();
-    expect(element().querySelector('.empty-state')!.textContent).toContain('No deploy selected');
+    expect(element().querySelector('.empty-state')!.textContent).toContain('No deployment selected');
     expect(element().querySelector('.deploy-card')).toBeNull();
   });
 

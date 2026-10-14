@@ -19,7 +19,7 @@
                 <label class="field">
                     <span class="field-label">Service account</span>
                     <input type="email" [formControl]="serviceAccountFormControl" placeholder="collector@my-gcp-project.iam.gserviceaccount.com">
-                    <span class="field-hint">The account the backend will use to read deploy information</span>
+                    <span class="field-hint">The account the backend will use to read deployment information</span>
                     @if (serviceAccountFormControl.touched && serviceAccountFormControl.hasError('email')) {
                         <span class="field-error">Enter a valid service account email address</span>
                     } @else if (serviceAccountFormControl.touched && serviceAccountFormControl.hasError('required')) {
@@ -46,7 +46,7 @@
     <div class="project-delete">
         <h2 mat-dialog-title class="dialog-title">Delete project</h2>
         <mat-dialog-content>
-            <p class="dialog-text">Are you sure you want to delete <strong class="mono">{{data.project.projectId}}</strong>? Collected deploy data is kept in the bucket but the project stops being watched.</p>
+            <p class="dialog-text">Are you sure you want to delete <strong class="mono">{{data.project.projectId}}</strong>? Collected deployment data is kept in the bucket but the project stops being watched.</p>
         </mat-dialog-content>
         <mat-dialog-actions class="dialog-actions">
             <button type="button" class="btn ghost" (click)="onCancelClicked()">Cancel</button>

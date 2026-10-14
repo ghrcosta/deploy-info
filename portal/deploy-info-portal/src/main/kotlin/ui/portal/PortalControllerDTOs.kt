@@ -41,7 +41,7 @@ data class ServiceDTO(
 
 /** A selectable version node; the fields the file-viewer header needs ride along with the identity. */
 data class VersionDTO(
-    /** The deploy identity key (format: GetDeployTreeUseCase.VersionEntry). */
+    /** The deployment identity key (format: GetDeployTreeUseCase.VersionEntry). */
     val id: String,
     val name: String,
     val type: String,

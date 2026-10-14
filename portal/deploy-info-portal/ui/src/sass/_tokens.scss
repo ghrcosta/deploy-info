@@ -135,7 +135,7 @@ body { background: linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(
 /* Cards lift slightly on hover */
 .project-card:hover, .file-block:hover { border-color: color-mix(in srgb, var(--accent) 32%, var(--border)); }
 
-/* Deploy version chip carries the accent */
+/* Deployment version chip carries the accent */
 .crumb-version { background: var(--accent-soft); color: var(--on-accent-soft); }
 
 /* Login hero card gets a subtle top accent line */

@@ -9,9 +9,9 @@ import java.time.Instant
 
 /**
  * Builds the main-screen navigator tree: a hierarchy of group > project > service > version from
- * the configured projects and the deploy links in the database.
+ * the configured projects and the deployment links in the database.
  *
- * The tree is built purely from Datastore. The data the file-viewer header needs (deploy type,
+ * The tree is built purely from Datastore. The data the file-viewer header needs (deployment type,
  * location, url, author, timestamp) is carried on the version nodes together with the upload's
  * `storageFolder`, so the file-content endpoint won't have to query the database again.
  *
@@ -37,7 +37,7 @@ class GetDeployTreeUseCase(
     )
 
     /**
-     * One selectable version node. `id` is the deploy identity's key name
+     * One selectable version node. `id` is the deployment identity's key name
      * (`<project>_<TYPE>_<location|->_<service>_<version>`), `name` is the version id, and the
      * remaining fields feed the file-viewer header and the file-content endpoint.
      */

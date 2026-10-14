@@ -11,7 +11,7 @@ import java.util.*
  *
  * The folder layout is the one produced by the collector; every part is optional (git files only
  * exist when the collector was configured to collect them, the uuid maps only when something was
- * collected). Layout contract: documentation/backend/deploy-content.md and
+ * collected). Layout contract: documentation/backend/deployment-content.md and
  * collector-java's documentation/collector-plugin.md.
  *
  * The application layer stays Spring-free (see CreateDeployLinkUseCase).

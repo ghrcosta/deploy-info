@@ -120,7 +120,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Closest match - with two matching deploys before the collect time, the later one wins`() {
+    fun `Closest match - with two matching deployments before the collect time, the later one wins`() {
         fakeAppEngineLister.seed(
             PROJECT_ID,
             listOf(
@@ -136,7 +136,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Deployer filter - a newer deploy by a different user is skipped and the matching user's deploy is chosen`() {
+    fun `Deployer filter - a newer deployment by a different user is skipped and the matching user's deploy is chosen`() {
         fakeAppEngineLister.seed(
             PROJECT_ID,
             listOf(
@@ -165,7 +165,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Time direction - a deploy created after the collect timestamp is never matched`() {
+    fun `Time direction - a deployment created after the collect timestamp is never matched`() {
         fakeAppEngineLister.seed(
             PROJECT_ID,
             listOf(
@@ -180,7 +180,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Window - a deploy exactly 15 minutes before the collect time matches`() {
+    fun `Window - a deployment exactly 15 minutes before the collect time matches`() {
         fakeAppEngineLister.seed(
             PROJECT_ID,
             listOf(
@@ -194,7 +194,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Window - a deploy just outside the 15 minute window is rejected`() {
+    fun `Window - a deployment just outside the 15 minute window is rejected`() {
         fakeAppEngineLister.seed(
             PROJECT_ID,
             listOf(
@@ -231,7 +231,7 @@ class CreateDeployLinkUseCaseTests {
             storageFolder = "uploads/old-folder",
             userEmail = "deployer@example.com",
             collectTimestamp = COLLECT_TIME.minusSeconds(120),
-            deployTimestamp = createTime, // the very same deploy the listing reports
+            deployTimestamp = createTime, // the very same deployment the listing reports
         )
         fakeDeployLinkRepository.save(existingLink)
 
@@ -245,7 +245,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Redeploy - a new deploy with the same version id replaces the existing link and deletes the old upload's folder`() {
+    fun `Redeploy - a new deployment with the same version id replaces the existing link and deletes the old upload's folder`() {
         fakeAppEngineLister.seed(
             PROJECT_ID,
             listOf(FakeAppEngineLister.deploy(PROJECT_ID, "web", "v1", COLLECT_TIME.minusSeconds(60), "deployer@example.com")),
@@ -260,7 +260,7 @@ class CreateDeployLinkUseCaseTests {
                 storageFolder = "uploads/old-folder",
                 userEmail = "deployer@example.com",
                 collectTimestamp = COLLECT_TIME.minusSeconds(120),
-                deployTimestamp = COLLECT_TIME.minusSeconds(600), // an older deploy with the same version id
+                deployTimestamp = COLLECT_TIME.minusSeconds(600), // an older deployment with the same version id
             ),
         )
 
@@ -333,7 +333,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Retry - the deploy appears between the first attempt and the retry, so the link is created and not deleted`() {
+    fun `Retry - the deployment appears between the first attempt and the retry, so the link is created and not deleted`() {
         fakeAppEngineLister.seed(PROJECT_ID, emptyList())
 
         val output = useCase.execute(input())
@@ -424,7 +424,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Multi-project - a deploy outside the window in one project is rejected even when listed`() {
+    fun `Multi-project - a deployment outside the window in one project is rejected even when listed`() {
         fakeProjectRepository.save(Project(projectId = OTHER_PROJECT_ID, group = null, serviceAccount = "sa@other.iam.gserviceaccount.com"))
         fakeAppEngineLister.seed(
             OTHER_PROJECT_ID,
@@ -451,7 +451,7 @@ class CreateDeployLinkUseCaseTests {
     }
 
     @Test
-    fun `Directory name - a name with a mismatched deploy type is rejected`() {
+    fun `Directory name - a name with a mismatched deployment type is rejected`() {
         assertFailsWith<InvalidDirectoryNameException> {
             useCase.execute(input(directoryName = "deployer_RUN_${COLLECT_TIME.toEpochMilli()}"))
         }

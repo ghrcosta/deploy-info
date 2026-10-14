@@ -30,7 +30,7 @@ class GcpAppEngineApiClientTests {
     ): GcpAppEngineApiClient = GcpAppEngineApiClient(credentialsProvider) { adminClient }
 
     @Test
-    fun `Map every version of every service into a deploy, newest first`() {
+    fun `Map every version of every service into a deployment, newest first`() {
         val adminClient = mock<AppEngineAdminClient> {
             on { listServices(PROJECT_ID) } doReturn listOf(
                 service(id = "web"), service(id = "worker"),

@@ -25,7 +25,7 @@ interface FileBlock {
 }
 
 /**
- * File viewer: a deploy card with crumb chips, the segmented Git/Extras tabs
+ * File viewer: a deployment card with crumb chips, the segmented Git/Extras tabs
  * and the per-file blocks with the per-line code renderer (diff tinting).
  * Screen design: documentation/frontend/main-screen.md.
  */

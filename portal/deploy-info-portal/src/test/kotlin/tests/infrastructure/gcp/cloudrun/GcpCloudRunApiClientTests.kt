@@ -31,7 +31,7 @@ class GcpCloudRunApiClientTests {
     ): GcpCloudRunApiClient = GcpCloudRunApiClient(credentialsProvider) { adminClient }
 
     @Test
-    fun `Map every revision of every service into a deploy, newest first`() {
+    fun `Map every revision of every service into a deployment, newest first`() {
         val adminClient = mock<CloudRunAdminClient> {
             on { listServices(PROJECT_ID) } doReturn listOf(
                 service(

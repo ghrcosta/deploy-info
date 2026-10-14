@@ -5,7 +5,7 @@
                aria-label="Filter deploys" (input)="onSearchInput($event)">
     </div>
 }
-<nav class="nav-tree" aria-label="Deploy navigator">
+<nav class="nav-tree" aria-label="Deployment navigator">
     @if (groupList().length === 0) {
         <div class="empty-state nav-empty">
             <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
@@ -32,7 +32,7 @@
                                     <details class="nav-service" open>
                                         <summary>
                                             <span class="nav-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
-                                            <mat-icon class="icon nav-service-icon" [svgIcon]="service.type" [attr.aria-label]="'Deploy of type ' + service.type"></mat-icon>
+                                            <mat-icon class="icon nav-service-icon" [svgIcon]="service.type" [attr.aria-label]="'Deployment of type ' + service.type"></mat-icon>
                                             <span class="nav-service-name">{{ service.name }}</span>
                                             <span class="nav-count">{{ service.versions.length }}</span>
                                         </summary>

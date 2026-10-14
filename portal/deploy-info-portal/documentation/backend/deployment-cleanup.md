@@ -1,6 +1,6 @@
-# Deploy cleanup
+# Deployment cleanup
 
-A sweep that detects deploy links whose deploy no longer exists in GCP and removes them — both the
+A sweep that detects deployment links whose deployment no longer exists in GCP and removes them — both the
 Datastore entry and the corresponding Cloud Storage folder.
 
 ## Trigger
@@ -18,8 +18,8 @@ Tree requests are the app's natural heartbeat, so the sweep piggybacks on them:
 
 ## How it works
 
-For every configured project and both deploy types, the deploys are listed from GCP (same listers as the
-linking logic, see [gcp-deploy-listing.md](gcp-deploy-listing.md)) and compared against the links in
+For every configured project and both deployment types, the deployments are listed from GCP (same listers as the
+linking logic, see [gcp-deployment-listing.md](gcp-deployment-listing.md)) and compared against the links in
 database. A link is **stale** when its identity (service id, version id, location — location only for
 Cloud Run) is absent from the listing. Nothing is returned; the outcome is reported via log messages. The
 only persisted state is the last-completed timestamp the due-check reads.
@@ -30,7 +30,7 @@ No claim/lock is used: two backend instances may run the sweep at the same time,
 merely **redundant**, not dangerous:
 
 - Every delete is idempotent and delete-only-on-proof — a link is deleted only when a successful listing
-  proves its deploy is gone, the Datastore entry goes first, and a second delete of the same
+  proves its deployment is gone, the Datastore entry goes first, and a second delete of the same
   already-deleted link/folder is a no-op.
 - The worst case is duplicated GCP listing API calls and duplicated work, both bounded by the number of
   instances and the once-per-interval trigger.
@@ -38,11 +38,11 @@ merely **redundant**, not dangerous:
 
 ## Safety rules
 
-1. **Delete only on proof.** A link is deleted only when a *successful* listing proves its deploy is
-   gone. A listing or credentials failure for a project/deploy type skips that combination entirely — a
+1. **Delete only on proof.** A link is deleted only when a *successful* listing proves its deployment is
+   gone. A listing or credentials failure for a project/deployment type skips that combination entirely — a
    transient failure never deletes data.
 2. **Grace period.** Links younger than `deploy-info.cleanup.grace-period` are never judged. This guards
-   against the snapshot race: the sweep compares links against a point-in-time listing; a deploy that
+   against the snapshot race: the sweep compares links against a point-in-time listing; a deployment that
    finishes *while the sweep runs* is live but absent from the snapshot, so a freshly created link could
    look "stale" to the same sweep that took the snapshot.
 3. **Delete order.** The Datastore entry goes first, then the Cloud Storage folder. A storage failure is

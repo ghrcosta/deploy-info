@@ -17,7 +17,7 @@ tests.
 
 When the `deployInfoCollect` task runs, six steps execute in order:
 
-1. **Setup** — the output directories are created (cleared first, so contents of different deploys never
+1. **Setup** — the output directories are created (cleared first, so contents of different deployments never
    mix) and the authenticated gcloud account is detected; failing that, the task fails — gcloud must be
    installed and logged in before the collector can run.
 2. **Git collection** (when enabled) — see below.
@@ -28,7 +28,7 @@ When the `deployInfoCollect` task runs, six steps execute in order:
 
 Errors in the bucket lookup, the upload or the trigger fail the task.
 
-The output directory is named `<user>_<DEPLOYTYPE>_<epochMillis>` (gcloud account, deploy type, epoch
+The output directory is named `<user>_<DEPLOYTYPE>_<epochMillis>` (gcloud account, deployment type, epoch
 millis). The name is the sole carrier of who/what/when — no metadata file is written; the portal derives
 the collection timestamp from the epoch-millis suffix.
 
@@ -81,7 +81,7 @@ status, malformed response body, network failure or timeout) fails the task befo
 ## Portal trigger
 
 After the upload, the collector notifies the portal: `POST {portalUrl}/collector/handleNewDirectory`
-with the output directory name, the project list, the deploy type and the user email (contract:
+with the output directory name, the project list, the deployment type and the user email (contract:
 [api.md](../../../documentation/api.md)).
 
 Response handling:

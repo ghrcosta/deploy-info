@@ -10,7 +10,7 @@ data class CollectorRequest(
     val projects: List<String>,
     /** `GAE` or `RUN`. */
     val deployType: DeployType,
-    /** The gcloud account that ran the deploy and the collection. */
+    /** The gcloud account that ran the deployment and the collection. */
     val userEmail: String,
 )
 

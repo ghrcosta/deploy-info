@@ -64,7 +64,7 @@ With authentication disabled (local/test profiles) the header is simply not requ
 ## Collector contract — `POST /collector/handleNewDirectory`
 
 Called by the collector after it has uploaded its output directory to the portal's Cloud Storage bucket.
-The portal then tries to link the upload to the GCP deploy it was built for (see
+The portal then tries to link the upload to the GCP deployment it was built for (see
 [deploy-link.md](../portal/deploy-info-portal/documentation/backend/deploy-link.md)).
 
 <table>
@@ -91,7 +91,7 @@ The portal then tries to link the upload to the GCP deploy it was built for (see
       <td>list of string</td>
       <td>
         Candidate GCP projects the code may have been deployed to. The collector cannot know which one, so it sends
-        all of them; the portal matches against the deploys of <strong>all</strong> listed projects together.
+        all of them; the portal matches against the deployments of <strong>all</strong> listed projects together.
         Projects not configured in the portal are silently skipped.
       </td>
     </tr>
@@ -107,7 +107,7 @@ The portal then tries to link the upload to the GCP deploy it was built for (see
       <td><code>userEmail</code></td>
       <td>string</td>
       <td>
-        The gcloud account that performed the deploy and the collection. Only deploys created by this user
+        The gcloud account that performed the deployment and the collection. Only deployments created by this user
         (case-insensitive) are candidates.
       </td>
     </tr>
@@ -116,15 +116,15 @@ The portal then tries to link the upload to the GCP deploy it was built for (see
 
 Matching rules (portal-side):
 
-- Only deploys created by `userEmail` (case-insensitive) are candidates.
-- The deploy must have been created at (or before) the collection timestamp, and within the configured
+- Only deployments created by `userEmail` (case-insensitive) are candidates.
+- The deployment must have been created at (or before) the collection timestamp, and within the configured
   window (`deploy-info.linking.window`, 15 minutes by default) before it.
 - Among the candidates of all listed projects, the one with the newest creation time wins; ties on the
   exact same creation time are broken by listing order.
-- If no plausible match is found, the matching is retried once after 5 minutes (a deploy may appear late,
+- If no plausible match is found, the matching is retried once after 5 minutes (a deployment may appear late,
   or the listing may fail transiently); if the retry still finds nothing, the upload's storage folder is
   deleted. The same retry applies to transient listing/credentials failures.
-- A deploy identity that is already linked is never re-linked or overwritten.
+- A deployment identity that is already linked is never re-linked or overwritten.
 
 <table>
   <thead>
@@ -138,12 +138,12 @@ Matching rules (portal-side):
     <tr>
       <td>200 OK</td>
       <td><code>{"status":"created",…}</code></td>
-      <td>A plausible deploy was found and linked.</td>
+      <td>A plausible deployment was found and linked.</td>
     </tr>
     <tr>
       <td>200 OK</td>
       <td><code>{"status":"already-linked",…}</code></td>
-      <td>The matched deploy already had a link; the existing link was left untouched.</td>
+      <td>The matched deployment already had a link; the existing link was left untouched.</td>
     </tr>
     <tr>
       <td>202 Accepted</td>
@@ -200,7 +200,7 @@ parameter of its own).
 ## Main-screen contract — `GET /portal/tree`
 
 A list of groups. Projects without a group (and links of projects no longer configured in the portal) are
-under the `""` group, which is sorted last. Every level is sorted by name. Services are keyed by deploy
+under the `""` group, which is sorted last. Every level is sorted by name. Services are keyed by deployment
 type, so the same service name may appear once as a GAE and once as a RUN service.
 
 **Note:** when the on-request cleanup trigger is enabled and due
@@ -240,7 +240,7 @@ runs first, therefore the request takes longer to complete. Otherwise, it is a p
       <td><code>versions[].id</code></td>
       <td>string</td>
       <td>
-        The deploy identity key
+        The deployment identity key
         <code>&lt;project&gt;_&lt;TYPE&gt;_&lt;location|-&gt;_&lt;service&gt;_&lt;version&gt;</code>; stable
         identifier for the version node.
       </td>
@@ -258,7 +258,7 @@ runs first, therefore the request takes longer to complete. Otherwise, it is a p
     <tr>
       <td><code>versions[].url</code></td>
       <td>string|null</td>
-      <td>The deploy's public URL, when known.</td>
+      <td>The deployment's public URL, when known.</td>
     </tr>
     <tr>
       <td><code>versions[].author</code></td>
@@ -320,7 +320,7 @@ node. Since the content is always the same, the request response is cached.
 
 ## Project configuration endpoints (frontend only)
 
-The Projects screen of the frontend manages the GCP projects whose deploys the portal will link (see
+The Projects screen of the frontend manages the GCP projects whose deployments the portal will link (see
 [projects.md](../portal/deploy-info-portal/documentation/backend/projects.md)). The four endpoints are
 protected like every other endpoint. Outcomes are always reported in the response body, not through HTTP
 error statuses: an operation that could not be performed returns `200 OK` with an `issues` object
@@ -361,7 +361,7 @@ error statuses: an operation that could not be performed returns `200 OK` with a
       <td><code>serviceAccount</code></td>
       <td>string</td>
       <td>
-        The project's service account the portal impersonates to list the project's deploys
+        The project's service account the portal impersonates to list the project's deployments
         (see <a href="../portal/deploy-info-portal/documentation/backend/gcp-deploy-listing.md">gcp-deploy-listing.md</a>).
       </td>
     </tr>
@@ -439,7 +439,7 @@ error statuses: an operation that could not be performed returns `200 OK` with a
 ### Service-account validation (`serviceAccountIssue` codes)
 
 Before saving, the portal impersonates the project's service account via the IAM Credentials API and
-lists the project's App Engine and Cloud Run deploys with it. On failure the project is <strong>not</strong>
+lists the project's App Engine and Cloud Run deployments with it. On failure the project is <strong>not</strong>
 saved and the result carries one of these codes:
 
 <table>
@@ -461,7 +461,7 @@ saved and the result carries one of these codes:
       <td><code>MISSING_LISTING_PERMISSION</code></td>
       <td>
         The service account lacks the App Engine Viewer / Cloud Run Viewer roles required to list the
-        project's deploys. Fixable by the user.
+        project's deployments. Fixable by the user.
       </td>
     </tr>
     <tr>

@@ -48,7 +48,7 @@ class DeployLinkDatastoreRepositoryTests {
     )
 
     @Test
-    fun `Save an App Engine deploy link through the datastore template`() {
+    fun `Save an App Engine deployment link through the datastore template`() {
         repository.save(gaeLink)
 
         argumentCaptor<DeployLinkEntity>().apply {
@@ -58,7 +58,7 @@ class DeployLinkDatastoreRepositoryTests {
     }
 
     @Test
-    fun `Save a Cloud Run deploy link through the datastore template`() {
+    fun `Save a Cloud Run deployment link through the datastore template`() {
         repository.save(runLink)
 
         argumentCaptor<DeployLinkEntity>().apply {
@@ -68,7 +68,7 @@ class DeployLinkDatastoreRepositoryTests {
     }
 
     @Test
-    fun `Get one deploy link from the datastore by its identity`() {
+    fun `Get one deployment link from the datastore by its identity`() {
         whenever(datastoreTemplate.findById("testProject1_GAE_-_default_20261004t120000", DeployLinkEntity::class.java))
             .thenReturn(DeployLinkEntity(gaeLink))
 
@@ -84,7 +84,7 @@ class DeployLinkDatastoreRepositoryTests {
     }
 
     @Test
-    fun `Return null when getting a deploy link that does not exist`() {
+    fun `Return null when getting a deployment link that does not exist`() {
         whenever(datastoreTemplate.findById("missing", DeployLinkEntity::class.java)).thenReturn(null)
 
         assertNull(
@@ -99,7 +99,7 @@ class DeployLinkDatastoreRepositoryTests {
     }
 
     @Test
-    fun `Get all deploy links of a project and deploy type from the datastore`() {
+    fun `Get all deployment links of a project and deploy type from the datastore`() {
         whenever(datastoreTemplate.findAll(DeployLinkEntity::class.java)).thenReturn(
             listOf(DeployLinkEntity(gaeLink), DeployLinkEntity(runLink)),
         )
@@ -110,7 +110,7 @@ class DeployLinkDatastoreRepositoryTests {
     }
 
     @Test
-    fun `Delete a deploy link from the datastore`() {
+    fun `Delete a deployment link from the datastore`() {
         repository.delete(runLink)
 
         verify(datastoreTemplate).deleteById(eq("testProject2_RUN_europe-west1_my-service_my-service-00001-abc"), eq(DeployLinkEntity::class.java))

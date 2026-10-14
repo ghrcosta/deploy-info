@@ -22,7 +22,7 @@ interface ServiceNode {
 interface VersionNode {
     id: string;
     name: string;
-    /** Epoch ms of the deploy, shown as the navigator's relative timestamp. */
+    /** Epoch ms of the deployment, shown as the navigator's relative timestamp. */
     deployTimestamp: number;
     /** The file-viewer selection this node represents. */
     selection: DeploySelection;
@@ -30,7 +30,7 @@ interface VersionNode {
 
 /**
  * Navigator: a filter box above a group → project → service → version tree of
- * native `<details>` elements. The tree is fetched by the parent deploy viewer
+ * native `<details>` elements. The tree is fetched by the parent deployment viewer
  * and passed in. Screen design: documentation/frontend/main-screen.md.
  */
 @Component({
@@ -41,7 +41,7 @@ interface VersionNode {
     styleUrl: './deploy-navigator.component.scss',
 })
 export class DeployNavigatorComponent {
-    /** Navigator tree of `GET /portal/tree` (see `tree-model.ts`), fetched by the deploy viewer. */
+    /** Navigator tree of `GET /portal/tree` (see `tree-model.ts`), fetched by the deployment viewer. */
     tree = input.required<GroupEntry[]>();
 
     private deployViewerService = inject(DeployViewerService);
@@ -63,7 +63,7 @@ export class DeployNavigatorComponent {
     selectVersion = (node: VersionNode) => {
         this.selectedVersionId = node.id;
         this.deployViewerService.newDeployClickedEvent(node.selection);
-        // Close the mobile navigator drawer when a deploy is picked.
+        // Close the mobile navigator drawer when a deployment is picked.
         this.document.body.classList.remove('nav-open');
     };
 

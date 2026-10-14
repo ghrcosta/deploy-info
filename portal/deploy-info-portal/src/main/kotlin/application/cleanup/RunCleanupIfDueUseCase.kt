@@ -11,7 +11,7 @@ import java.time.Instant
  * throws is logged and not marked completed, so the next tree request retries.
  *
  * Why the sweep piggybacks on tree requests instead of a fixed scheduler, and why concurrent sweeps
- * are accepted as redundant: documentation/backend/deploy-cleanup.md.
+ * are accepted as redundant: documentation/backend/deployment-cleanup.md.
  */
 class RunCleanupIfDueUseCase(
     private val enabled: Boolean,

@@ -13,7 +13,7 @@ data class DeployInfoProperties(
 ) {
 
     data class Linking(
-        /** How far back from the collect timestamp a deploy may still be matched. */
+        /** How far back from the collect timestamp a deployment may still be matched. */
         val window: Duration,
     )
 
@@ -25,7 +25,7 @@ data class DeployInfoProperties(
         val interval: Duration,
 
         /**
-         * How old a deploy link must be before the sweep may judge it stale — protects a link that
+         * How old a deployment link must be before the sweep may judge it stale — protects a link that
          * was created after the sweep's listing snapshot was taken from being deleted by that same
          * sweep.
          */

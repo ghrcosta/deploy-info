@@ -39,7 +39,7 @@ Exit code is `0` on success, `1` on any failure, `2` on malformed arguments.
   <tbody>
     <tr>
       <td><code>--deploy-type</code></td>
-      <td>REQUIRED. Type of deploy: <code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run).</td>
+      <td>REQUIRED. Type of deployment: <code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run).</td>
     </tr>
     <tr>
       <td><code>--portal-url</code></td>

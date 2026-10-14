@@ -7,7 +7,7 @@ import { DeployTreeNetworkService } from './deploy-tree.network.service';
 import { GroupEntry } from './tree-model';
 
 /**
- * Deploy viewer shell: an indefinite loading indicator until the navigator tree
+ * Deployment viewer shell: an indefinite loading indicator until the navigator tree
  * has loaded, then the navigator column next to the viewer column.
  */
 @Component({

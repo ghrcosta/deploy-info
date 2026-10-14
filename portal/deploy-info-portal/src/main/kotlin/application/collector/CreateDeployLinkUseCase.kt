@@ -7,12 +7,12 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Links a collector upload (a Cloud Storage folder) to the GCP deploy it was built for.
+ * Links a collector upload (a Cloud Storage folder) to the GCP deployment it was built for.
  *
  * The collector cannot know exactly which GCP project the code was deployed to, so it sends a list
- * of candidate projects; the listing is merged across all of them and the winning deploy is chosen
+ * of candidate projects; the listing is merged across all of them and the winning deployment is chosen
  * globally. Matching rules, the retry-before-delete behavior and redeploy handling:
- * documentation/backend/deploy-link.md (trigger contract: documentation/api.md).
+ * documentation/backend/deployment-link.md (trigger contract: documentation/api.md).
  *
  * The application layer stays Spring-free (project convention: all collaborators are
  * constructor-injected interfaces, no Spring annotations in this layer).
@@ -45,10 +45,10 @@ class CreateDeployLinkUseCase(
     )
 
     sealed class Output {
-        /** A plausible deploy was found and linked. */
+        /** A plausible deployment was found and linked. */
         data class Created(val deployLink: DeployLink) : Output()
 
-        /** The matched deploy already had a link; the existing link was left untouched. */
+        /** The matched deployment already had a link; the existing link was left untouched. */
         data class AlreadyLinked(val existing: DeployLink) : Output()
 
         /**
@@ -100,7 +100,7 @@ class CreateDeployLinkUseCase(
     }
 
     /**
-     * Merges the deploy candidates of every configured project, then picks the closest survivor of
+     * Merges the deployment candidates of every configured project, then picks the closest survivor of
      * the filters regardless of which project it came from.
      */
     private fun matchDeploy(projects: List<Project>, input: Input, collectTimestamp: Instant): MatchResult {
@@ -119,13 +119,13 @@ class CreateDeployLinkUseCase(
             }
         }
         // Deployer-email filter (case-insensitive), then time direction: the upload happens AFTER
-        // the deploy, so the closest match is the newest survivor (candidates are newest first).
+        // the deployment, so the closest match is the newest survivor (candidates are newest first).
         val closest = candidates
             .filter { it.createdBy.equals(input.userEmail, ignoreCase = true) }
             .filter { it.createTime.isBefore(collectTimestamp) }
             .maxByOrNull { it.createTime } ?: return MatchResult.NoMatch
 
-        // Time window: distinguishes a plausible match from an unrelated old deploy.
+        // Time window: distinguishes a plausible match from an unrelated old deployment.
         if (closest.createTime.isBefore(collectTimestamp.minus(window))) {
             return MatchResult.NoMatch
         }
@@ -133,7 +133,7 @@ class CreateDeployLinkUseCase(
             closest.projectId, input.deployType, closest.location, closest.serviceId, closest.versionId,
         ) ?: return MatchResult.Matched(closest, replaced = null)
         if (existing.deployTimestamp == closest.createTime) return MatchResult.AlreadyLinked(existing)
-        // Same identity, different deploy: a redeploy that reused the version id. The new link
+        // Same identity, different deployment: a redeploy that reused the version id. The new link
         // replaces the existing one (createLink deletes the replaced link's storage folder).
         return MatchResult.Matched(closest, replaced = existing)
     }
@@ -164,7 +164,7 @@ class CreateDeployLinkUseCase(
                     storageCleaner.delete(old.storageFolder)
                 } catch (e: RuntimeException) {
                     logger.warn(
-                        "Replaced deploy link ${old.keyName} (a new deploy reused its version id), " +
+                        "Replaced deployment link ${old.keyName} (a new deployment reused its version id), " +
                             "but deleting its old storage folder ${old.storageFolder} failed: ${e.message}",
                     )
                 }
@@ -190,7 +190,7 @@ class CreateDeployLinkUseCase(
         data object NoMatch : MatchResult
     }
 
-    /** Deploy fields the link needs, shared between the App Engine and Cloud Run listers. */
+    /** Deployment fields the link needs, shared between the App Engine and Cloud Run listers. */
     private data class DeployCandidate(
         val projectId: String,
         val createTime: Instant,

@@ -8,7 +8,7 @@
                 </span>
                 <span class="crumb-sep"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
                 <span class="chip crumb crumb-type">
-                    <mat-icon class="icon" [svgIcon]="selection.version.type" [attr.aria-label]="'Deploy of type ' + selection.version.type"></mat-icon>
+                    <mat-icon class="icon" [svgIcon]="selection.version.type" [attr.aria-label]="'Deployment of type ' + selection.version.type"></mat-icon>
                     <span>{{ selection.service }}</span>
                 </span>
                 <span class="crumb-sep"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
@@ -43,16 +43,16 @@
         } @else if (notFound) {
             <div class="empty-state">
                 <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
-                <h3>Deploy not found</h3>
+                <h3>Deployment not found</h3>
                 <p>It may have been cleaned up after the navigator was loaded.</p>
             </div>
         } @else if (loadFailed) {
             <div class="empty-state">
                 <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
-                <h3>Failed to load the deploy data</h3>
+                <h3>Failed to load the deployment data</h3>
             </div>
         } @else if (content) {
-            <div class="tabs" role="tablist" aria-label="Deploy content">
+            <div class="tabs" role="tablist" aria-label="Deployment content">
                 <button type="button" class="tab-btn" role="tab"
                         [class.active]="activeTab === 'git'"
                         [attr.aria-selected]="activeTab === 'git'"
@@ -125,7 +125,7 @@
                     } @else {
                         <div class="empty-state">
                             <mat-icon class="icon empty-icon" svgIcon="no_data" aria-hidden="true"></mat-icon>
-                            <p>No extra files were collected for this deploy.</p>
+                            <p>No extra files were collected for this deployment.</p>
                         </div>
                     }
                 </section>
@@ -135,7 +135,7 @@
 } @else {
     <div class="empty-state">
         <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
-        <h3>No deploy selected</h3>
-        <p>Pick a deploy from the navigator on the left</p>
+        <h3>No deployment selected</h3>
+        <p>Pick a deployment from the navigator on the left</p>
     </div>
 }

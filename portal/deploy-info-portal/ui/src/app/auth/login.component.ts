@@ -85,7 +85,7 @@ export class LoginComponent implements OnDestroy {
                     // complete with no change detection, leaving the login screen shown until a
                     // reload (which restores the session inside the zone via the app initializer).
                     // Running inside the zone also puts the HttpClient request's XHR completion in
-                    // it, so the transition to the deploy view renders without a manual tick.
+                    // it, so the transition to the deployment view renders without a manual tick.
                     this.zone.run(() => this.authService.signIn(response.credential));
                 },
                 use_fedcm_for_button: true,

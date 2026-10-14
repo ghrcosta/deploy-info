@@ -11,8 +11,8 @@ import domain.Project
 import org.slf4j.LoggerFactory
 
 /**
- * Validates a project's service account by exercising the same permission chain the deploy listing
- * uses -- see: documentation/backend/gcp-deploy-listing.md.
+ * Validates a project's service account by exercising the same permission chain the deployment listing
+ * uses -- see: documentation/backend/gcp-deployment-listing.md.
  */
 class GcpServiceAccountValidator(
     private val credentialsProvider: CredentialsProvider,

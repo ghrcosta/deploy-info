@@ -5,7 +5,7 @@ import java.time.Instant
 enum class DeployType { GAE, RUN }
 
 /**
- * The link between a collector upload (a Cloud Storage folder) and the GCP deploy it was built for.
+ * The link between a collector upload (a Cloud Storage folder) and the GCP deployment it was built for.
  *
  * Identity is the tuple (projectId, deployType, serviceId, versionId, location): location is part
  * of the identity because Cloud Run revision ids repeat across regions (null for App Engine).
@@ -13,9 +13,9 @@ enum class DeployType { GAE, RUN }
  * request; service/version/location/deploy timestamp/url are filled by the linking logic from the
  * GCP listing.
  *
- * [deployTimestamp] is the GCP deploy's creation time. It disambiguates a version id that is
- * deployed again (the same identity tuple, but a new deploy): the linking logic uses it to tell
- * "the very same deploy is already linked" from "a new deploy reused an existing identity" — in the
+ * [deployTimestamp] is the GCP deployment's creation time. It disambiguates a version id that is
+ * deployed again (the same identity tuple, but a new deployment): the linking logic uses it to tell
+ * "the very same deployment is already linked" from "a new deployment reused an existing identity" — in the
  * latter case the new link replaces the old one (see `CreateDeployLinkUseCase`).
  */
 data class DeployLink(
@@ -30,7 +30,7 @@ data class DeployLink(
     val deployTimestamp: Instant,
     val url: String? = null,
 ) {
-    /** Datastore key name for this deploy link's identity. */
+    /** Datastore key name for this deployment link's identity. */
     val keyName: String
         get() = listOf(
             projectId,

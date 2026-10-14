@@ -44,7 +44,7 @@ collection failure, same token-less fallback. The only intentional differences:
 - **`--project-dir`** replaces the plugin's project/build-directory pair; output always goes to
   `<project-dir>/build/collector/`.
 - The plugin hooks into deploy tasks via Gradle (`finalizedBy`); the script is meant to be invoked by
-  CI/deploy tooling after a deploy.
+  CI/deployment tooling after a deployment.
 
 ## Resulting Cloud Storage folder layout
 
