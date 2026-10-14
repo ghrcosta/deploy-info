@@ -1,5 +1,7 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, inject, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { ProjectDataDialogComponent, ProjectDataDialogAction } from "./project-data-dialog/project-data-dialog.component";
 import { ProjectsConfigNetworkService } from './projects-config.network.service';
@@ -11,23 +13,34 @@ import { ProjectsConfigNetworkService } from './projects-config.network.service'
     changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         MatIconModule,
+        MatProgressSpinnerModule,
     ],
 })
-export class ProjectsConfigComponent {
+export class ProjectsConfigComponent implements OnInit {
     readonly dialog = inject(MatDialog);
     readonly network = inject(ProjectsConfigNetworkService);
+    private destroyRef = inject(DestroyRef);
 
-    projects: Project[] = [];
+    /**
+     * The watched projects, `null` while `GET /project/all` is in flight — the
+     * page contents are only rendered once it is set. A failed request resolves
+     * to an empty list so the "No projects yet" state shows.
+     */
+    projects: Project[] | null = null;
 
     /** Page subtitle with a properly pluralized project count. */
     get watchedProjectsSubtitle(): string {
-        return `${this.projects.length} ${this.projects.length === 1 ? 'project' : 'projects'} watched for deploys`;
+        const projects = this.projects ?? [];
+        return `${projects.length} ${projects.length === 1 ? 'project' : 'projects'} watched for deploys`;
     }
 
     ngOnInit() {
-        this.network.getProjects().subscribe(projects => {
-            this.projects = projects;
-        });
+        this.network.getProjects()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: projects => this.projects = projects,
+                error: () => this.projects = [],
+            });
     }
 
     onAddProjectClicked = () => {

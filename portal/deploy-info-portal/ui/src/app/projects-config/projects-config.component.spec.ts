@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 
 import { ProjectsConfigComponent } from './projects-config.component';
 import { ProjectsConfigNetworkService } from './projects-config.network.service';
@@ -116,5 +116,46 @@ describe('ProjectsConfigComponent', () => {
 
     expect(emptyFixture.nativeElement.querySelector('.projects-empty')).toBeTruthy();
     expect(emptyFixture.nativeElement.querySelector('.project-grid')).toBeNull();
+  });
+
+  describe('while the projects request is in flight', () => {
+    let projectsSubject: Subject<typeof PROJECTS>;
+
+    beforeEach(() => {
+      projectsSubject = new Subject<typeof PROJECTS>();
+      network.getProjects.and.returnValue(projectsSubject);
+    });
+
+    const pendingFixture = () => {
+      const pending = TestBed.createComponent(ProjectsConfigComponent);
+      pending.detectChanges();
+      return pending;
+    };
+
+    it('hides the page contents and shows the loading indicator until the request completes', () => {
+      const pending = pendingFixture();
+      const el = pending.nativeElement as HTMLElement;
+      expect(el.querySelector('.projects-loading mat-spinner')).toBeTruthy();
+      expect(el.querySelector('.projects-inner')).toBeNull();
+      expect(el.textContent).not.toContain('No projects yet');
+
+      projectsSubject.next(PROJECTS);
+      pending.detectChanges();
+
+      expect(el.querySelector('.projects-loading')).toBeNull();
+      expect(el.querySelector('.projects-inner')).toBeTruthy();
+      expect(el.querySelectorAll('.project-card').length).toBe(PROJECTS.length);
+    });
+
+    it('shows the empty state when the request fails', () => {
+      const pending = pendingFixture();
+      projectsSubject.error(new Error('boom'));
+      pending.detectChanges();
+
+      const el = pending.nativeElement as HTMLElement;
+      expect(el.querySelector('.projects-loading')).toBeNull();
+      expect(el.querySelector('.projects-empty')).toBeTruthy();
+      expect(el.textContent).toContain('No projects yet');
+    });
   });
 });

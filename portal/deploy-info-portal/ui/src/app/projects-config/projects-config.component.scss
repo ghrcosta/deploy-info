@@ -2,8 +2,14 @@
    .project-grid, .project-card, .project-card-head, .project-actions,
    .project-fields, .empty-state/.projects-empty) live in the global
    stylesheet (src/sass/_structure.scss).
-   Nothing component-specific is needed. */
+   Only the host display and the loading spinner wrapper are component-specific. */
 
 :host {
     display: block;
+}
+
+.projects-loading {
+    display: flex;
+    justify-content: center;
+    padding-top: 48px;
 }
