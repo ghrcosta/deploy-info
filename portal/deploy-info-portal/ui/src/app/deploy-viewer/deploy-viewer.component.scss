@@ -1,6 +1,6 @@
 /* All shell styles (the .shell grid, the .navigator column, the .viewer column,
    including the mobile drawer) are structural and live in the global stylesheet
-   (src/sass/_structure.scss), mirroring the mock's base.css. */
+   (src/sass/_structure.scss). */
 :host {
     display: block;
 }

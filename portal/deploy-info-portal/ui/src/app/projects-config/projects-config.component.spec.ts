@@ -13,8 +13,8 @@ const PROJECTS = [
   { projectId: 'acme-sandbox', group: '', serviceAccount: 'collector@acme-sandbox.iam.gserviceaccount.com' }
 ];
 
-// Minimal stand-ins for the icons the page renders; the real SVGs are
-// registered by AppComponent at runtime, which the specs don't include.
+// Minimal icon stand-ins: the real ones are registered by AppComponent at
+// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
 const ICON_STUB =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0H0Z"/></svg>';
 const ICON_NAMES = ['project', 'add', 'edit', 'delete', 'group', 'service_account'];
@@ -60,7 +60,7 @@ describe('ProjectsConfigComponent', () => {
     const fields = cards[0].querySelectorAll('.project-field dd');
     expect(fields[0].textContent).toContain('Platform');
     expect(fields[1].textContent).toContain('collector@acme-web-prod.iam.gserviceaccount.com');
-    // A project without a group shows the mock's muted placeholder.
+    // A project without a group shows the muted placeholder.
     expect(cards[1].querySelectorAll('.project-field dd')[0].textContent).toContain('No group');
   });
 

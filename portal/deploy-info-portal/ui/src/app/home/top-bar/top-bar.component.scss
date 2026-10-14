@@ -1,9 +1,8 @@
 /* All structural top-bar styling (.topbar, .brand, .brand-mark, .topbar-nav,
    .topbar-link, .icon-btn, the mobile nav-toggle) lives in the global
-   stylesheet (src/sass/_structure.scss), mirroring the mock's base.css. Only
-   component-specific sizing is defined here: mat-icon renders at 24px by
-   default, while the mock sizes the brand mark's icon at 19px and icon buttons'
-   icons at 20px. */
+   stylesheet (src/sass/_structure.scss). Only component-specific sizing is
+   defined here: mat-icon renders at 24px by default, while the brand mark's
+   icon needs 19px and icon buttons' icons 20px. */
 .brand-mark mat-icon {
     width: 19px;
     height: 19px;

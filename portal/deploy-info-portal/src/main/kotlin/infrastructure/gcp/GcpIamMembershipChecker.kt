@@ -31,8 +31,8 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Results are cached per email — the analysis is a relatively expensive call — with a long TTL for
  * positive results (an existing grant rarely disappears) and a short TTL for negative ones, so a
- * newly granted user is not locked out for long. Like every GCP interaction in the portal, the
- * Cloud Asset client is created lazily on the first check, never at startup.
+ * newly granted user is not locked out for long. The Cloud Asset client is created lazily on the
+ * first check, never at startup.
  */
 class GcpIamMembershipChecker(
     /** Resolves the portal's own project id, or null when it cannot be determined. */

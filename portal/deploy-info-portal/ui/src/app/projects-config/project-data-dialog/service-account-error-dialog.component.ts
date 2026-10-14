@@ -3,12 +3,6 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogTitle, MatDialogContent, MatDia
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 
-/**
- * Error dialog shown when the backend could not validate a project's service account while adding
- * or editing a project (see `documentation/plan-service-account-validation.md`). It names the
- * missing permission and offers expandable step-by-step instructions for granting it — via the GCP
- * Console and via the gcloud CLI.
- */
 @Component({
     selector: 'service-account-error-dialog',
     imports: [
@@ -83,7 +77,8 @@ export class ServiceAccountErrorDialogComponent {
         this.dialogRef.close();
     }
 
-    /** Re-submits the form, so the user can retry right after fixing IAM in another tab. */
+    /** Closes with 'retry'; the dialog's caller re-submits the form, so the user can retry
+     *  right after fixing IAM in another tab. */
     onTryAgainClicked = () => {
         this.dialogRef.close('retry');
     }

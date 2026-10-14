@@ -1,12 +1,11 @@
-// Angular Material M3 palette re-seeded to the "Modern Clean" mock's dark
-// tokens (ui-mocks/direction-1-modern-clean/theme.css, [data-theme='dark']):
-// - Primary/accent: #7cabff (the mock's lifted dark --accent)
-// - Background: #13161b (the mock's dark --bg)
+// Dark counterpart of _theme-light.scss (same re-seeding approach) against the
+// dark design tokens:
+// - Primary/accent: #7cabff (the lifted dark --accent)
+// - Background: #13161b (dark --bg)
 // - Layered surfaces from --surface/--surface-2/--surface-3
 // - outline/outline-variant from --border-strong/--border
-// - Error: #f2b8ab (the mock's dark --danger)
-// Tertiary tracks the mock's dark --warn family; secondary keeps a neutral
-// blue-gray (the mock has no secondary counterpart).
+// - Error: #f2b8ab (dark --danger)
+// Tertiary tracks the dark --warn family; secondary keeps a neutral blue-gray.
 
 $palette: (
     primary: #7cabff,

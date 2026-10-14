@@ -1,11 +1,9 @@
 /* ==========================================================================
    DeployInfo Portal — structural styles.
 
-   Ported verbatim from ui-mocks/shared/base.css: it owns LAYOUT and
-   component STRUCTURE. Look & feel (colors, radii, shadows, fonts,
-   effects) comes from the design tokens in _tokens.scss via the
-   design-token contract of the mock; every var() here has a fallback so a
-   missing theme still renders sanely.
+   Owns LAYOUT and component STRUCTURE; look & feel (colors, radii, shadows,
+   fonts, effects) comes from the design tokens in _tokens.scss. Every var()
+   here has a fallback so a missing theme still renders sanely.
    ========================================================================== */
 
 /* ----------------------------------------------------------------- reset */
@@ -791,9 +789,8 @@ body.nav-hidden .viewer { display: flex; align-items: center; justify-content: c
 }
 
 /* --------------------------------------------- Material dialog surface */
-/* MatDialog keeps the behavior (focus trap); its surface is restyled to the
-   mock's .dialog card — 16px radius, surface color, border and shadow-3
-   (see work plan item 16 / decision 1). */
+/* MatDialog keeps the behavior (focus trap); its surface is restyled to a
+   plain dialog card — 16px radius, surface color, border and shadow-3. */
 .mat-mdc-dialog-surface {
     /* !important: Material's dialog chrome styles are unscoped component styles
        loaded after the global stylesheet, so plain overrides lose the cascade. */
@@ -801,13 +798,13 @@ body.nav-hidden .viewer { display: flex; align-items: center; justify-content: c
     background: var(--surface, #fff) !important;
     border: 1px solid var(--border, #e3e6ea) !important;
     box-shadow: var(--shadow-3, 0 24px 60px rgba(0, 0, 0, .25)) !important;
-    /* The mock's .dialog inner padding. */
+    /* Dialog-card inner padding. */
     padding: 26px 28px;
 }
 
-/* Material pads and typesets its own title/content/actions chrome; the mock's
-   dialog spacing comes from the .dialog-text/.dialog-hint/.dialog-form margins
-   and .dialog-actions, so zero the chrome out (all dialogs use the mock layout). */
+/* Material pads and typesets its own title/content/actions chrome; dialog
+   spacing comes from the .dialog-text/.dialog-hint/.dialog-form margins and
+   .dialog-actions, so zero the chrome out (all dialogs use that layout). */
 .mat-mdc-dialog-title {
     padding: 0 !important;
     font-size: 1.2rem !important;

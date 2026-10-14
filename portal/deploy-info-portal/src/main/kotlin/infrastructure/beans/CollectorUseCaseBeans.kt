@@ -11,12 +11,6 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-/**
- * Wires the collector-facing capabilities: the storage-bucket lookup and the deploy-link creation —
- * the GCP listers, the Datastore-backed link repository, the Cloud Storage cleaner (resolved lazily
- * so the portal starts without Storage credentials), and the retry scheduler. The file-content
- * reader and use case live in `PortalUseCaseBeans`.
- */
 @Configuration
 class CollectorUseCaseBeans(
     private val projectRepository: ProjectRepository,

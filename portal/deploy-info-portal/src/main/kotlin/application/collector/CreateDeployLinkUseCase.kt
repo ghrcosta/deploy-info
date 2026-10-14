@@ -9,25 +9,13 @@ import java.time.Instant
 /**
  * Links a collector upload (a Cloud Storage folder) to the GCP deploy it was built for.
  *
- * The collector cannot know exactly which GCP project the code was deployed to (e.g. PROD, DEV or
- * QA), so it sends a list of candidate projects; the listing is merged across all of them and the
- * winning deploy is chosen globally.
+ * The collector cannot know exactly which GCP project the code was deployed to, so it sends a list
+ * of candidate projects; the listing is merged across all of them and the winning deploy is chosen
+ * globally. Matching rules, the retry-before-delete behavior and redeploy handling:
+ * documentation/backend/deploy-link.md (trigger contract: documentation/api.md).
  *
- * Matching rules: only deploys created by the collector's user are candidates, the deploy must have
- * been created at (or before) the collection timestamp, and within the configured window before it;
- * among the candidates the closest one below the collection timestamp wins (candidates are sorted
- * newest first, so it is the first survivor of the filters).
- *
- * When no plausible match is found, the matching is retried once after a short delay (a deploy may
- * appear late, or the listing may fail transiently) before the upload's storage folder is deleted.
- *
- * A deploy identity that is already linked is handled by comparing the existing link's deploy
- * timestamp (the GCP deploy's creation time, stored on every link) with the matched deploy's:
- * when they are equal it is the very same deploy (e.g. a duplicate trigger) and the existing link
- * is left untouched; when they differ a new deploy reused the version id — the new link then
- * replaces the old one, and the old link's storage folder (the replaced deploy's upload) is deleted.
- *
- * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
+ * The application layer stays Spring-free (project convention: all collaborators are
+ * constructor-injected interfaces, no Spring annotations in this layer).
  */
 class CreateDeployLinkUseCase(
     private val projectRepository: ProjectRepository,
@@ -130,9 +118,8 @@ class CreateDeployLinkUseCase(
                     }
             }
         }
-        // Deployer-email filter (case-insensitive), then time direction: the upload always happens
-        // AFTER the deploy, so a deploy created after the collection is the next deploy. The
-        // closest match is the newest survivor, across all candidate projects.
+        // Deployer-email filter (case-insensitive), then time direction: the upload happens AFTER
+        // the deploy, so the closest match is the newest survivor (candidates are newest first).
         val closest = candidates
             .filter { it.createdBy.equals(input.userEmail, ignoreCase = true) }
             .filter { it.createTime.isBefore(collectTimestamp) }

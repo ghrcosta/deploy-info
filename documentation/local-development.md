@@ -3,7 +3,7 @@
 How to run every component on a local machine: the collectors, the portal backend (Spring Boot +
 Datastore emulator) and the Angular frontend. Per-component details live in each component's
 `documentation/` folder — the links are in the [root README](../README.md), and the portal-specific ones
-in [running-locally.md](../portal/deploy-info-portal/documentation/running-locally.md).
+in [running-locally.md](../portal/deploy-info-portal/documentation/development/running-locally.md).
 
 ## Prerequisites
 
@@ -55,7 +55,7 @@ in [running-locally.md](../portal/deploy-info-portal/documentation/running-local
 4. `npm start` in `ui` — UI up on 4200, talking to the backend. Alternatively, `./gradlew bootJar` in
    `portal/deploy-info-portal` compiles the frontend, embeds it into the fat jar and serves it on 8080
    from the same origin as the API (see
-   [frontend-serving.md](../portal/deploy-info-portal/documentation/frontend-serving.md)).
+   [frontend-serving.md](../portal/deploy-info-portal/documentation/development/frontend-serving.md)).
 5. `npm test` in `ui` — frontend unit tests pass, always headless.
 
 Authentication is **disabled in the local profile** — every step above runs without a Google sign-in. To
@@ -64,4 +64,4 @@ exercise it locally: create an OAuth client id (web application, authorized Java
 with `deploy-info.auth.enabled=true`, `deploy-info.auth.client-id=<id>` and the `GOOGLE_CLOUD_PROJECT`
 environment variable set to the portal's project ID (the App Engine runtime sets it automatically;
 locally it must be provided by hand). See
-[authentication.md](../portal/deploy-info-portal/documentation/authentication.md).
+[authentication.md](../portal/deploy-info-portal/documentation/backend/authentication.md).

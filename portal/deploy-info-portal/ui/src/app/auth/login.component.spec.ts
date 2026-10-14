@@ -7,8 +7,8 @@ import { environment } from '../../environments/environment';
 import { LoginComponent } from './login.component';
 import { AuthService } from './auth.service';
 
-// Minimal stand-ins for the SVG icons the login card renders; the real ones are
-// registered by AppComponent at runtime, which the specs don't include.
+// Minimal icon stand-ins: the real ones are registered by AppComponent at
+// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
 const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0Z"/></svg>';
 
 describe('LoginComponent', () => {
@@ -40,11 +40,6 @@ describe('LoginComponent', () => {
         httpMock.verify();
     });
 
-    /**
-     * Regression: the component's `state` field initializer used to run after the
-     * `authState$` subscription field, overwriting the synchronously replayed state back
-     * to 'loading' — the deployed sign-in screen was stuck on the loading message forever.
-     */
     it('renders the sign-in screen with the branded card and the Google button container when the auth state is signed-out', async () => {
         const authService = TestBed.inject(AuthService);
         const initialized = authService.initialize();
@@ -55,7 +50,7 @@ describe('LoginComponent', () => {
         fixture.detectChanges();
 
         const compiled = fixture.nativeElement as HTMLElement;
-        expect(compiled.querySelector('.login-card')).withContext('the mock\'s branded login card').toBeTruthy();
+        expect(compiled.querySelector('.login-card')).withContext('the branded login card').toBeTruthy();
         expect(compiled.querySelector('.login-brand')!.textContent).toContain('DeployInfo');
         expect(compiled.querySelector('.login-state')!.textContent).toContain('Access requires IAM role');
         expect(compiled.querySelector('.google-button'))
@@ -63,15 +58,11 @@ describe('LoginComponent', () => {
             .toBeTruthy();
     });
 
-    /**
-     * Regression: the button used to be rendered with the hardcoded light 'outline' theme, and
-     * content-sized (no `width`), so the personalized "Sign in as <user>" button had different
-     * dimensions than the initial one, with the iframe off-center inside the container.
-     */
     it('renders the Google button with the page scheme and fixed dimensions, re-rendering on theme change', async () => {
         const renderButton = jasmine.createSpy('renderButton');
+        const initialize = jasmine.createSpy('initialize');
         (window as { google?: unknown }).google = {
-            accounts: { id: { initialize: jasmine.createSpy('initialize'), renderButton } },
+            accounts: { id: { initialize, renderButton } },
         };
         // "Loads" the Google Identity Services script without the network: resolves synchronously.
         spyOn(document.head, 'appendChild').and.callFake(

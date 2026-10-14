@@ -16,12 +16,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Lists Cloud Run services/revisions of a project through the official Google Cloud Run client
- * library, authenticating with credentials impersonating the project's service account.
- *
- * The client library takes care of authentication, request building, JSON parsing and pagination;
- * this class only caches the underlying clients per service account, resolves the location/service
- * ids out of the resource names and maps the library's resources into [CloudRunDeploy] domain
- * objects.
+ * library, authenticating with credentials impersonating the project's service account (the shared
+ * impersonation/caching approach is documented on GcpAppEngineApiClient). This class additionally
+ * resolves the location/service ids out of the resource names.
  */
 class GcpCloudRunApiClient(
     private val credentialsProvider: CredentialsProvider,
@@ -58,8 +55,6 @@ class GcpCloudRunApiClient(
         try {
             listing()
         } catch (e: ApiException) {
-            // The server's error text (denied permission, resource, remediation link) lives only in
-            // the cause chain — log it before it is discarded into the compact [GcpListingException].
             val reason = GcpListingException.errorInfoReason(e)
             logger.warn(
                 "GCP Cloud Run listing failed: project=${project.projectId}, serviceAccount=${project.serviceAccount}, " +

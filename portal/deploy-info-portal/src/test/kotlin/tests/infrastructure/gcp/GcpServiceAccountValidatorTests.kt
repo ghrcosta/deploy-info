@@ -16,11 +16,6 @@ import org.mockito.kotlin.*
 import java.util.*
 import kotlin.test.assertEquals
 
-/**
- * Unit tests of the two-step service-account validation (impersonation first, then the GAE + Cloud
- * Run listings) — see `documentation/plan-service-account-validation.md`. The credential failures
- * themselves are categorized in `GcpCredentialsProviderTests`.
- */
 class GcpServiceAccountValidatorTests {
 
     private val project = Project(projectId = "proj", group = null, serviceAccount = "sa@proj.iam.gserviceaccount.com")

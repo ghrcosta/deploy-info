@@ -6,25 +6,12 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * The on-request cleanup trigger: runs the validity/cleanup sweep from a tree request, but only
- * when enough time has passed since the last completed sweep.
+ * The on-request cleanup trigger: runs the injected sweep [Runnable] from a tree request, but only
+ * when enough time has passed since the last completed sweep — disabled means a no-op; a sweep that
+ * throws is logged and not marked completed, so the next tree request retries.
  *
- * This replaces a fixed-interval scheduler because the portal runs on App Engine Standard, where
- * idle instances are terminated after ~15 minutes: a scheduled job either never fires (long
- * interval, dead instance) or keeps an instance alive forever (short interval). Tree requests are
- * the app's natural heartbeat, so the sweep piggybacks on them.
- *
- * The timing logic lives here; the sweep itself is an injected [Runnable]. Rules:
- * - When disabled (the configured switch is off), this is a no-op — no state is read or written.
- * - When the last completed sweep is younger than `interval`, nothing happens: normal tree requests
- *   pay no sweep cost.
- * - Otherwise the sweep runs; a sweep that throws is logged and **not** marked completed, so the
- *   next tree request retries.
- *
- * Concurrency: two backend instances may run the sweep at the same time. This is accepted as merely
- * redundant — every delete is idempotent (delete-only-on-proof, the Datastore entry first), so the
- * worst case is duplicated listing API calls and duplicated work, both bounded by the number of
- * instances and the once-per-interval trigger. No claim/lock is used to prevent it.
+ * Why the sweep piggybacks on tree requests instead of a fixed scheduler, and why concurrent sweeps
+ * are accepted as redundant: documentation/backend/deploy-cleanup.md.
  */
 class RunCleanupIfDueUseCase(
     private val enabled: Boolean,

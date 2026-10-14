@@ -29,9 +29,6 @@ data class GitContent(
 /**
  * The file content of a collector upload's Cloud Storage folder: the GIT section and the extra
  * files collected by the collector, keyed back to their original file paths through the uuid maps.
- *
- * Field names mirror the frontend's `DeployData` (`git.gitlog`, `git.gitstatus`, `git.changes`,
- * `extras`), so the REST contract (Phase 1 §4) can map this 1:1.
  */
 data class DeployContent(
     /** The GIT section, or null when the upload contains no git data. */

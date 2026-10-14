@@ -23,6 +23,6 @@ class FrontendServingConfiguration : WebMvcConfigurer {
 
     private companion object {
         /** First path segments of the backend HTTP endpoints (see the controllers in `ui/`). */
-        val API_PREFIXES = listOf("auth", "collector", "portal", "settings")
+        val API_PREFIXES = listOf("auth", "collector", "portal", "project")
     }
 }

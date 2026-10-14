@@ -25,11 +25,6 @@ class CollectorController(
         @RequestBody request: CollectorRequest,
         httpServletRequest: HttpServletRequest,
     ): ResponseEntity<Any> {
-        // Defense in depth against hand-crafted requests (see DeployInfoProperties.Auth): the
-        // authentication filter has already verified the token's email — here it is checked against
-        // the claimed userEmail, so a valid token cannot attribute an upload to another user's
-        // deploy. The attribute is only present when authentication is enabled; when it is not
-        // (local/test), there is nothing to compare against and the check is skipped.
         val tokenEmail = httpServletRequest.getAttribute(AuthenticationFilter.AUTHENTICATED_EMAIL_ATTRIBUTE) as? String
         if (tokenEmail != null && properties.auth.collectorRequireEmailMatch &&
             !tokenEmail.equals(request.userEmail, ignoreCase = true)

@@ -38,7 +38,7 @@ export class TopBarComponent implements OnInit {
         this.applyThemeClasses();
     }
 
-    /** The mock's mobile menu toggle: shows/hides the navigator drawer (step C's navigator). */
+    /** Mobile menu toggle: shows/hides the navigator drawer. */
     toggleNavigator = () => {
         this.renderer.selectRootElement('body', true).classList.toggle('nav-open');
     }
@@ -58,12 +58,6 @@ export class TopBarComponent implements OnInit {
         this.authService.logout();
     }
 
-    /**
-     * Keeps the existing html.light-theme/dark-theme class mechanism: the login
-     * component's Google-button re-render MutationObserver depends on it, and
-     * both the custom design tokens and Material's light-dark() palette key off
-     * these classes.
-     */
     private applyThemeClasses() {
         const html = this.renderer.selectRootElement('html', true);
         if (this.isDarkMode) {

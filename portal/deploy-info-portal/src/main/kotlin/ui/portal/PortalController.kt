@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Main-screen contracts (see `documentation/api.md`): the navigator tree and the collected file content of
- * an upload folder.
- */
 @RestController
 @RequestMapping("portal")
 class PortalController(
@@ -21,27 +17,12 @@ class PortalController(
     private val runCleanupIfDueUseCase: RunCleanupIfDueUseCase,
 ) {
 
-    /**
-     * The navigator tree (group > project > service > version). The on-request cleanup trigger
-     * runs first when it is due, so the tree never serves links that a due sweep would have removed
-     * first; this makes the response slower by the sweep's duration roughly once per interval.
-     */
     @GetMapping("/tree")
     fun getTree(): ResponseEntity<List<GroupDTO>> {
         runCleanupIfDueUseCase.executeIfDue()
         return ResponseEntity.ok(getDeployTreeUseCase.execute().map { GroupDTO(it) })
     }
 
-    /**
-     * The collected files (GIT section and extras) of one upload folder, as carried by the tree's
-     * version nodes — so this endpoint touches Cloud Storage only, never Datastore.
-     *
-     * The 200 response is browser-cacheable (`Cache-Control: private, max-age=604800, immutable`):
-     * an upload folder's content never changes after the collector wrote it — the only lifecycle
-     * event is the cleanup sweep deleting the whole folder, which the tree no longer links to. The
-     * `private` scope keeps proxies/shared caches out of the authenticated API; error responses
-     * (404/502) carry no cache header, so they are never cached.
-     */
     @GetMapping("/deploy/content")
     fun getContent(@RequestParam("folder") storageFolder: String): ResponseEntity<Any> =
         when (val output = getDeployContentUseCase.execute(GetDeployContentUseCase.Input(storageFolder))) {

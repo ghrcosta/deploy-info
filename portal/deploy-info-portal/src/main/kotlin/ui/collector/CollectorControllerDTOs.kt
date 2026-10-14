@@ -46,7 +46,7 @@ data class BucketResponse(
  */
 data class CollectorAuthenticationError(
     val error: String,
-    /** The email of the account the presented token was issued for. */
+    /** The email of the presented token (same meaning as AuthUserDTO.email). */
     val tokenEmail: String,
     /** The `userEmail` the request body claimed. */
     val requestUserEmail: String,

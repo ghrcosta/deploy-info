@@ -30,9 +30,8 @@ interface VersionNode {
 }
 
 /**
- * Navigator of the "Modern Clean" mock: a filter box above a group → project →
- * service → version tree of native `<details>` elements, replacing the previous
- * mat-expansion-panel/mat-tree markup (see UI-REFACTOR-PLAN.md, step C).
+ * Navigator: a filter box above a group → project → service → version tree of
+ * native `<details>` elements. Screen design: documentation/frontend/main-screen.md.
  */
 @Component({
     selector: 'deploy-navigator',
@@ -68,7 +67,7 @@ export class DeployNavigatorComponent {
     selectVersion = (node: VersionNode) => {
         this.selectedVersionId = node.id;
         this.deployViewerService.newDeployClickedEvent(node.selection);
-        // The mock closes the mobile navigator drawer when a deploy is picked.
+        // Close the mobile navigator drawer when a deploy is picked.
         this.document.body.classList.remove('nav-open');
     };
 
@@ -76,7 +75,7 @@ export class DeployNavigatorComponent {
     openProjectsView = () => this.homeService.openView('projects');
 
     /**
-     * The mock's navigator filter (ui-mocks/shared/app.js, `filterTree`): versions are
+     * Navigator filter: versions are
      * matched against their full text; services and projects stay visible when any child
      * survives or their own name matches ("self match"); groups stay visible when any
      * project survives. Hidden nodes get `data-filtered-out` (display: none in the global

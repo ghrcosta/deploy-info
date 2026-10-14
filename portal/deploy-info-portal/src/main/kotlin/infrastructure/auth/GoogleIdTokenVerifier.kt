@@ -24,8 +24,7 @@ class GoogleIdTokenVerifier(
             return null
         }
         if (info.audience != audience) {
-            // Never include the token itself in log output — only its metadata.
-            logger.debug("Rejected an ID token for {}: audience {} is not this portal's client id", email, info.audience)
+            logger.debug("Rejected an ID token for ${email}: audience ${info.audience} is not this portal's client id")
             return null
         }
         if ((info.expiresAt ?: 0) <= nowSeconds()) {

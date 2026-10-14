@@ -9,13 +9,12 @@ import java.util.*
  * identified by the folder name the tree endpoint carries on its version nodes — so this use case
  * touches Cloud Storage only, never Datastore.
  *
- * The folder layout is the one produced by the collector (see the collector plugin documentation):
- * `git-log.txt` / `git-status.txt` at the top level, uuid-named files with their `uuid → path` +
- * new/modified state mappings in `uuid-git.csv`, and `uuid → path` mappings in
- * `uuid-extra.properties`. Every part is optional: git files only exist when the collector was
- * configured to collect them, and the uuid maps only when something was collected.
+ * The folder layout is the one produced by the collector; every part is optional (git files only
+ * exist when the collector was configured to collect them, the uuid maps only when something was
+ * collected). Layout contract: documentation/backend/deploy-content.md and
+ * collector-java's documentation/collector-plugin.md.
  *
- * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
+ * The application layer stays Spring-free (see CreateDeployLinkUseCase).
  */
 class GetDeployContentUseCase(
     private val fileContentReader: FileContentReader,
@@ -53,7 +52,7 @@ class GetDeployContentUseCase(
         val gitLog = fileContentReader.readText(storageFolder, GIT_LOG_FILE)
         val gitStatus = fileContentReader.readText(storageFolder, GIT_STATUS_FILE)
         val changes = readGitChanges(storageFolder)
-        val extras = readMappedFiles(storageFolder, EXTRA_UUID_PROPERTIES)
+        val extras = readMappedFiles(storageFolder)
         val git = if (gitLog == null && gitStatus == null && changes.isEmpty()) {
             null
         } else {
@@ -64,7 +63,7 @@ class GetDeployContentUseCase(
 
     /**
      * Reads the git-collected files: parses `uuid-git.csv` (header `uuid,filepath,status`; RFC 4180 —
-     * filepaths containing commas/quotes are quoted) and reads each uuid file's text. Rows with a
+     * file paths containing commas/quotes are quoted) and reads each uuid file's text. Rows with a
      * wrong shape or an unknown status, and entries referencing files that are missing from the
      * folder, are skipped (partial uploads must not fail the whole content read).
      */
@@ -124,8 +123,8 @@ class GetDeployContentUseCase(
      * reads each uuid file's text. Entries referencing files that are missing from the folder are
      * skipped (partial uploads must not fail the whole content read).
      */
-    private fun readMappedFiles(storageFolder: String, propertiesFile: String): List<ContentFile> {
-        val propertiesText = fileContentReader.readText(storageFolder, propertiesFile) ?: return emptyList()
+    private fun readMappedFiles(storageFolder: String): List<ContentFile> {
+        val propertiesText = fileContentReader.readText(storageFolder, EXTRA_UUID_PROPERTIES) ?: return emptyList()
         val uuidToPath = Properties().apply { load(propertiesText.byteInputStream()) }
         return uuidToPath.stringPropertyNames().mapNotNull { uuid ->
             val content = fileContentReader.readText(storageFolder, uuid) ?: return@mapNotNull null

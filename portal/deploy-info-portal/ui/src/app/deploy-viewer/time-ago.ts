@@ -1,7 +1,6 @@
 /**
- * Timestamp helpers shared by the deploy navigator and the file viewer,
- * mirroring the mock's `timeAgo`/`fmtTime` utilities (ui-mocks/shared/app.js)
- * with UTC rendering (the collector stores epoch milliseconds).
+ * Timestamp helpers shared by the deploy navigator and the file viewer, with
+ * UTC rendering (the collector stores epoch milliseconds).
  */
 
 /** Relative label for an epoch-millisecond timestamp: "5m ago", "3h ago", "2d ago". */
@@ -12,7 +11,7 @@ export function timeAgo(ms: number): string {
     return `${Math.round(m / 1440)}d ago`;
 }
 
-/** Absolute UTC timestamp in the mock's format: "2025-01-01 13:45 UTC". */
+/** Absolute UTC timestamp: "2025-01-01 13:45 UTC". */
 export function fmtTime(ms: number): string {
     const d = new Date(ms);
     const pad = (n: number) => String(n).padStart(2, '0');

@@ -7,11 +7,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Registers the [AuthenticationFilter] on the protected API prefixes. The filter paths follow the
- * servlet wildcard convention, so the pattern for the `portal` prefix covers deeper paths like
- * `portal/deploy/content` too. Everything else — the static frontend resources and the frontend
- * fallback (the UI is served from the same jar) — stays public, so the browser can load the app
- * shell and render the sign-in screen.
+ * Registers the [AuthenticationFilter] on the protected API prefixes. Everything else — the static
+ * frontend resources — stays public, so the browser can load the sign-in screen.
  */
 @Configuration
 class SecurityConfiguration {

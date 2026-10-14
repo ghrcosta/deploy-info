@@ -22,7 +22,7 @@ private fun input(
     userEmail: String = "deployer@example.com",
     collectTimestamp: Instant = COLLECT_TIME,
 ) = CreateDeployLinkUseCase.Input(
-    // The directory name encodes the collect timestamp: <user>_<deployType>_<epochMillis>
+    // The directory name encodes the collect timestamp (convention: CreateDeployLinkUseCase.parseCollectTimestamp)
     directoryName = directoryName ?: "deployer_${deployType.name}_${collectTimestamp.toEpochMilli()}",
     projects = projects,
     deployType = deployType,

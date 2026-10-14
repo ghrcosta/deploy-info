@@ -9,8 +9,8 @@ import { DeployViewerService } from '../deploy-viewer.service';
 import { GroupEntry } from '../tree-model';
 import { HomeService } from '../../home/home.service';
 
-// Minimal stand-ins for the SVG icons the navigator renders; the real ones are
-// registered by AppComponent at runtime, which the specs don't include.
+// Minimal icon stand-ins: the real ones are registered by AppComponent at
+// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
 const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 const registerStubIcons = (registry: MatIconRegistry, sanitizer: DomSanitizer) =>
     ['search', 'chevron_right', 'project', 'GAE', 'RUN', 'deployed_code', 'deployed_code_alert']

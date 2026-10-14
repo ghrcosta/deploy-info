@@ -13,26 +13,10 @@ import java.time.Instant
 /**
  * The validity/cleanup logic: periodically detects deploy links whose deploy no longer exists in
  * GCP and removes them — the Datastore entry and the collector upload's Cloud Storage folder.
+ * Nothing is returned; the outcome is reported via log messages.
  *
- * For every configured project and both deploy types, the deploys are listed from GCP and compared
- * against the links in the repository. A link is stale when its identity (service id, version id,
- * location) is not present in the listing. Deletion order matters: the Datastore entry goes first,
- * so a Cloud Storage failure (logged and swallowed) can never leave a link pointing at a folder
- * that was deleted underneath it — it only leaves an orphaned folder as debris.
- *
- * Safety rules:
- * - A listing that fails ([GcpListingException] / [CredentialsException]) skips that project and
- *   deploy type entirely: links are only ever deleted on a *successful* listing that proves they
- *   are stale, never on a transient failure.
- * - Links younger than the configured grace period are not judged. This is because their deploy
- *   may have been created after this sweep's listing snapshot was taken — a sweep snapshot is a
- *   point-in-time view, and a deploy that finishes while the sweep runs is live but absent from
- *   the snapshot.
- * - A deploy link whose project is no longer configured in the portal is left untouched (it cannot
- *   even be listed safely without the project's service-account configuration).
- *
- * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
- * Nothing is returned — the outcome is reported via log messages.
+ * The sweep rules (delete only on proof, grace period, delete order, unconfigured projects,
+ * concurrency): documentation/backend/deploy-cleanup.md.
  */
 class CleanupInvalidDeployLinksUseCase(
     private val projectRepository: ProjectRepository,
@@ -52,7 +36,8 @@ class CleanupInvalidDeployLinksUseCase(
 
         for (project in checkedProjects) {
             for (deployType in DeployType.entries) {
-                // Grace period: a link younger than the grace period is never judged stale.
+                // Grace period: never judge links younger than it (snapshot race — see
+                // documentation/backend/deploy-cleanup.md).
                 val candidates = deployLinkRepository.getAllFor(project.projectId, deployType).filter {
                     it.collectTimestamp.isBefore(now.minus(gracePeriod))
                 }

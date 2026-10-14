@@ -12,8 +12,8 @@ import { ProjectsConfigNetworkService } from '../projects-config/projects-config
 
 const THEME_STORAGE_KEY = 'deploy-info-theme';
 
-// Minimal stand-ins for the SVG icons the rendered views use; the real ones are
-// registered by AppComponent at runtime, which the specs don't include.
+// Minimal icon stand-ins: the real ones are registered by AppComponent at
+// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
 const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0Z"/></svg>';
 const ICON_NAMES = [
   'project', 'GAE', 'RUN', 'no_data', 'group', 'deployed_code', 'deployed_code_alert', 'label',

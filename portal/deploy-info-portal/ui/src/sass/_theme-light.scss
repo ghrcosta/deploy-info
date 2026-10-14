@@ -1,13 +1,12 @@
-// Angular Material M3 palette re-seeded to the "Modern Clean" mock
-// (ui-mocks/direction-1-modern-clean/theme.css) so the remaining Material
-// pieces (snackbar, dialog form fields, spinner) match the mock:
-// - Primary/accent: #2f6fed (the mock's --accent)
-// - Background: #f5f7fa (the mock's --bg)
+// Angular Material M3 palette re-seeded to the UI's design tokens (_tokens.scss)
+// so the remaining Material pieces (snackbar, dialog form fields, spinner) match:
+// - Primary/accent: #2f6fed (--accent)
+// - Background: #f5f7fa (--bg)
 // - Layered surfaces from --surface/--surface-2/--surface-3
 // - outline/outline-variant from --border-strong/--border
-// - Error: #c5221f (the mock's --danger)
-// Tertiary tracks the mock's --warn family; secondary keeps a neutral
-// blue-gray (the mock has no secondary counterpart).
+// - Error: #c5221f (--danger)
+// Tertiary tracks the --warn family; secondary keeps a neutral blue-gray
+// (the design has no secondary counterpart).
 
 $palette: (
     primary: #2f6fed,

@@ -152,11 +152,7 @@ export class ProjectDataDialogComponent {
         })
     }
 
-    /**
-     * Error dialog for a failed service-account validation, naming the missing permission with
-     * expandable grant instructions. 'Retry' closes the dialog with 'retry' and re-submits the
-     * form, so the user can retry right after fixing IAM in another tab.
-     */
+    /** Error dialog for a failed service-account validation (see ServiceAccountErrorDialogComponent). */
     openServiceAccountErrorDialog(serviceAccountIssue: string | undefined, portalServiceAccount: string | undefined) {
         const dialogRef = this.dialog.open(ServiceAccountErrorDialogComponent, {
             disableClose: true,
@@ -222,8 +218,6 @@ export interface EditProjectResult {
 export interface EditProjectIssues {
     issueProjectNotFound: boolean;
     issueServiceAccountError: boolean;
-    /** Issue code from the backend (`ServiceAccountIssue`), set only when `issueServiceAccountError`. */
     serviceAccountIssue?: string;
-    /** Portal's own service account email, set only when `issueServiceAccountError`. */
     portalServiceAccount?: string;
 }

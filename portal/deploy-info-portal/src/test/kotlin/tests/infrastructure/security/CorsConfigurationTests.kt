@@ -89,7 +89,7 @@ class CorsConfigurationConfigurableOriginTests {
     }
 
     @Test
-    fun `The default dev origin is no longer allowed`() {
+    fun `The overridden configuration replaces the default dev origin`() {
         val result = mvc.perform(
             options("/collector/bucket")
                 .header(HttpHeaders.ORIGIN, "http://localhost:4200")

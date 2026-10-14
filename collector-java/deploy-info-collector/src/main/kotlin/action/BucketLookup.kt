@@ -15,11 +15,7 @@ import java.net.URL
  */
 class BucketLookup(
     private val portalUrl: String,
-    /**
-     * gcloud access token sent as the `Authorization: Bearer` credential, or null when none could
-     * be obtained (a portal that requires authentication then answers with an actionable error).
-     * The token itself is never logged.
-     */
+    /** gcloud access token as the Bearer credential, or null — see [GcloudAccessTokenProvider]. */
     private val accessToken: String? = null,
     /** Seam for tests: how an [HttpURLConnection] is opened for a given [URL]. */
     private val openConnection: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },

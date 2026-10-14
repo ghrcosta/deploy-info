@@ -12,7 +12,6 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-/** Wires the main-screen capabilities: the navigator tree and the upload folder content reading. */
 @Configuration
 class PortalUseCaseBeans(
     private val projectRepository: ProjectRepository,
@@ -21,7 +20,6 @@ class PortalUseCaseBeans(
     private val properties: DeployInfoProperties,
 ) {
 
-    /** Resolved lazily, so the portal starts (and the tests run) without Storage credentials. */
     @Bean
     fun fileContentReader(): FileContentReader =
         GcsFileContentReader({ storageProvider.getObject() }, properties.storageBucket)

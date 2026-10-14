@@ -84,7 +84,7 @@ describe('DeployViewerComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render the mock shell grid: navigator column next to the viewer column', () => {
+  it('should render the shell grid: navigator column next to the viewer column', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.shell')).toBeTruthy();
     expect(el.querySelector('aside.navigator#navigator')).toBeTruthy();

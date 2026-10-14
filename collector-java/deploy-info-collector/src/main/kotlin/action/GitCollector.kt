@@ -10,12 +10,10 @@ class GitCollector {
     fun execute() {
         Logger.i("Collecting diff data...")
         try {
-            // Save the "git status" devs are used to, will be visible on the portal
             val gitStatusOutput = executeCommand("git status --long --branch --untracked-files=normal")
             val gitStatusOutputFile = createEmptyFile("git-status.txt")
             gitStatusOutputFile.writeText(gitStatusOutput)
 
-            // Save the "git log" devs are used to, will be visible on the portal
             val gitLogOutput = executeCommand("git log --oneline")
             val gitLogOutputFile = createEmptyFile("git-log.txt")
             gitLogOutputFile.writeText(gitLogOutput)
@@ -45,11 +43,7 @@ class GitCollector {
     /** One entry of `git status --porcelain`: the file path plus its git state. */
     private data class ChangedFile(val filePath: String, val status: GitFileStatus)
 
-    /**
-     * Parses `git status --porcelain` output. The leading 2-char XY code carries the state: `??` is
-     * untracked, a code containing `A` (staged addition) is new — taking priority over `M` — and any
-     * other code (`M`, `MM`, `D`, ...) is a modification of a tracked file.
-     */
+    /** Parses `git status --porcelain` output (state classification: [GitFileStatus.fromPorcelainCode]). */
     private fun extractChangedFiles(gitStatusOutput: String, repoRoot: File): List<ChangedFile> {
         val gitStatusFilePathPattern = "^([A-Z?!\\s]{2})\\s+(.*)$".toRegex(RegexOption.MULTILINE)
         val changedFiles = mutableListOf<ChangedFile>()

@@ -1,5 +1,6 @@
 package infrastructure.auth
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.slf4j.LoggerFactory
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.IOException
@@ -16,14 +17,11 @@ enum class TokenInfoKind(val queryParameter: String) {
 }
 
 /**
- * Asks Google's tokeninfo endpoint about a token. Both Google-issued token kinds the portal accepts
- * are verified this way: OpenID Connect ID tokens (the frontend's sign-in credential) and OAuth
- * access tokens (the collector's `gcloud auth print-access-token` credential) — Google validates
- * the token's signature and returns its metadata.
+ * Validates Google-issued OpenID Connect ID tokens (the frontend's sign-in credential) and OAuth
+ * access tokens (the collector's `gcloud auth print-access-token` credential).
  *
- * Responses are cached per token for [GoogleTokenInfoClient.Companion.CACHE_TTL_SECONDS], because
- * verification is a network round-trip to Google and every API request carries the token again.
- * The cache is keyed by the token itself — held in memory only, never logged.
+ * Responses are cached per token for [GoogleTokenInfoClient.Companion.CACHE_TTL_SECONDS]. The cache
+ * is held in memory only, never logged.
  */
 class GoogleTokenInfoClient(
     /** Seam for tests: how an [HttpURLConnection] is opened for the tokeninfo endpoint. */
@@ -84,7 +82,7 @@ class GoogleTokenInfoClient(
                 email = dto.email,
                 audience = dto.aud,
                 expiresAt = dto.exp?.toLongOrNull(),
-                emailVerified = dto.email_verified?.equals("true", ignoreCase = true),
+                emailVerified = dto.emailVerified?.equals("true", ignoreCase = true),
             )
         } catch (e: Exception) {
             logger.warn("Could not parse the Google tokeninfo response: {}", e.message)
@@ -99,7 +97,8 @@ class GoogleTokenInfoClient(
         val email: String? = null,
         val aud: String? = null,
         val exp: String? = null,
-        val email_verified: String? = null,
+        @JsonProperty("email_verified")
+        val emailVerified: String? = null,
     )
 
     private data class CacheEntry(val info: TokenInfo, val validUntil: Long)
@@ -110,7 +109,6 @@ class GoogleTokenInfoClient(
         private val logger = LoggerFactory.getLogger(GoogleTokenInfoClient::class.java)
         private val jsonMapper = jacksonObjectMapper()
 
-        /** Never log a token; the debug messages name only the outcome. */
         const val TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
         const val HTTP_OK = 200
         const val CONNECT_TIMEOUT_MILLIS = 10_000

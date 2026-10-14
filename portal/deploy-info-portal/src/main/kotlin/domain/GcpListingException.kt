@@ -22,13 +22,9 @@ class GcpListingException(
         get() = statusCode == "PERMISSION_DENIED" || statusCode == "403"
 
     /**
-     * True when the listing API cannot resolve the project at all — gax `NOT_FOUND`, or
-     * `INVALID_ARGUMENT` for a malformed project id. Kept distinct from [isPermissionDenied]
-     * because the two need different remediation: a wrong/unreachable project id means the entered
-     * name must be rechecked, not that IAM roles are missing. (The App Engine Admin API itself
-     * answers a wrong/unreachable project id with a plain `PERMISSION_DENIED` — "or it may not
-     * exist" — so that case stays indistinguishable from a real denial; see
-     * `documentation/settings-projects.md`.)
+     * True when the listing API cannot resolve the project at all — gax `NOT_FOUND` or
+     * `INVALID_ARGUMENT`. Kept distinct from [isPermissionDenied] because the two need different
+     * remediation (caveat for the App Engine Admin API: documentation/backend/projects.md).
      */
     val isProjectNotFound: Boolean
         get() = statusCode == "NOT_FOUND" || statusCode == "404" ||

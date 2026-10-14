@@ -1,16 +1,12 @@
 /* ==========================================================================
-   DeployInfo Portal — design tokens ("Modern Clean" direction)
+   DeployInfo Portal — design tokens
 
-   Ported verbatim from ui-mocks/direction-1-modern-clean/theme.css.
+   Light tokens live on :root; dark tokens are defined under
+   html.dark-theme (the portal's theme-class mechanism — the login component's
+   Google-button re-render MutationObserver depends on it).
 
-   Light tokens live on :root; dark tokens are defined under BOTH
-   html.dark-theme (the portal's existing theme-class mechanism — the login
-   component's Google-button re-render MutationObserver depends on it) and
-   [data-theme='dark'] (the mock's mechanism).
-
-   This partial is loaded AFTER _structure.scss so the direction-specific
-   flourishes at the bottom win the cascade, exactly like the mock, where
-   theme.css is linked after base.css.
+   This partial is loaded AFTER _structure.scss so the design-specific
+   flourishes at the bottom win the cascade.
    ========================================================================== */
 
 :root {

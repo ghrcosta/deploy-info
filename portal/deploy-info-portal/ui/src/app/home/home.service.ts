@@ -8,8 +8,7 @@ export type HomeView = 'deploys' | 'projects' | 'help';
     providedIn: 'root'
 })
 export class HomeService {
-    // BehaviorSubject so subscribers always receive the current value immediately,
-    // instead of only reacting to clicks emitted after they subscribed.
+    // BehaviorSubject so subscribers get the current value immediately (same pattern as AuthService).
     private _viewSubject = new BehaviorSubject<HomeView>('deploys');
     viewObservable = this._viewSubject.asObservable();
 

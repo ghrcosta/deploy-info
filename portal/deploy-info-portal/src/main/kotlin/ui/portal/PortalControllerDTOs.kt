@@ -41,16 +41,14 @@ data class ServiceDTO(
 
 /** A selectable version node; the fields the file-viewer header needs ride along with the identity. */
 data class VersionDTO(
-    /** The deploy identity key: `<project>_<TYPE>_<location|->_<service>_<version>`. */
+    /** The deploy identity key (format: GetDeployTreeUseCase.VersionEntry). */
     val id: String,
     val name: String,
     val type: String,
     val location: String?,
     val url: String?,
     val author: String,
-    /** Epoch millis of the collection timestamp. */
     val timestamp: Long,
-    /** The upload folder to pass to `GET /portal/deploy/content`. */
     val storageFolder: String,
 ) {
     constructor(version: GetDeployTreeUseCase.VersionEntry) : this(

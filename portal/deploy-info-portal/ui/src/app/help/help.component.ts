@@ -38,12 +38,6 @@ const COLLECTOR_SNIPPET = [
     '}',
 ].join('\n');
 
-/**
- * Help page of the "Modern Clean" mock: a getting-started card with three
- * steps and the collector's Gradle snippet (see UI-REFACTOR-PLAN.md, step E).
- * Not a route — shown by the home shell when the view is 'help'; the internal
- * links switch to the Projects/Deploys views instead of navigating.
- */
 @Component({
     selector: 'help',
     templateUrl: './help.component.html',

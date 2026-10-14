@@ -9,20 +9,16 @@ import java.time.Instant
 
 /**
  * Builds the main-screen navigator tree: a hierarchy of group > project > service > version from
- * the configured projects and the deploy links in the repository.
+ * the configured projects and the deploy links in the database.
  *
- * The tree is built purely from Datastore — no GCP listing calls — so a listing failure can never
- * fail a tree request; link validity is the cleanup sweep's job (which tree requests trigger when
- * due, see `RunCleanupIfDueUseCase`). Per-version data the file-viewer header needs (deploy type,
+ * The tree is built purely from Datastore. The data the file-viewer header needs (deploy type,
  * location, url, author, timestamp) is carried on the version nodes together with the upload's
- * `storageFolder`, so the file-content endpoint never has to look the link up in Datastore.
+ * `storageFolder`, so the file-content endpoint won't have to query the database again.
  *
- * Structure and sorting mirror the frontend's navigator: services of one project are keyed by
- * (deploy type, service id) — the same service name may exist as a GAE and a RUN service; entries
- * are sorted by name at every level; ungrouped projects go under the empty-name group, which is
- * sorted last.
+ * Items are sorted alphabetically on all levels; ungrouped projects go in an empty-name group,
+ * which is sorted last.
  *
- * The application layer stays Spring-free; all collaborators are constructor-injected interfaces.
+ * The application layer stays Spring-free (see CreateDeployLinkUseCase).
  */
 class GetDeployTreeUseCase(
     private val projectRepository: ProjectRepository,

@@ -12,24 +12,10 @@ import org.springframework.web.filter.OncePerRequestFilter
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * Rejects requests to the protected API prefixes (`/portal`, `/settings`, `/collector`, `/auth/user`)
- * unless they carry a Google token of a user who is present in the IAM of the project the portal runs
- * in — directly or through a group. Two token kinds are accepted, chosen by the path:
+ * Rejects requests to the protected API prefixes unless they carry a Google token of a user who
+ * is present in the IAM of the project the portal runs in — directly or through a group.
  *
- * - browser requests (`/portal`, `/settings`, `/auth/user`) carry the Google Identity Services ID
- *   token the frontend obtained at sign-in;
- * - collector requests (`/collector`) carry the OAuth access token the collector obtains with
- *   `gcloud auth print-access-token`.
- *
- * Failures are reported as JSON bodies the callers can act on: 401 for a missing/invalid token, 403
- * for a valid token of an unpermitted user, 503 when the portal cannot run its IAM membership check.
- * The verification results are cached (see the implementations behind [AuthenticateUserUseCase]), so
- * the cost per request is amortized across calls.
- *
- * Requests pass through untouched while authentication is disabled
- * (`deploy-info.auth.enabled=false` — the local and test profiles), and CORS preflights (`OPTIONS`)
- * always pass through: browsers do not send credentials on preflights, and the CORS handling itself
- * lives at the MVC level (see `CorsConfiguration`).
+ * Requests pass through untouched while authentication is disabled (`deploy-info.auth.enabled=false`).
  */
 class AuthenticationFilter(
     private val authenticateUserUseCase: AuthenticateUserUseCase,

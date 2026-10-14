@@ -7,7 +7,7 @@ import infrastructure.config.DeployInfoProperties
  * portal's `deploy-info.storage-bucket` property. Consumed by the collector-facing
  * `GET /collector/bucket` endpoint (see `documentation/api.md`).
  *
- * The application layer stays Spring-free; the bound properties object is constructor-injected.
+ * The application layer stays Spring-free (see CreateDeployLinkUseCase).
  */
 class GetStorageBucketUseCase(
     private val properties: DeployInfoProperties,

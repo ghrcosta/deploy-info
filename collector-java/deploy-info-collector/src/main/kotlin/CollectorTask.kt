@@ -127,9 +127,7 @@ abstract class CollectorTask : DefaultTask() {
 
             collectGitStatusData()
             collectExtraFiles()
-            // One gcloud access token for both portal calls (bucket lookup + trigger); null when
-            // none can be obtained — the portal then answers with its own actionable error if it
-            // requires authentication.
+            // One token for both portal calls (see GcloudAccessTokenProvider).
             val accessToken = accessTokenProvider.fetch()
             val bucketName = lookupBucket(accessToken)
             uploadFiles(bucketName)

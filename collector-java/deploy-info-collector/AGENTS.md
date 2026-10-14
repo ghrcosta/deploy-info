@@ -36,8 +36,27 @@ It is implemented using Kotlin.
 
 ### Documentation rules
 
-- If a change adds a new feature or affects how an existing feature works, modify all documentation to include or
-  update the feature description.
-  - `README.md`: Has a summary of existing features, but focus on project setup and usage.
-  - `documentation/` directory: contains the full documentation for all features, spread in multiple files. Each file
-    focuses on a single feature.
+- Documentation is layered:
+  - `README.md`: a short entry point for the project/module — what it is, how to set it up and how to
+    use it. It must not duplicate detailed documentation; it links to it instead.
+  - `documentation/`: the detailed documentation, one file per topic.
+- Organize the `documentation/` directory by concern (e.g. feature reference, development how-tos,
+  deployment/infrastructure), one topic per file, and apply the same structure to every module.
+- Single source of truth: when information would otherwise appear in more than one file, keep it in
+  exactly one file and link to it from the others. Do not restate contracts, parameters or procedures.
+- If a change adds a new feature or affects how an existing feature works, update every document that
+  describes it. Documentation must always describe the current, actual behavior — never a past or a
+  planned state.
+- When adding, moving, renaming or deleting documentation files, update every link to and from them
+  (including links from other modules and from code comments), and verify that no relative links are
+  broken. Use relative links, so documentation works from any viewer or hosting platform.
+- While updating a document, also remove content that has become stale: references to deleted or
+  renamed files, superseded designs, and planning artifacts (phases, TODOs, status notes).
+- Keep volatile implementation details (source/class/test file names) out of overview and how-to
+  documents; name concrete identifiers only where they genuinely help the reader of that specific
+  topic, and expect them to be updated whenever the code changes.
+- Keep the style consistent across all documentation:
+  - Each file starts with a level-1 title and a one-paragraph statement of its purpose.
+  - Use tables for structured data (parameters, fields, configuration, error codes) instead of prose.
+  - Use the same terminology for the same concept in every file; never introduce a second name for an
+    existing feature or element.

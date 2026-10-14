@@ -24,7 +24,7 @@ there is nothing extra to configure. The portal verifies that the account is pre
 portal's project (directly or through a group) and rejects the calls with actionable errors otherwise;
 a rejected bucket lookup or trigger fails the build with a message naming the fix. Portals with
 authentication disabled (local development) are unaffected. See the portal's
-[authentication.md](../../portal/deploy-info-portal/documentation/authentication.md).
+[authentication.md](../../portal/deploy-info-portal/documentation/backend/authentication.md).
 
 Parameters:
 

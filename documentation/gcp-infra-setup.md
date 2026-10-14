@@ -2,7 +2,7 @@
 
 What must exist in GCP for a production deploy-info setup. For running everything locally see
 [local-development.md](local-development.md); for deploying the portal itself see
-[deployment.md](../portal/deploy-info-portal/documentation/deployment.md).
+[deployment.md](../portal/deploy-info-portal/documentation/development/deployment.md).
 
 Everything happens in two kinds of projects:
 
@@ -26,7 +26,7 @@ Everything happens in two kinds of projects:
       <td>Cloud Asset API (<code>cloudasset.googleapis.com</code>)</td>
       <td>
         Authentication: the portal checks every caller against the project's IAM (see
-        <a href="../portal/deploy-info-portal/documentation/authentication.md">authentication.md</a>)
+        <a href="../portal/deploy-info-portal/documentation/backend/authentication.md">authentication.md</a>)
       </td>
     </tr>
     <tr>
@@ -70,7 +70,7 @@ On App Engine the portal runs as the project's **App Engine default service acco
       <td>portal project</td>
       <td>
         The authentication membership check (see
-        <a href="../portal/deploy-info-portal/documentation/authentication.md">authentication.md</a>)
+        <a href="../portal/deploy-info-portal/documentation/backend/authentication.md">authentication.md</a>)
       </td>
     </tr>
     <tr>
@@ -78,7 +78,7 @@ On App Engine the portal runs as the project's **App Engine default service acco
       <td>portal project</td>
       <td>
         Read/write the configured projects, the deploy links and the cleanup state (see
-        <a href="../portal/deploy-info-portal/documentation/deploy-cleanup.md">deploy-cleanup.md</a>)
+        <a href="../portal/deploy-info-portal/documentation/backend/deploy-cleanup.md">deploy-cleanup.md</a>)
       </td>
     </tr>
     <tr>
@@ -108,13 +108,13 @@ On App Engine the portal runs as the project's **App Engine default service acco
 - **OAuth client** — a web-application OAuth client whose *Authorized JavaScript origins* include the
   portal's serving URL (and `http://localhost:4200` for local frontend development). Its client ID goes
   into `deploy-info.auth.client-id`; the id is not a secret — only the client's origin restrictions
-  matter. See [authentication.md](../portal/deploy-info-portal/documentation/authentication.md).
+  matter. See [authentication.md](../portal/deploy-info-portal/documentation/backend/authentication.md).
 
 ## 2. Watched projects
 
 For each project registered in the portal's Projects screen, the portal lists its App Engine versions and
 Cloud Run revisions **by impersonating that project's service account** (see
-[gcp-deploy-listing.md](../portal/deploy-info-portal/documentation/gcp-deploy-listing.md)). Each watched
+[gcp-deploy-listing.md](../portal/deploy-info-portal/documentation/backend/gcp-deploy-listing.md)). Each watched
 project therefore needs:
 
 1. **A service account to impersonate** — the project's default App Engine / compute service account

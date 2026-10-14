@@ -51,8 +51,6 @@ class GcpAppEngineApiClient(
         try {
             listing()
         } catch (e: ApiException) {
-            // The server's error text (denied permission, resource, remediation link) lives only in
-            // the cause chain — log it before it is discarded into the compact [GcpListingException].
             val reason = GcpListingException.errorInfoReason(e)
             logger.warn(
                 "GCP App Engine listing failed: project=${project.projectId}, serviceAccount=${project.serviceAccount}, " +

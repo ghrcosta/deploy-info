@@ -12,24 +12,7 @@ import org.slf4j.LoggerFactory
 
 /**
  * Validates a project's service account by exercising the same permission chain the deploy listing
- * uses, in order:
- *
- * 1. **Impersonation** — [CredentialsProvider.credentialsFor] obtains credentials for the target
- *    service account via the IAM Credentials API, which requires
- *    `roles/iam.serviceAccountTokenCreator` on it. Because `credentialsFor()` forces a token
- *    refresh, the IAM token request is genuinely made and a missing permission surfaces as a
- *    user-fixable [CredentialsException] (category `SERVICE_ACCOUNT_MISCONFIGURATION`).
- * 2. **Listing** — lists the App Engine and Cloud Run deploys with the impersonated credentials,
- *    which requires the App Engine Viewer / Cloud Run Viewer roles on the target project. A
- *    permission denial (`403` / `PERMISSION_DENIED`) surfaces as [GcpListingException] with that
- *    status code and maps to `MISSING_LISTING_PERMISSION` — unless the denial carries the
- *    `google.rpc.ErrorInfo` reason `SERVICE_DISABLED`, i.e. the listing API itself is not enabled
- *    in the project, which maps to `APIS_NOT_ENABLED` so a disabled API does not masquerade as
- *    missing IAM roles; a listing failure that cannot resolve the project at all (`NOT_FOUND` /
- *    `INVALID_ARGUMENT`) maps to `PROJECT_NOT_FOUND`, so a wrong project id does not masquerade as
- *    missing permissions.
- *
- * Like the credentials themselves, validation runs lazily per add/edit request — never at startup.
+ * uses -- see: documentation/backend/gcp-deploy-listing.md.
  */
 class GcpServiceAccountValidator(
     private val credentialsProvider: CredentialsProvider,

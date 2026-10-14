@@ -9,13 +9,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
 
-/**
- * Wires the validity/cleanup logic: the sweep use case and the on-request trigger that runs it
- * from tree requests when due. There is deliberately no fixed-interval scheduler — the portal runs
- * on App Engine Standard, where idle instances are terminated, so a scheduled job either never
- * fires or keeps an instance alive forever. The clock is the system clock in UTC (the sweep only
- * compares timestamps against the deploy links' collect timestamps).
- */
 @Configuration
 class CleanupBeans(private val properties: DeployInfoProperties) {
 

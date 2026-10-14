@@ -13,12 +13,6 @@ import infrastructure.gcp.GcpProjectIdResolver
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-/**
- * Wires the authentication chain: token verification against Google's tokeninfo endpoint, the
- * group-aware IAM membership check against the Cloud Asset API, and the use case combining them.
- * Like every GCP interaction in the portal, nothing here touches the network at startup — the
- * tokeninfo client and the Cloud Asset client only act when a request is actually authenticated.
- */
 @Configuration
 class AuthBeans(private val properties: DeployInfoProperties) {
 

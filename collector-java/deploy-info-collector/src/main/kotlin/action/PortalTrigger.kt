@@ -14,20 +14,13 @@ import java.net.URL
  * link the upload to the GCP deploy it was built for.
  *
  * Calls `POST {portalUrl}/collector/handleNewDirectory` (see `documentation/api.md`) with a
- * [TriggerRequest] JSON body, implemented with plain `java.net.HttpURLConnection` so that no HTTP
- * client dependency is added to the published plugin jar, mirroring [BucketLookup]. Gson is used to
- * serialize the request and to parse the response.
- *
- * The request carries a gcloud access token ([accessToken]) as the `Authorization: Bearer`
- * credential, so the portal can verify the caller is a user present in the IAM of its project
- * (Phase 2.7 authentication). The portal owns the matching logic and its 5-minute retry: a
- * `pending` response means the portal may still link the upload (or delete its folder) later, so
- * it is logged but does not fail the build. Any other unexpected outcome does fail the build.
+ * [TriggerRequest] JSON body, using plain `HttpURLConnection` like [BucketLookup] (no HTTP
+ * client dependency in the published jar). Gson serializes the request and parses the response.
  */
 class PortalTrigger(
     /** Base URL for to communicate with the backend. */
     private val portalUrl: String,
-    /** Name of the uploaded output directory, `<user>_<deployType>_<epochMillis>`. */
+    /** Name of the uploaded output directory (convention documented on [TriggerRequest]). */
     private val directoryName: String,
     /** Candidate GCP projects the code may have been deployed to. */
     private val projects: List<String>,
@@ -35,11 +28,7 @@ class PortalTrigger(
     private val deployType: String,
     /** The gcloud account that performed the deploy and the collection. */
     private val userEmail: String,
-    /**
-     * gcloud access token sent as the `Authorization: Bearer` credential, or null when none could
-     * be obtained (a portal that requires authentication then answers with an actionable error).
-     * The token itself is never logged.
-     */
+    /** gcloud access token as the Bearer credential, or null — see [io.github.ghrcosta.action.GcloudAccessTokenProvider]. */
     private val accessToken: String? = null,
     /** Seam for tests: how an [HttpURLConnection] is opened for a given [URL]. */
     private val openConnection: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },

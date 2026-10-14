@@ -1,6 +1,6 @@
 /* All structural login styling (.login-screen, .login-card, .login-brand,
    .login-logo, .login-state, .btn, .spinner) lives in the global stylesheet
-   (src/sass/_structure.scss), mirroring the mock's base.css. Only the mat-icon
+   (src/sass/_structure.scss). Only the mat-icon
    sizes the global stylesheet cannot express (mat-icon renders at 24px, so
    single-class selectors would lose to it) and the Google-button container are
    component-specific. */

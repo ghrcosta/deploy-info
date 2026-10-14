@@ -24,12 +24,6 @@ class GcpListerBeans {
     fun gcpCloudRunLister(gcpCredentialsProvider: GcpCredentialsProvider): GcpCloudRunLister =
         GcpCloudRunApiClient.create(gcpCredentialsProvider)
 
-    /**
-     * Impersonates each configured project's service account through the IAM Credentials API to
-     * obtain the credentials used by the listing APIs. The portal's own credentials are resolved
-     * lazily (Application Default Credentials) so that missing credentials only fail when a listing
-     * call is actually made, not at startup.
-     */
     @Bean
     fun gcpCredentialsProvider(): GcpCredentialsProvider = GcpCredentialsProvider(
         callerCredentials = { GoogleCredentials.getApplicationDefault() },
@@ -50,8 +44,7 @@ class GcpListerBeans {
 
     /**
      * Resolves the portal's own service account email from the same lazily-resolved Application
-     * Default Credentials the impersonation uses — only looked up when an add/edit response reports
-     * a service-account issue.
+     * Default Credentials the impersonation uses.
      */
     @Bean
     fun portalIdentityResolver(): PortalIdentityResolver = GcpPortalIdentityResolver(

@@ -40,7 +40,6 @@ class GcpCredentialsProvider(
         }
         return try {
             credentials.refreshIfExpired()
-            // Never log the tokens themselves — only that a fresh token is ready for the account.
             logger.debug("Impersonated access token for ${project.serviceAccount} is ready (refreshed if expired)")
             credentials
         } catch (e: CredentialsException) {

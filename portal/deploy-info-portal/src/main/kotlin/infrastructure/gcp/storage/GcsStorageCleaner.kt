@@ -4,11 +4,7 @@ import application.StorageCleaner
 import com.google.cloud.storage.Storage
 import com.google.cloud.storage.Storage.BlobListOption
 
-/**
- * Deletes every object under a collector upload's folder prefix in the configured bucket, using the
- * Cloud Storage client from the Spring Cloud GCP Storage starter. The [Storage] client is resolved
- * lazily, so the portal still starts (and the tests still run) without Storage credentials.
- */
+/** Deletes every object under a collector upload's folder prefix in the configured bucket. */
 class GcsStorageCleaner(
     private val storageProvider: () -> Storage,
     private val bucketName: String,

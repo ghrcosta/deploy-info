@@ -10,7 +10,7 @@ export const appConfig: ApplicationConfig = {
     providers: [
         provideZoneChangeDetection({ eventCoalescing: true }),
 
-        // Attaches the Google ID token to API requests (Phase 2.7 authentication).
+        // Attaches the Google ID token to API requests (see auth.interceptor.ts).
         provideHttpClient(withInterceptors([authInterceptor]), withXhr()),
 
         // Resolves the sign-in configuration and restores a stored session before the UI renders.

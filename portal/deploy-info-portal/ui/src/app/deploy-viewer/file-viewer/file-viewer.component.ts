@@ -8,7 +8,7 @@ import { DeployContentNetworkService } from '../deploy-content.network.service';
 import { ContentFile, DeployContent, GitFileStatus } from '../content-model';
 import { fmtTime, timeAgo } from '../time-ago';
 
-/** One rendered code line of a `.code` block, matching the mock's renderer. */
+/** One rendered code line of a `.code` block (see toCodeLines). */
 interface CodeLine {
     /** 1-based line number. */
     n: number;
@@ -25,10 +25,9 @@ interface FileBlock {
 }
 
 /**
- * File viewer of the "Modern Clean" mock: a deploy card with crumb chips, the
- * segmented Git/Extras tabs and the per-file blocks with the mock's per-line
- * code renderer (diff tinting), replacing the previous mat-tabs/
- * mat-expansion-panel/ngx-highlightjs markup (see UI-REFACTOR-PLAN.md, step C).
+ * File viewer: a deploy card with crumb chips, the segmented Git/Extras tabs
+ * and the per-file blocks with the per-line code renderer (diff tinting).
+ * Screen design: documentation/frontend/main-screen.md.
  */
 @Component({
     selector: 'file-viewer',
@@ -85,14 +84,12 @@ export class FileViewerComponent {
         this.activeTab = tab;
     };
 
-    /** Chip class of a git file state (see the mock's `statusChip`). */
     statusChipClass = (status: GitFileStatus) =>
         status === 'new' ? 'st-new'
         : status === 'untracked' ? 'st-untracked'
         : status === 'modified' ? 'st-modified'
         : '';
 
-    /** Chip label of a git file state (see the mock's `statusChip`). */
     statusChipLabel = (status: GitFileStatus) =>
         status === 'new' ? 'New'
         : status === 'untracked' ? 'Untracked'
@@ -133,10 +130,9 @@ export class FileViewerComponent {
 }
 
 /**
- * The mock's per-line code renderer (ui-mocks/shared/app.js, `codeBlock`): every
- * line becomes a `.cl` span with a `.cln` number and a `.clt` text; when `diff`
- * is set, lines starting with +, - or @@ get the `cl-add`/`cl-del`/`cl-hunk`
- * tint classes driven by the add/del/hunk design tokens.
+ * Per-line code renderer: every line becomes a `.cl` span with a `.cln` number
+ * and a `.clt` text; when `diff` is set, lines starting with +, - or @@ get the
+ * `cl-add`/`cl-del`/`cl-hunk` tint classes driven by the add/del/hunk design tokens.
  */
 function toCodeLines(text: string, diff: boolean): CodeLine[] {
     const lines = text.split('\n');

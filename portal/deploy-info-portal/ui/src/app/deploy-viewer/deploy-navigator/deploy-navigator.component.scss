@@ -1,7 +1,6 @@
 /* Structural styles (.nav-search, .nav-group, .nav-project, .nav-service,
    .nav-version with the selected and filtered-out states, .empty-state) live in
-   the global stylesheet (src/sass/_structure.scss), mirroring the mock's
-   base.css. Only the host layout, the vertical centering of the empty state and
+   the global stylesheet (src/sass/_structure.scss). Only the host layout, the vertical centering of the empty state and
    the icon sizes the global stylesheet cannot express (mat-icon renders at
    24px, so single-class selectors would lose to it) are component-specific. */
 
