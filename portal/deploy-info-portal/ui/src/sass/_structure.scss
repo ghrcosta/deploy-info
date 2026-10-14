@@ -449,6 +449,22 @@ img, svg { display: block; }
     line-height: 1.6;
     tab-size: 4;
 }
+/* .code is the horizontal scroll container, but the diff tint is a background
+   on the .cl rows, whose width would otherwise resolve to the initially
+   visible width only (the tint then stops when you scroll sideways). Making
+   the inner code box as wide as its longest line lets every .cl row — and its
+   background — span the full scrollable width. */
+.code code {
+    display: block;
+    min-width: max-content;
+}
+/* The git log block is the only one that can carry very long (collector-capped) output: past
+   30 lines it scrolls vertically instead of growing. 30 lines at the .code line-height (1.6)
+   plus its 12px paddings (border-box: max-height includes the padding). */
+.code-scroll {
+    max-height: calc(48em + 24px);
+    overflow-y: auto;
+}
 .cl { display: flex; }
 .cln {
     flex: 0 0 46px;
