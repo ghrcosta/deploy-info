@@ -1,10 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { of } from 'rxjs';
 
 import { DeployNavigatorComponent } from './deploy-navigator.component';
-import { DeployTreeNetworkService } from '../deploy-tree.network.service';
 import { DeployViewerService } from '../deploy-viewer.service';
 import { GroupEntry } from '../tree-model';
 import { HomeService } from '../../home/home.service';
@@ -19,7 +17,6 @@ const registerStubIcons = (registry: MatIconRegistry, sanitizer: DomSanitizer) =
 describe('DeployNavigatorComponent', () => {
   let component: DeployNavigatorComponent;
   let fixture: ComponentFixture<DeployNavigatorComponent>;
-  let networkService: jasmine.SpyObj<DeployTreeNetworkService>;
   let deployViewerService: DeployViewerService;
 
   const TEST_TREE: GroupEntry[] = [
@@ -63,12 +60,8 @@ describe('DeployNavigatorComponent', () => {
   beforeEach(async () => {
     document.body.classList.remove('nav-open');
 
-    networkService = jasmine.createSpyObj('DeployTreeNetworkService', ['getTree']);
-    networkService.getTree.and.returnValue(of(TEST_TREE));
-
     await TestBed.configureTestingModule({
       imports: [DeployNavigatorComponent],
-      providers: [{ provide: DeployTreeNetworkService, useValue: networkService }],
     })
     .compileComponents();
 
@@ -76,6 +69,7 @@ describe('DeployNavigatorComponent', () => {
 
     deployViewerService = TestBed.inject(DeployViewerService);
     fixture = TestBed.createComponent(DeployNavigatorComponent);
+    fixture.componentRef.setInput('tree', TEST_TREE);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -101,23 +95,22 @@ describe('DeployNavigatorComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should fetch the tree and convert it to nodes', () => {
-    expect(networkService.getTree).toHaveBeenCalled();
-    expect(component.groupList.length).toEqual(2);
-    expect(component.groupList[0].name).toEqual('PROD');
-    expect(component.groupList[0].projects[0].services[0].versions.length).toEqual(2);
-    expect(component.groupList[1].name).toEqual('');
+  it('should convert the tree to nodes', () => {
+    expect(component.groupList().length).toEqual(2);
+    expect(component.groupList()[0].name).toEqual('PROD');
+    expect(component.groupList()[0].projects[0].services[0].versions.length).toEqual(2);
+    expect(component.groupList()[1].name).toEqual('');
   });
 
   it('should carry the file-viewer selection (project, service, version) on the version nodes', () => {
-    const service = component.groupList[0].projects[0].services[0];
+    const service = component.groupList()[0].projects[0].services[0];
     expect(service.versions[0].selection).toEqual({
       project: 'Project C',
       service: 'web',
       version: TEST_TREE[0].projects[0].services[0].versions[0],
     });
     expect(service.versions[1].selection!.version).toEqual(TEST_TREE[0].projects[0].services[0].versions[1]);
-    expect(component.groupList[1].projects[0].services[0].versions[0].selection).toEqual({
+    expect(component.groupList()[1].projects[0].services[0].versions[0].selection).toEqual({
       project: 'Project D',
       service: 'worker',
       version: TEST_TREE[1].projects[0].services[0].versions[0],
@@ -150,7 +143,7 @@ describe('DeployNavigatorComponent', () => {
     first.click();
     fixture.detectChanges();
 
-    expect(selections).toEqual([component.groupList[0].projects[0].services[0].versions[0].selection]);
+    expect(selections).toEqual([component.groupList()[0].projects[0].services[0].versions[0].selection]);
     expect(first.classList.contains('selected')).toBeTrue();
     expect(first.getAttribute('aria-current')).toEqual('true');
 
@@ -206,8 +199,8 @@ describe('DeployNavigatorComponent', () => {
   });
 
   it('should show the empty state with a "Manage projects" button when there is no data', () => {
-    networkService.getTree.and.returnValue(of([]));
     const emptyFixture = TestBed.createComponent(DeployNavigatorComponent);
+    emptyFixture.componentRef.setInput('tree', []);
     emptyFixture.detectChanges();
     const el = emptyFixture.nativeElement as HTMLElement;
 

@@ -1,4 +1,4 @@
-@if (groupList.length > 0) {
+@if (groupList().length > 0) {
     <div class="nav-search">
         <mat-icon class="icon" svgIcon="search" aria-hidden="true"></mat-icon>
         <input #navSearchInput type="search" placeholder="Filter projects, services, versions…"
@@ -6,7 +6,7 @@
     </div>
 }
 <nav class="nav-tree" aria-label="Deploy navigator">
-    @if (groupList.length === 0) {
+    @if (groupList().length === 0) {
         <div class="empty-state nav-empty">
             <mat-icon class="icon empty-icon" svgIcon="deployed_code_alert" aria-hidden="true"></mat-icon>
             <h3>No deploys found</h3>
@@ -14,7 +14,7 @@
             <button type="button" class="btn outlined" (click)="openProjectsView()">Manage projects</button>
         </div>
     } @else {
-        @for (group of groupList; track group.name) {
+        @for (group of groupList(); track group.name) {
             <section class="nav-group">
                 <h3 class="nav-group-label">
                     @if (group.name) { {{ group.name }} } @else { <span class="nav-group-none">No group</span> }

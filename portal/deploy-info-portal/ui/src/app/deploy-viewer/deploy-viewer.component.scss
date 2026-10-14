@@ -1,6 +1,13 @@
 /* All shell styles (the .shell grid, the .navigator column, the .viewer column,
    including the mobile drawer) are structural and live in the global stylesheet
-   (src/sass/_structure.scss). */
+   (src/sass/_structure.scss). Only the host display and the loading spinner
+   wrapper are component-specific. */
 :host {
     display: block;
+}
+
+.shell-loading {
+    display: flex;
+    justify-content: center;
+    padding-top: 48px;
 }

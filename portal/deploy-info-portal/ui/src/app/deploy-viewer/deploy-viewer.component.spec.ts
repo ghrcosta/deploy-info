@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 
 import { DeployViewerComponent } from './deploy-viewer.component';
 import { DeployViewerService } from './deploy-viewer.service';
@@ -55,9 +55,10 @@ describe('DeployViewerComponent', () => {
   let component: DeployViewerComponent;
   let fixture: ComponentFixture<DeployViewerComponent>;
   let contentNetwork: jasmine.SpyObj<DeployContentNetworkService>;
+  let treeNetwork: jasmine.SpyObj<DeployTreeNetworkService>;
 
   beforeEach(async () => {
-    const treeNetwork = jasmine.createSpyObj<DeployTreeNetworkService>('DeployTreeNetworkService', ['getTree']);
+    treeNetwork = jasmine.createSpyObj<DeployTreeNetworkService>('DeployTreeNetworkService', ['getTree']);
     treeNetwork.getTree.and.returnValue(of(TREE));
     contentNetwork = jasmine.createSpyObj<DeployContentNetworkService>('DeployContentNetworkService', ['getContent']);
     contentNetwork.getContent.and.returnValue(of(CONTENT));
@@ -131,6 +132,49 @@ describe('DeployViewerComponent', () => {
     expect(el.querySelectorAll('details.file-block').length).toBe(3);
     expect(el.textContent).toContain('src/app/app.component.ts');
     expect(el.textContent).not.toContain('No deploy selected');
+  });
+
+  describe('while the tree request is in flight', () => {
+    let treeSubject: Subject<GroupEntry[]>;
+
+    beforeEach(() => {
+      treeSubject = new Subject<GroupEntry[]>();
+      treeNetwork.getTree.and.returnValue(treeSubject);
+    });
+
+    const pendingFixture = () => {
+      const pending = TestBed.createComponent(DeployViewerComponent);
+      pending.detectChanges();
+      return pending;
+    };
+
+    it('hides the shell contents and shows the loading indicator until the tree request completes', () => {
+      const pending = pendingFixture();
+      const el = pending.nativeElement as HTMLElement;
+      expect(el.querySelector('.shell-loading mat-spinner')).toBeTruthy();
+      expect(el.querySelector('.shell')).toBeNull();
+      expect(el.textContent).not.toContain('No deploys found');
+      expect(el.textContent).not.toContain('No deploy selected');
+      expect(contentNetwork.getContent).not.toHaveBeenCalled();
+
+      treeSubject.next(TREE);
+      pending.detectChanges();
+
+      expect(el.querySelector('.shell-loading')).toBeNull();
+      expect(el.querySelector('.shell')).toBeTruthy();
+      expect(el.textContent).toContain('No deploy selected');
+    });
+
+    it('shows the navigator empty state when the tree request fails', () => {
+      const pending = pendingFixture();
+      treeSubject.error(new Error('boom'));
+      pending.detectChanges();
+
+      const el = pending.nativeElement as HTMLElement;
+      expect(el.querySelector('.shell-loading')).toBeNull();
+      expect(el.querySelector('.shell')).toBeTruthy();
+      expect(el.textContent).toContain('No deploys found');
+    });
   });
 });
 

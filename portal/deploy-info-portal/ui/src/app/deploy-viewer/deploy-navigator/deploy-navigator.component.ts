@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { HomeService } from '../../home/home.service';
-import { DeployTreeNetworkService } from '../deploy-tree.network.service';
 import { DeployViewerService, DeploySelection } from '../deploy-viewer.service';
 import { GroupEntry } from '../tree-model';
 import { timeAgo } from '../time-ago';
@@ -31,7 +30,8 @@ interface VersionNode {
 
 /**
  * Navigator: a filter box above a group → project → service → version tree of
- * native `<details>` elements. Screen design: documentation/frontend/main-screen.md.
+ * native `<details>` elements. The tree is fetched by the parent deploy viewer
+ * and passed in. Screen design: documentation/frontend/main-screen.md.
  */
 @Component({
     selector: 'deploy-navigator',
@@ -41,26 +41,22 @@ interface VersionNode {
     styleUrl: './deploy-navigator.component.scss',
 })
 export class DeployNavigatorComponent {
-    private treeNetworkService = inject(DeployTreeNetworkService);
+    /** Navigator tree of `GET /portal/tree` (see `tree-model.ts`), fetched by the deploy viewer. */
+    tree = input.required<GroupEntry[]>();
+
     private deployViewerService = inject(DeployViewerService);
     private homeService = inject(HomeService);
     private document = inject(DOCUMENT);
 
     constructor(private elementRef: ElementRef) {}
 
-    groupList: GroupNode[] = [];
+    groupList = computed(() => this.convertDataToNodes(this.tree()));
 
     /** Id of the currently selected version node; drives the `.selected` state. */
     selectedVersionId: string | null = null;
 
     /** Relative timestamp formatter shared with the file viewer. */
     timeAgo = timeAgo;
-
-    ngOnInit() {
-        this.treeNetworkService.getTree().subscribe(entries => {
-            this.groupList = this.convertDataToNodes(entries);
-        });
-    }
 
     onSearchInput = (event: Event) => this.filterTree((event.target as HTMLInputElement).value);
 
