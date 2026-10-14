@@ -75,7 +75,8 @@ class GitCollectorTests {
 
         GitCollector().execute()
 
-        assertEquals(4, paths.size)
+        // 'git diff' is only executed for MODIFIED files; untracked/new files get their contents copied
+        assertEquals(2, paths.size)
         assertGitFilesAreCorrect()
 
         val gitUuidMap = Context.get().gitUuidMap
@@ -125,7 +126,8 @@ class GitCollectorTests {
 
         GitCollector().execute()
 
-        assertEquals(3, paths.size)
+        // 'git diff' is only executed for MODIFIED files; untracked/new files get their contents copied
+        assertEquals(2, paths.size)
         assertGitFilesAreCorrect()
 
         val gitUuidMap = Context.get().gitUuidMap
@@ -170,11 +172,7 @@ class GitCollectorTests {
         val paths = mutableListOf<String>()
 
         everyExecuteCommandAnswers(
-            gitStatusPorcelainResponse = {
-                """
-                ?? ${file.name}
-                """.trimIndent()
-            },
+            gitStatusPorcelainResponse = { " M ${file.name}" },
             gitDiffResponse = { path: String ->
                 paths.add(path)
                 someFileRelatedContent
@@ -200,11 +198,7 @@ class GitCollectorTests {
         val paths = mutableListOf<String>()
 
         everyExecuteCommandAnswers(
-            gitStatusPorcelainResponse = {
-                """
-                ?? ${projectRootDir.name}/${file.name}
-                """.trimIndent()
-            },
+            gitStatusPorcelainResponse = { " M ${projectRootDir.name}/${file.name}" },
             gitDiffResponse = { path: String ->
                 paths.add(path)
                 someFileRelatedContent

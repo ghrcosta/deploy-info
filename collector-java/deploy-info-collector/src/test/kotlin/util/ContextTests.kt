@@ -53,4 +53,24 @@ class ContextTests {
         assertEquals(userEmail, Context.get().userEmail)
         assert(!File(Context.get().outputDir, "collector.properties").exists())
     }
+
+    @Test
+    fun `Context converts the configured max file size from KB to bytes`() {
+        every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
+                CommandResult(stdout = "user@email.com", stderr = "")
+
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE, maxFileSizeInKb = 1)
+
+        assertEquals(1024, Context.get().maxFileSize)
+    }
+
+    @Test
+    fun `Context defaults the max file size to 50KB`() {
+        every { executeCommandOrThrowException("gcloud config get-value account", any()) } returns
+                CommandResult(stdout = "user@email.com", stderr = "")
+
+        Context.init(projectRootDir, buildDir, CollectorTask.DeployType.GAE)
+
+        assertEquals(50 * 1024, Context.get().maxFileSize)
+    }
 }

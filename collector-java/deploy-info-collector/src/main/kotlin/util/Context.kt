@@ -26,7 +26,7 @@ class Context(
 
         fun get(): Context = instance
 
-        fun init(rootDir: File, buildDir: File, deployType: CollectorTask.DeployType, maxFileSize: Int? = null) {
+        fun init(rootDir: File, buildDir: File, deployType: CollectorTask.DeployType, maxFileSizeInKb: Int? = null) {
             val baseDir = createBaseDirectory(buildDir)
 
             val gcloudEmail = executeCommandOrThrowException("gcloud config get-value account", baseDir).stdout
@@ -38,7 +38,7 @@ class Context(
                 baseDir = baseDir,
                 outputDir = outputDir,
                 projectRootDir = rootDir,
-                maxFileSize = maxFileSize ?: (50 * 1024), // 50KB
+                maxFileSize = (maxFileSizeInKb ?: 50) * 1024, // value in KB, converted to bytes
                 userEmail = gcloudEmail
             )
         }

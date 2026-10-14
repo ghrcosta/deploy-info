@@ -34,7 +34,7 @@ abstract class CollectorTask : DefaultTask() {
 
     @get:Input
     @get:Option(
-        description = "Maximum size of files that can be included. Default is 50KB."
+        description = "Maximum size of files that can be included, in KB. Default is 50."
     )
     @get:Optional
     abstract val maxFileSize: Property<Int>
@@ -85,35 +85,47 @@ abstract class CollectorTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        validateParameters()
+        val (trimmedPortalUrl, trimmedProjects, trimmedExtraFiles) = trimmedInputs()
+
+        validateParameters(trimmedPortalUrl, trimmedProjects)
         Logger.init(logger)
         TaskImpl(
             rootDir = projectRootDir.get(),
             buildDir = buildDirectory.get().asFile,
-            maxFileSize = maxFileSize.orNull,
+            maxFileSizeInKb = maxFileSize.orNull,
             collectGitStatus = collectGitStatus.getOrElse(true),
-            extraFilesToCollect = extraFilesToCollect.orNull,
-            portalUrl = portalUrl.get(),
+            extraFilesToCollect = trimmedExtraFiles,
+            portalUrl = trimmedPortalUrl,
             deployType = deployType.get(),
-            projects = projects.get(),
+            projects = trimmedProjects,
         ).run()
     }
 
-    private fun validateParameters() {
-        if (portalUrl.get().isBlank())
+    /** Removes the surrounding blank space of every string input, so it is ignored by validation and the run. */
+    internal fun trimmedInputs(): Triple<String, List<String>, List<String>?> = Triple(
+        portalUrl.get().trim(),
+        projects.get().map { it.trim() },
+        extraFilesToCollect.orNull?.map { it.trim() },
+    )
+
+    internal fun validateParameters(portalUrl: String, projectList: List<String>) {
+        if (portalUrl.isBlank())
             throw GradleException("'portalUrl' must not be empty.")
-        val projectList = projects.get()
         if (projectList.isEmpty())
             throw GradleException("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
         projectList.find { it.isBlank() }?.let {
             throw GradleException("'projects' must not contain empty values.")
+        }
+        maxFileSize.orNull?.let { maxSizeInKb ->
+            if (maxSizeInKb < 1)
+                throw GradleException("'maxFileSize' must be at least 1 (in KB), got: '${maxSizeInKb}'.")
         }
     }
 
     class TaskImpl(
         private val rootDir: File,
         private val buildDir: File,
-        private val maxFileSize: Int?,
+        private val maxFileSizeInKb: Int?,
         private val collectGitStatus: Boolean,
         private val extraFilesToCollect: List<String>?,
         private val portalUrl: String,
@@ -123,7 +135,7 @@ abstract class CollectorTask : DefaultTask() {
         private val accessTokenProvider = GcloudAccessTokenProvider()
 
         fun run() {
-            Context.init(rootDir, buildDir, deployType, maxFileSize)
+            Context.init(rootDir, buildDir, deployType, maxFileSizeInKb)
 
             collectGitStatusData()
             collectExtraFiles()
