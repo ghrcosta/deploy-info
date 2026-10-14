@@ -2,7 +2,7 @@
 # generated from this template by the `generateGaeConfig` Gradle task, which replaces the service
 # placeholder below with the service name from the `gaeService` Gradle property (default "default")
 # — see documentation/deployment.md. The jar name is pinned to portal.jar by the Gradle build, and
-# the App Engine version name (<portal_version>-<timestamp>) is set at deploy time, so neither
+# the App Engine version name (<portal_version>-<timestamp>) is set at deployment time, so neither
 # changes here.
 runtime: java21
 instance_class: F2

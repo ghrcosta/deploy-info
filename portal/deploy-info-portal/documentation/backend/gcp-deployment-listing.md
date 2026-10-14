@@ -1,14 +1,14 @@
-# GCP deploy listing
+# GCP deployment listing
 
 How the portal backend lists the existing deploys of a configured GCP project: given a configured
 project, the portal discovers every App Engine version and Cloud Run revision that exists in it, newest
-first. It is the data source for the linking logic that associates a collector upload with the deploy it
+first. It is the data source for the linking logic that associates a collector upload with the deployment it
 was built for.
 
 ## How it works
 
 - Two listers (one for App Engine, one for Cloud Run) list every service and version/revision of the
-  project, newest first, mapping each into a deploy object with project, service, version/revision id,
+  project, newest first, mapping each into a deployment object with project, service, version/revision id,
   creation time and the public URL. A listing attempt that returns an error or other invalid response
   throws a listing exception.
 - **Impersonation**: the portal's own credentials (Application Default Credentials) impersonate the

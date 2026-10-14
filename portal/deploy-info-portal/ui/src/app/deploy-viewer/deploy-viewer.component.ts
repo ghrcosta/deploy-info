@@ -28,7 +28,7 @@ export class DeployViewerComponent implements OnInit {
     /**
      * The navigator tree, `null` while `GET /portal/tree` is in flight — the
      * shell contents are only rendered once it is set. A failed request resolves
-     * to an empty tree so the navigator's "No deploys found" state shows.
+     * to an empty tree so the navigator's "No deployments found" state shows.
      */
     tree: GroupEntry[] | null = null;
 

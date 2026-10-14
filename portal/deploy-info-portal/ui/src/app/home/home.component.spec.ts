@@ -87,7 +87,7 @@ describe('HomeComponent', () => {
     expect(element().querySelector('top-bar')).toBeNull();
   });
 
-  it('shows the top bar and the deploy viewer once signed in', () => {
+  it('shows the top bar and the deployment viewer once signed in', () => {
     render();
 
     expect(element().querySelector('top-bar')).toBeTruthy();

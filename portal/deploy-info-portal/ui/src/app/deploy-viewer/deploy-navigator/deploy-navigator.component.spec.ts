@@ -205,7 +205,7 @@ describe('DeployNavigatorComponent', () => {
     const el = emptyFixture.nativeElement as HTMLElement;
 
     expect(el.querySelector('.empty-state.nav-empty')).toBeTruthy();
-    expect(el.textContent).toContain('No deploys found');
+    expect(el.textContent).toContain('No deployments found');
     expect(el.querySelector('.nav-search')).toBeNull();
 
     const views: unknown[] = [];

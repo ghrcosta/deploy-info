@@ -99,7 +99,7 @@ class DeployLinkDatastoreRepositoryTests {
     }
 
     @Test
-    fun `Get all deployment links of a project and deploy type from the datastore`() {
+    fun `Get all deployment links of a project and deployment type from the datastore`() {
         whenever(datastoreTemplate.findAll(DeployLinkEntity::class.java)).thenReturn(
             listOf(DeployLinkEntity(gaeLink), DeployLinkEntity(runLink)),
         )
