@@ -36,7 +36,8 @@ Writes into the output directory:
 - Per changed file: the porcelain status lists the changed paths (relative to the **git repository
   root**, which may differ from the Gradle project root, e.g. when the repo root is a parent of the
   module). Each file is stored under a fresh UUID file name (avoids path/encoding issues in Storage),
-  and its real path plus state is recorded in the `uuid-git.csv` map:
+  and its repo-root-relative path (as reported by porcelain, with a leading `/`) plus state is
+  recorded in the `uuid-git.csv` map:
   - porcelain code `??` → **untracked**; a staged addition → **new**; any other code → **modified**;
   - modified files store their `git diff`; new/untracked files (which have no diff) store the full file
     content;
@@ -60,8 +61,9 @@ status, malformed response body, network failure or timeout) fails the task befo
 
 ## Upload
 
-1. If git files were collected, `uuid-git.csv` is written (`uuid,filepath,status`, RFC 4180 escaping so
-   quoted filepaths survive commas/quotes).
+1. If git files were collected, `uuid-git.csv` is written (`uuid,filepath,status`, where `filepath` is
+   relative to the git repository root with a leading `/`; RFC 4180 escaping so quoted file paths
+   survive commas/quotes).
 2. If extra files were collected, `uuid-extra.properties` is written (`<uuid>=<path>`, Java Properties
    format).
 3. A `gcloud storage` command creates a new top-level folder in the bucket named after the output

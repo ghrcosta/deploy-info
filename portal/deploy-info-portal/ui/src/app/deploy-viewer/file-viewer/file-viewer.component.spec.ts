@@ -174,6 +174,23 @@ describe('FileViewerComponent', () => {
     expect(extrasPanel.querySelector('.status-chip.st-extra')!.textContent).toContain('Extra');
   });
 
+  it('should render the file paths exactly as received, keeping the leading slash', () => {
+    select(VERSION);
+    fixture.detectChanges();
+
+    // The <bdi> wrapper isolates the path text (the RTL ellipsis trick on .file-path would
+    // otherwise visually move the leading "/" to the end of the displayed path).
+    const changePath = element().querySelector('[aria-label="Git"] .file-path bdi')!;
+    expect(changePath.textContent).toEqual('/src/main.kt');
+
+    // The Extras panel only renders when its tab is active.
+    (element().querySelectorAll('.tab-btn')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const extraPath = element().querySelector('[aria-label="Extras"] .file-path bdi')!;
+    expect(extraPath.textContent).toEqual('/docs/readme.md');
+  });
+
+
   it('should render collapsible file blocks, closed by default and without copy buttons', () => {
     select(VERSION);
     fixture.detectChanges();

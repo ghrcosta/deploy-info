@@ -107,6 +107,11 @@ class GitCollectorTests(CollectorTestCase):
             },
             {Path(collected.filepath).name: collected.status for collected in git_uuid_map.values()},
         )
+        # The recorded file paths are repo-root-relative with a leading "/" (not absolute).
+        self.assertEqual(
+            {f"/{self.project_root_dir.name}/{name}" for name in ("file01", "file02", "file03", "file04")},
+            {collected.filepath for collected in git_uuid_map.values()},
+        )
         # The diff output (not the file content) was saved for the modified files.
         self.assertEqual(
             [SOME_FILE_RELATED_CONTENT, SOME_FILE_RELATED_CONTENT],
@@ -185,6 +190,11 @@ class GitCollectorTests(CollectorTestCase):
         git_uuid_map = dic.Context.get().git_uuid_map
         self.assertEqual(1, len(git_uuid_map))
         self.assert_files_from_uuid_map_exist(git_uuid_map)
+        # Repo root == project root: the porcelain path is just the file name.
+        self.assertEqual(
+            {"/file01"},
+            {collected.filepath for collected in git_uuid_map.values()},
+        )
 
     def test_generates_main_files_and_supports_file_names_with_spaces(self):
         file = self.project_root_dir / "file with space"

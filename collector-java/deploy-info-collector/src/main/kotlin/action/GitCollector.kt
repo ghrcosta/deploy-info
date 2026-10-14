@@ -24,13 +24,13 @@ class GitCollector {
             val changedFiles = extractChangedFiles(gitStatusPorcelain, repoRoot)
             changedFiles.forEach { changedFile ->
                 val gitDiffOutput = if (changedFile.status == GitFileStatus.MODIFIED) {
-                    executeCommand("git --no-pager diff \"${changedFile.filePath}\"")
+                    executeCommand("git --no-pager diff \"${changedFile.fullFilePath}\"")
                 } else ""
                 if (gitDiffOutput.isBlank()) {
-                    val fileContent = File(changedFile.filePath).getContents()
-                    saveContentToUuidFile(changedFile.filePath, changedFile.status, fileContent)
+                    val fileContent = File(changedFile.fullFilePath).getContents()
+                    saveContentToUuidFile(changedFile.repoRelativePath, changedFile.status, fileContent)
                 } else {
-                    saveContentToUuidFile(changedFile.filePath, changedFile.status, gitDiffOutput)
+                    saveContentToUuidFile(changedFile.repoRelativePath, changedFile.status, gitDiffOutput)
                 }
             }
         } catch (e: IOException) {
@@ -41,7 +41,13 @@ class GitCollector {
     }
 
     /** One entry of `git status --porcelain`: the file path plus its git state. */
-    private data class ChangedFile(val filePath: String, val status: GitFileStatus)
+    private data class ChangedFile(
+        /** Absolute path of the file, used for the file operations (diff, read, existence check). */
+        val fullFilePath: String,
+        /** Path of the file relative to the git repository root, as reported by porcelain (with "/" separators). */
+        val repoRelativePath: String,
+        val status: GitFileStatus,
+    )
 
     /** Parses `git status --porcelain` output (state classification: [GitFileStatus.fromPorcelainCode]). */
     private fun extractChangedFiles(gitStatusOutput: String, repoRoot: File): List<ChangedFile> {
@@ -54,7 +60,7 @@ class GitCollector {
             if (filePath.isNotEmpty()) {
                 val fullFilePath = parsePathFromRepoRoot(filePath, repoRoot)
                 if (File(fullFilePath).isFile) {
-                    changedFiles.add(ChangedFile(fullFilePath, status = GitFileStatus.fromPorcelainCode(match.groupValues[1])))
+                    changedFiles.add(ChangedFile(fullFilePath, repoRelativePath = filePath, status = GitFileStatus.fromPorcelainCode(match.groupValues[1])))
                 }
             }
         }
@@ -74,11 +80,16 @@ class GitCollector {
     private fun parsePathFromRepoRoot(filePath: String, repoRoot: File): String =
         File(repoRoot, filePath).absolutePath
 
-    private fun saveContentToUuidFile(filePath: String, status: GitFileStatus, content: String) {
+    /**
+     * Records the file content under a fresh UUID-named file in the output directory, mapping the UUID to the
+     * file's path relative to the git repository root (with a leading "/", as `git status --porcelain` reports
+     * it) and its git state. This relative path is what ends up in `uuid-git.csv` (and is displayed in the portal).
+     */
+    private fun saveContentToUuidFile(repoRelativePath: String, status: GitFileStatus, content: String) {
         val uuid = UUID.randomUUID().toString()
         val gitFile = createEmptyFile(uuid)
         gitFile.writeText(content)
-        val parsedPath = "/${filePath}".replace("\\", "/").replace("//", "/")
+        val parsedPath = "/${repoRelativePath}".replace("\\", "/").replace("//", "/")
         Context.get().gitUuidMap[uuid] = GitCollectedFile(filepath = parsedPath, status = status)
     }
 }

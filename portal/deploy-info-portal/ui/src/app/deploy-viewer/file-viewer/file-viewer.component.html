@@ -93,7 +93,9 @@
                                 <summary class="file-head">
                                     <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
                                     <span class="chip status-chip" [class]="statusChipClass(block.status)">{{ statusChipLabel(block.status) }}</span>
-                                    <span class="file-path mono">{{ block.filepath }}</span>
+                                    <!-- bdi isolates the path so the RTL ellipsis trick (direction: rtl on .file-path)
+                                         doesn't move the leading "/" to the end of the displayed path. -->
+                                    <span class="file-path mono"><bdi>{{ block.filepath }}</bdi></span>
                                 </summary>
                                 <pre class="code"><code>@for (line of block.lines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
                             </details>
@@ -113,7 +115,9 @@
                                 <summary class="file-head">
                                     <span class="file-chevron"><mat-icon class="icon" svgIcon="chevron_right" aria-hidden="true"></mat-icon></span>
                                     <span class="chip status-chip st-extra">Extra</span>
-                                    <span class="file-path mono">{{ block.filepath }}</span>
+                                    <!-- bdi isolates the path so the RTL ellipsis trick (direction: rtl on .file-path)
+                                         doesn't move the leading "/" to the end of the displayed path. -->
+                                    <span class="file-path mono"><bdi>{{ block.filepath }}</bdi></span>
                                 </summary>
                                 <pre class="code"><code>@for (line of block.lines; track line.n) {<span class="cl {{ line.cls }}"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
                             </details>

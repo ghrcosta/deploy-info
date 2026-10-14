@@ -91,6 +91,11 @@ class GitCollectorTests {
             ),
             gitUuidMap.values.associate { File(it.filepath).name to it.status },
         )
+        // The recorded filepaths are repo-root-relative with a leading "/" (not absolute).
+        assertEquals(
+            setOf("/${projectRootDir.name}/file01", "/${projectRootDir.name}/file02", "/${projectRootDir.name}/file03", "/${projectRootDir.name}/file04"),
+            gitUuidMap.values.map { it.filepath }.toSet(),
+        )
     }
 
     @Test
@@ -189,6 +194,8 @@ class GitCollectorTests {
         val gitUuidMap = Context.get().gitUuidMap
         assertEquals(1, gitUuidMap.entries.size)
         assertFilesFromUuidMapExist(gitUuidMap)
+        // Repo root == project root: the porcelain path is just the file name.
+        assertEquals(setOf("/file01"), gitUuidMap.values.map { it.filepath }.toSet())
     }
 
     @Test

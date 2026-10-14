@@ -371,14 +371,14 @@ def collect_git_status() -> None:
         # "git status --porcelain" is better for automations, use it to list (and process) files
         git_status_porcelain = run_command("git status --porcelain --untracked-files=normal --no-renames")
         repo_root = get_git_repo_root()
-        for file_path, status in extract_changed_files(git_status_porcelain, repo_root):
+        for repo_relative_path, full_file_path, status in extract_changed_files(git_status_porcelain, repo_root):
             git_diff_output = ""
             if status == GitFileStatus.MODIFIED:
-                git_diff_output = run_command(f'git --no-pager diff "{file_path}"')
+                git_diff_output = run_command(f'git --no-pager diff "{full_file_path}"')
             if not git_diff_output.strip():
-                save_content_to_uuid_file(file_path, status, get_contents(Path(file_path)))
+                save_content_to_uuid_file(repo_relative_path, status, get_contents(Path(full_file_path)))
             else:
-                save_content_to_uuid_file(file_path, status, git_diff_output)
+                save_content_to_uuid_file(repo_relative_path, status, git_diff_output)
     except OSError as error:
         Logger.e(f"Error: {error}")
         create_empty_file("error.txt").write_text(f"Error: {error}", encoding="utf-8")
@@ -388,11 +388,13 @@ def collect_git_status() -> None:
 _PORCELAIN_LINE_PATTERN = re.compile(r"^([A-Z?!\s]{2})\s+(.*)$", re.MULTILINE)
 
 
-def extract_changed_files(git_status_output: str, repo_root: str) -> list[tuple[str, GitFileStatus]]:
-    """Parse `git status --porcelain` output into (absolute path, git state) pairs.
+def extract_changed_files(git_status_output: str, repo_root: str) -> list[tuple[str, str, GitFileStatus]]:
+    """Parse `git status --porcelain` output into (repo-relative path, absolute path, git state) triples.
 
-    The XY-code classification lives in ``GitFileStatus.from_porcelain_code``. Entries that do
-    not resolve to an existing regular file are skipped.
+    The repo-relative path (with "/" separators, as porcelain reports it) is the one recorded in
+    ``uuid-git.csv`` and shown in the portal; the absolute path is only used for the file
+    operations. The XY-code classification lives in ``GitFileStatus.from_porcelain_code``.
+    Entries that do not resolve to an existing regular file are skipped.
     """
     changed_files: list[tuple[str, GitFileStatus]] = []
     for match in _PORCELAIN_LINE_PATTERN.finditer(git_status_output):
@@ -402,7 +404,7 @@ def extract_changed_files(git_status_output: str, repo_root: str) -> list[tuple[
             continue
         full_file_path = parse_path_from_repo_root(file_path, repo_root)
         if Path(full_file_path).is_file():
-            changed_files.append((full_file_path, GitFileStatus.from_porcelain_code(match.group(1))))
+            changed_files.append((file_path, full_file_path, GitFileStatus.from_porcelain_code(match.group(1))))
     return changed_files
 
 
@@ -422,11 +424,15 @@ def parse_path_from_repo_root(file_path: str, repo_root: str) -> str:
     return os.path.abspath(os.path.join(repo_root, file_path))
 
 
-def save_content_to_uuid_file(file_path: str, status: GitFileStatus, content: str) -> None:
-    """Save ``content`` under a fresh UUID filename and record it in ``Context.git_uuid_map``."""
+def save_content_to_uuid_file(repo_relative_path: str, status: GitFileStatus, content: str) -> None:
+    """Save ``content`` under a fresh UUID filename and record it in ``Context.git_uuid_map``.
+
+    The recorded filepath is relative to the git repository root (with a leading "/", as
+    ``git status --porcelain`` reports it) — that is what ends up in ``uuid-git.csv``.
+    """
     uuid_key = str(uuid.uuid4())
     create_empty_file(uuid_key).write_text(content, encoding="utf-8")
-    parsed_path = f"/{file_path}".replace("\\", "/").replace("//", "/")
+    parsed_path = f"/{repo_relative_path}".replace("\\", "/").replace("//", "/")
     Context.get().git_uuid_map[uuid_key] = GitCollectedFile(filepath=parsed_path, status=status)
 
 
