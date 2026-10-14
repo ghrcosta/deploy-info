@@ -2,12 +2,7 @@
 
 Standalone Python script to collect files and make them available to the portal — a drop-in alternative
 to the [Gradle collector plugin](../collector-java/deploy-info-collector/README.md) for projects not
-built with Gradle (or CI pipelines that prefer a plain script).
-
-Single file (`deploy_info_collector.py`), no dependencies beyond the Python 3.10+ standard library, git
-and an authenticated gcloud CLI. After collecting, it uploads the files to Cloud Storage and notifies the
-portal ([trigger contract](../documentation/api.md)), which links the upload to the GCP deploy it was
-built for. The upload bucket is resolved from the portal via `GET /collector/bucket`.
+built with Gradle.
 
 How it works internally: [documentation/python-collector.md](documentation/python-collector.md).
 
@@ -36,23 +31,67 @@ python3 deploy_info_collector.py --deploy-type GAE --portal-url https://deploy-i
 
 Exit code is `0` on success, `1` on any failure, `2` on malformed arguments.
 
-| Argument | Description |
-|---|---|
-| --deploy-type | REQUIRED. Type of deploy: `GAE` (App Engine) or `RUN` (Cloud Run). |
-| --portal-url | REQUIRED. URL of the portal backend. The upload bucket is resolved from the portal, so the portal must be reachable before the upload starts. |
-| --projects | REQUIRED. GCP projects where the code may have been deployed. Comma-separated and/or repeatable; merged and deduplicated; must yield at least one non-empty value. |
-| --project-dir | OPTIONAL. Project root directory; base for resolving git/extra-file paths. Output goes to `<project-dir>/build/collector/…`. Default is the current directory. |
-| --max-file-size | OPTIONAL. Maximum size of files that can be included, **in KB** (the Gradle plugin takes bytes — the only CLI-surface difference). Default is 50. |
-| --collect-git-status / --no-collect-git-status | OPTIONAL. Whether git-related data is collected. Default is enabled. |
-| --extra-files | OPTIONAL. Extra files to include. Paths relative to `--project-dir`; files only, no directories; collected without parent dirs, so same-name files collide. |
-| --verbose | OPTIONAL. Print debug lines (each executed command). |
+<table>
+  <thead>
+    <tr>
+      <th>Argument</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>--deploy-type</code></td>
+      <td>REQUIRED. Type of deploy: <code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run).</td>
+    </tr>
+    <tr>
+      <td><code>--portal-url</code></td>
+      <td>
+        REQUIRED. URL of the portal backend.
+      </td>
+    </tr>
+    <tr>
+      <td><code>--projects</code></td>
+      <td>
+        REQUIRED. List of GCP projects where the code may have been deployed. Comma-separated and/or
+        repeatable; merged and deduplicated; must yield at least one non-empty value.
+      </td>
+    </tr>
+    <tr>
+      <td><code>--project-dir</code></td>
+      <td>
+        OPTIONAL. Project root directory; base for resolving git/extra-file paths. Output goes to
+        <code>&lt;project-dir&gt;/build/collector/…</code>. Default is the current directory.
+      </td>
+    </tr>
+    <tr>
+      <td><code>--max-file-size</code></td>
+      <td>
+        OPTIONAL. Maximum size of files that can be included, in KB. Default is 50.
+      </td>
+    </tr>
+    <tr>
+      <td><code>--collect-git-status</code> / <code>--no-collect-git-status</code></td>
+      <td>OPTIONAL. Whether git-related data is collected. Default is enabled.</td>
+    </tr>
+    <tr>
+      <td><code>--extra-files</code></td>
+      <td>
+        OPTIONAL. Extra files to include. Paths relative to <code>--project-dir</code>. Directories are
+        not supported. Only the file itself is collected, without its parent directories, so if two
+        files have the same name, only one will be included.
+      </td>
+    </tr>
+    <tr>
+      <td><code>--verbose</code></td>
+      <td>OPTIONAL. Print debug lines (each executed command).</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Notes
 
 - The collector writes its output to `<project-dir>/build/collector/` and clears that directory at the
   start of every run, so contents of different deploys never mix.
-- The output directory name (`<gcloud-user>_<DEPLOYTYPE>_<epochMillis>`) is the sole carrier of
-  who/what/when; no metadata file is written.
 - Large files become `<FILE IS TOO LARGE (n bytes)>` placeholders, binaries `<FILE IS BINARY>`, blank
   files `<FILE IS BLANK>` — mirroring the Gradle plugin byte-for-byte.
 - The resulting Cloud Storage folder layout is the same contract the portal serving relies on (see

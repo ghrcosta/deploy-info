@@ -2,185 +2,72 @@
 
 Gradle plugin to collect files and make them available to the portal.
 
-After uploading the collected files to Cloud Storage, the plugin POSTs the trigger contract
-([`documentation/api.md`](../../documentation/api.md)) to the portal backend, which links the upload to the GCP deploy
-it was built for. The upload bucket is not configured on the collector: it is resolved from the portal via
+After uploading the collected files to Cloud Storage, the plugin notifies the portal backend
+([trigger contract](../../documentation/api.md)), which links the upload to the GCP deploy it was built
+for. The upload bucket is not configured on the collector: it is resolved from the portal via
 `GET /collector/bucket`.
 
+How it works internally:
+[documentation/collector-plugin.md](documentation/collector-plugin.md).
 
 ## Usage
 
-**Authentication (since 0.0.2):** the collector authenticates itself against the portal with a
-gcloud access token of the active gcloud account (`gcloud auth print-access-token`) — the same
-account that performs the Cloud Storage upload, so there is nothing extra to configure. The portal
-verifies that the account is present in the IAM of the portal's project (directly or through a
-group) and rejects the calls with actionable errors otherwise: HTTP 401/403 during the bucket
-lookup or trigger fail the build with a message naming the fix (`gcloud auth login`, an IAM grant,
-or — for `email-mismatch` — the gcloud service-account impersonation setup). Portals with
+Apply the plugin (`io.github.ghrcosta.deploy-info-collector`) and configure the `deployInfoCollect` task's
+parameters (table below). A typical setup sets `deployType`, `portalUrl` and `projects`, and hooks
+`deployInfoCollect` with `finalizedBy` on the deploy task (e.g. `appengineDeploy`) so the collection runs
+automatically after every deploy. All parameters are also available as command-line options (e.g.
+`./gradlew deployInfoCollect --deploy-type=GAE`).
+
+The collector authenticates itself against the portal with a gcloud
+access token of the active gcloud account — the same account that performs the Cloud Storage upload, so
+there is nothing extra to configure. The portal verifies that the account is present in the IAM of the
+portal's project (directly or through a group) and rejects the calls with actionable errors otherwise;
+a rejected bucket lookup or trigger fails the build with a message naming the fix. Portals with
 authentication disabled (local development) are unaffected. See the portal's
-`documentation/authentication.md`.
+[authentication.md](../../portal/deploy-info-portal/documentation/authentication.md).
 
-Example for `build.gradle.kts`:
-```kotlin
-// Add the plugin
-plugins {
-    id("io.github.ghrcosta.deploy-info-collector")
-}
+Parameters:
 
-// Configure the task
-tasks.deployInfoCollect {
-    deployType.set(CollectorTask.DeployType.GAE)
-    portalUrl.set("https://deploy-info-portal.example.com")
-    projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
-}
-
-// Automate task execution after deploy
-tasks.appengineDeploy {
-    finalizedBy("deployInfoCollect")
-}
-```
-
-Task parameters:
 <table>
-<tr>
-<td>Parameter name</td>
-<td>Description</td>
-<td>Example</td>
-</tr>
-
-<tr>
-<td>maxFileSize</td>
-<td>OPTIONAL. Maximum size of files that can be included. Default is 50KB.</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    maxFileSize.set(100 * 1024)
-}
-```
-
-</td>
-</tr>
-
-<tr>
-<td>collectGitStatus</td>
-<td>OPTIONAL. If git-related data must be collected. Default is 'true'.</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    collectGitStatus.set(false)
-}
-```
-
-</td>
-</tr>
-
-<tr>
-<td>extraFilesToCollect</td>
-<td>
-OPTIONAL. Extra files to include in the collection. Each item in the list must be a path relative to
-this projects' root directory. Directories are not supported. Note that only the file itself will be
-collected, without its parent directories, so if two files have the same name, only one will be
-included.
-</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    extraFilesToCollect.set(listOf(
-        "src/main/resources/application.properties",
-        "src/main/resources/application-local.properties",
-        "src/main/resources/application-prod.properties",
-    ))
-}
-```
-
-</td>
-</tr>
-
-<tr>
-<td>deployType</td>
-<td>
-
-REQUIRED. Type of deploy. Value must be from enum `CollectorTask.DeployType`.
-Supports AppEngine ('GAE') and CloudRun ('RUN').
-
-</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    deployType.set(CollectorTask.DeployType.GAE)
-}
-```
-
-</td>
-</tr>
-
-<tr>
-<td>portalUrl</td>
-<td>
-REQUIRED. URL of the portal backend. The upload bucket is resolved from the portal via
-<code>GET /collector/bucket</code>, so the portal must be reachable before the upload starts.
-</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    portalUrl.set("https://deploy-info-portal.example.com")
-}
-```
-
-</td>
-</tr>
-
-<tr>
-<td>projects</td>
-<td>REQUIRED. List of GCP projects where the code may have been deployed.
-Must contain at least one non-empty value.</td>
-<td>
-
-```kotlin
-tasks.deployInfoCollect {
-    projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
-}
-```
-
-</td>
-</tr>
+  <tr>
+    <th>Parameter</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>deployType</td>
+    <td>REQUIRED. Type of deploy: <code>GAE</code> (App Engine) or <code>RUN</code> (Cloud Run).</td>
+  </tr>
+  <tr>
+    <td>portalUrl</td>
+    <td>REQUIRED. URL of the portal backend.</td>
+  </tr>
+  <tr>
+    <td>projects</td>
+    <td>REQUIRED. List of GCP projects where the code may have been deployed.</td>
+  </tr>
+  <tr>
+    <td>maxFileSize</td>
+    <td>OPTIONAL. Maximum size of files that can be included, in KB. Default is 50KB.</td>
+  </tr>
+  <tr>
+    <td>collectGitStatus</td>
+    <td>OPTIONAL. Whether git-related data is collected. Default is <code>true</code>.</td>
+  </tr>
+  <tr>
+    <td>extraFilesToCollect</td>
+    <td>
+      OPTIONAL. Extra files to include in the collection. Each item must be a path relative to the project's root
+      directory. Directories are not supported. Only the file itself is collected, without its parent directories, so
+      if two files have the same name, only one will be included.
+    </td>
+  </tr>
 </table>
-
 
 ## Development
 
-1. On this project:
-   1. Execute gradle task `publishToMavenLocal` to generate the plugin and put it into the local maven directory
-2. On the project you want to test the plugin:
-   1. Modify `settings.gradle.kts` to include the `mavenLocal()` repository. Note that if the project has modules,
-      it may have multiple `settings.gradle.kts`. If so, you must modify the root one.
-      ```kotlin
-      pluginManagement {
-          repositories {
-              mavenLocal() // <-- This line
-              gradlePluginPortal()
-              mavenCentral()
-          }
-      }
-      ```
-   2. Modify `build.gradle.kts` to import the plugin into the project (or module) and configure it. Since you are
-      loading a plugin from local maven, you must include the plugin version.
-      ```kotlin
-      plugins {
-          id("io.github.ghrcosta.deploy-info-collector") version "0.0.3"
-      }
-
-      tasks.deployInfoCollect {
-          deployType.set(CollectorTask.DeployType.GAE)
-          portalUrl.set("https://deploy-info-portal.example.com")
-          projects.set(listOf("proj-prod", "proj-dev", "proj-qa"))
-      }
-      tasks.appengineDeploy {
-          finalizedBy("deployInfoCollect")
-      }
-      ```
+1. In this project, run `./gradlew publishToMavenLocal` to publish the plugin to the local Maven
+   repository.
+2. In the project under test, add the `mavenLocal()` repository to the plugin-management repositories of
+   the **root** `settings.gradle.kts` (a multi-module project may have several `settings.gradle.kts` —
+   the root one is what counts), apply the plugin with an explicit version, and configure the task as
+   above.
