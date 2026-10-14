@@ -53,10 +53,10 @@ class FrontendServingEndpointTests {
 
     @Test
     fun `API paths are not served the frontend index`() {
-        // GET /settings/projects reaches the (mocked) settings use case — any response coming from
+        // GET /project/all reaches the (mocked) project use case — any response coming from
         // the real handler proves the API takes precedence over the frontend fallback resource
         // handler.
-        val result = mvc.perform(get("/settings/projects")).andReturn()
+        val result = mvc.perform(get("/project/all")).andReturn()
         assertTrue(result.response.contentAsString.isEmpty())
     }
 }

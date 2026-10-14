@@ -1,9 +1,9 @@
-package ui.settings
+package ui.project
 
-import application.settings.AddProjectUseCase
-import application.settings.DeleteProjectUseCase
-import application.settings.EditProjectUseCase
-import application.settings.GetAllProjectsUseCase
+import application.project.AddProjectUseCase
+import application.project.DeleteProjectUseCase
+import application.project.EditProjectUseCase
+import application.project.GetAllProjectsUseCase
 import org.springframework.http.ResponseEntity
 
 fun GetAllProjectsUseCase.Output.toResponse(): ResponseEntity<List<ProjectDTO>> =

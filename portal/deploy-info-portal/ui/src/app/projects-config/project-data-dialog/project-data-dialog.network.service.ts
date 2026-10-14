@@ -12,15 +12,15 @@ export class ProjectDataDialogNetworkService {
     private http = inject(HttpClient)
 
     addProject(project: Project): Observable<AddProjectResult> {
-        return this.http.post<AddProjectResult>(`${environment.url}/settings/project`, project)
+        return this.http.post<AddProjectResult>(`${environment.url}/project`, project)
     }
 
     editProject(project: Project): Observable<EditProjectResult> {
-        return this.http.put<EditProjectResult>(`${environment.url}/settings/project`, project)
+        return this.http.put<EditProjectResult>(`${environment.url}/project`, project)
     }
 
     deleteProject(projectId: string): Observable<Project[]> {
-        return this.http.delete<Project[]>(`${environment.url}/settings/project/${projectId}`)
+        return this.http.delete<Project[]>(`${environment.url}/project/${projectId}`)
     }
 }
 

@@ -1,10 +1,9 @@
-package tests.ui.settings
+package tests.ui.project
 
-import application.settings.DeleteProjectUseCase
+import application.project.GetAllProjectsUseCase
 import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import domain.Project
 import infrastructure.DeployInfoPortalApplication
-import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,17 +12,18 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import tools.jackson.core.type.TypeReference
 import tools.jackson.module.kotlin.jacksonObjectMapper
-import ui.settings.ProjectDTO
+import ui.project.ProjectDTO
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @SpringBootTest(classes = [DeployInfoPortalApplication::class])
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class DeleteProjectUseCaseEndpointTests {
+class GetAllProjectsUseCaseEndpointTests {
 
     @Autowired
     private lateinit var mvc: MockMvc
@@ -32,26 +32,38 @@ class DeleteProjectUseCaseEndpointTests {
     private lateinit var datastoreTemplate: DatastoreTemplate
 
     @MockitoBean
-    private lateinit var useCase: DeleteProjectUseCase
+    private lateinit var useCase: GetAllProjectsUseCase
 
-    private val uriTemplate = "/settings/project/%s"
+    private val uri = "/project/all"
 
     private val objectMapper = jacksonObjectMapper()
 
     @Test
-    fun `Return after delete project operation`() {
-        val output = DeleteProjectUseCase.Output(
+    fun `Happy path with repository empty`() {
+        val output = GetAllProjectsUseCase.Output(
+            projectsInRepository = listOf()
+        )
+        whenever(useCase.execute()).thenReturn(output)
+
+        val result = mvc.perform(get(uri)).andReturn()
+        assertEquals(HttpStatus.NO_CONTENT.value(), result.response.status)
+        assertTrue(result.response.contentAsString.isEmpty())
+    }
+
+    @Test
+    fun `Happy path with repository not empty`() {
+        val output = GetAllProjectsUseCase.Output(
             projectsInRepository = listOf(
-                Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
+                Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com"),
+                Project(projectId = "testProject2", group = "test", serviceAccount = "test@account.com")
             )
         )
-        whenever(useCase.execute(any())).thenReturn(output)
+        whenever(useCase.execute()).thenReturn(output)
 
-        val uri = String.format(uriTemplate, "project-name")
-        val result = mvc.perform(delete(uri)).andReturn()
-
+        val result = mvc.perform(get(uri)).andReturn()
         assertEquals(HttpStatus.OK.value(), result.response.status)
+
         val dto = objectMapper.readValue(result.response.contentAsString, object : TypeReference<List<ProjectDTO>>(){})
-        assertEquals(1, dto.size)
+        assertEquals(2, dto.size)
     }
 }

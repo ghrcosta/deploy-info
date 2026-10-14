@@ -14,7 +14,7 @@ class FrontendResourceResolverTests {
     lateinit var staticDirectory: File
 
     private fun resolver(): FrontendResourceResolver =
-        FrontendResourceResolver(listOf("collector", "portal", "settings"))
+        FrontendResourceResolver(listOf("collector", "portal", "project"))
 
     private fun location() = FileSystemResource(staticDirectory.absolutePath + "/")
 
@@ -50,7 +50,7 @@ class FrontendResourceResolverTests {
         File(staticDirectory, "index.html").writeText("<app-root></app-root>")
         assertNull(resolver().resolve(location(), "portal"))
         assertNull(resolver().resolve(location(), "portal/tree"))
-        assertNull(resolver().resolve(location(), "settings/projects"))
+        assertNull(resolver().resolve(location(), "project/all"))
         assertNull(resolver().resolve(location(), "collector/bucket"))
     }
 

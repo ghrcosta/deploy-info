@@ -1,7 +1,7 @@
-package tests.application.settings
+package tests.application.project
 
 import application.ServiceAccountIssue
-import application.settings.AddProjectUseCase
+import application.project.AddProjectUseCase
 import domain.Project
 import tests.fakes.FakeProjectRepository
 import tests.fakes.FakeServiceAccountValidator

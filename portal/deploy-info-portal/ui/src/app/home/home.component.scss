@@ -1,7 +1,7 @@
 /* Shell layout of the "Modern Clean" mock: a sticky top bar (its .topbar
    structural styles live in src/sass/_structure.scss) above fluid content.
    Unlike the previous layout there is no fixed-width centering: the deploy
-   viewer's shell grid and the settings page fill the available width. */
+   viewer's shell grid and the projects page fill the available width. */
 .home {
     display: flex;
     flex-direction: column;

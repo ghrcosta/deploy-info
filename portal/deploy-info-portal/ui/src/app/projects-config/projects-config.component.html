@@ -1,8 +1,8 @@
-<div class="settings-inner">
-    <header class="settings-head">
+<div class="projects-inner">
+    <header class="projects-head">
         <div>
             <h2>Manage projects</h2>
-            <p class="settings-sub">{{ watchedProjectsSubtitle }}</p>
+            <p class="projects-sub">{{ watchedProjectsSubtitle }}</p>
         </div>
         <button type="button" class="btn primary" (click)="onAddProjectClicked()">
             <mat-icon class="icon" svgIcon="add" aria-hidden="true"></mat-icon>
@@ -11,7 +11,7 @@
     </header>
 
     @if (projects.length === 0) {
-        <div class="empty-state settings-empty">
+        <div class="empty-state projects-empty">
             <mat-icon class="icon empty-icon" svgIcon="project" aria-hidden="true"></mat-icon>
             <h3>No projects yet</h3>
             <p>Add the first GCP project to start watching its deploys.</p>

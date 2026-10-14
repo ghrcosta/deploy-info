@@ -1,6 +1,6 @@
-package tests.application.settings
+package tests.application.project
 
-import application.settings.GetAllProjectsUseCase
+import application.project.GetAllProjectsUseCase
 import domain.Project
 import tests.fakes.FakeProjectRepository
 import kotlin.test.BeforeTest

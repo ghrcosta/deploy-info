@@ -1,8 +1,8 @@
-package tests.ui.settings
+package tests.ui.project
 
 import application.PortalIdentityResolver
 import application.ServiceAccountIssue
-import application.settings.AddProjectUseCase
+import application.project.EditProjectUseCase
 import com.google.cloud.spring.data.datastore.core.DatastoreTemplate
 import com.google.gson.Gson
 import domain.Project
@@ -17,9 +17,9 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import tools.jackson.module.kotlin.jacksonObjectMapper
-import ui.settings.AddProjectResultDTO
+import ui.project.EditProjectResultDTO
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -27,7 +27,7 @@ import kotlin.test.assertNull
 @SpringBootTest(classes = [DeployInfoPortalApplication::class])
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class AddProjectUseCaseEndpointTests {
+class EditProjectUseCaseEndpointTests {
 
     @Autowired
     private lateinit var mvc: MockMvc
@@ -36,20 +36,20 @@ class AddProjectUseCaseEndpointTests {
     private lateinit var datastoreTemplate: DatastoreTemplate
 
     @MockitoBean
-    private lateinit var useCase: AddProjectUseCase
+    private lateinit var useCase: EditProjectUseCase
 
     @MockitoBean
     private lateinit var portalIdentityResolver: PortalIdentityResolver
 
-    private val uri = "/settings/project"
+    private val uri = "/project"
 
     private val objectMapper = jacksonObjectMapper()
 
     @Test
-    fun `Add project without issues`() {
+    fun `Edit project without issues`() {
         val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val output = AddProjectUseCase.Output(
-            issueProjectIdConflict = false,
+        val output = EditProjectUseCase.Output(
+            issueProjectNotFound = false,
             issueServiceAccountError = false,
             projectsInRepository = listOf(project)
         )
@@ -57,22 +57,22 @@ class AddProjectUseCaseEndpointTests {
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
-            post(uri)
+            put(uri)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
-        val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
+        val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
         assertNull(dto.issues)
         assertEquals(1, dto.projects?.size)
     }
 
     @Test
-    fun `Notify issue when adding project with same name twice`() {
+    fun `Notify issue when editing project that does not exist`() {
         val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val output = AddProjectUseCase.Output(
-            issueProjectIdConflict = true,
+        val output = EditProjectUseCase.Output(
+            issueProjectNotFound = true,
             issueServiceAccountError = false,
             projectsInRepository = emptyList()
         )
@@ -80,25 +80,25 @@ class AddProjectUseCaseEndpointTests {
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
-            post(uri)
+            put(uri)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
-        val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
-        assertEquals(true, dto.issues?.issueProjectIdConflict)
+        val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
+        assertEquals(true, dto.issues?.issueProjectNotFound)
         assertNull(dto.issues?.serviceAccountIssue)
         assertNull(dto.projects)
     }
 
     @Test
-    fun `Notify issue when adding project with service account problem`() {
+    fun `Notify issue when editing project with service account problem`() {
         val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val output = AddProjectUseCase.Output(
-            issueProjectIdConflict = false,
+        val output = EditProjectUseCase.Output(
+            issueProjectNotFound = false,
             issueServiceAccountError = true,
-            serviceAccountIssue = ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION,
+            serviceAccountIssue = ServiceAccountIssue.MISSING_LISTING_PERMISSION,
             projectsInRepository = emptyList()
         )
         whenever(useCase.execute(any())).thenReturn(output)
@@ -106,24 +106,24 @@ class AddProjectUseCaseEndpointTests {
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
-            post(uri)
+            put(uri)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
-        val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
+        val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueServiceAccountError)
-        assertEquals("MISSING_IMPERSONATION_PERMISSION", dto.issues?.serviceAccountIssue)
+        assertEquals("MISSING_LISTING_PERMISSION", dto.issues?.serviceAccountIssue)
         assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)
         assertNull(dto.projects)
     }
 
     @Test
-    fun `Notify issue when adding project that the listing APIs cannot resolve`() {
+    fun `Notify issue when editing project that the listing APIs cannot resolve`() {
         val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val output = AddProjectUseCase.Output(
-            issueProjectIdConflict = false,
+        val output = EditProjectUseCase.Output(
+            issueProjectNotFound = false,
             issueServiceAccountError = true,
             serviceAccountIssue = ServiceAccountIssue.PROJECT_NOT_FOUND,
             projectsInRepository = emptyList()
@@ -133,13 +133,13 @@ class AddProjectUseCaseEndpointTests {
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
-            post(uri)
+            put(uri)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
-        val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
+        val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueServiceAccountError)
         assertEquals("PROJECT_NOT_FOUND", dto.issues?.serviceAccountIssue)
         assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)
@@ -147,10 +147,10 @@ class AddProjectUseCaseEndpointTests {
     }
 
     @Test
-    fun `Notify issue when adding project with a listing API not enabled`() {
+    fun `Notify issue when editing project with a listing API not enabled`() {
         val project = Project(projectId = "testProject1", group = "test", serviceAccount = "test@account.com")
-        val output = AddProjectUseCase.Output(
-            issueProjectIdConflict = false,
+        val output = EditProjectUseCase.Output(
+            issueProjectNotFound = false,
             issueServiceAccountError = true,
             serviceAccountIssue = ServiceAccountIssue.APIS_NOT_ENABLED,
             projectsInRepository = emptyList()
@@ -160,13 +160,13 @@ class AddProjectUseCaseEndpointTests {
 
         val body = Gson().toJson(project)
         val result = mvc.perform(
-            post(uri)
+            put(uri)
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
 
         assertEquals(HttpStatus.OK.value(), result.response.status)
-        val dto = objectMapper.readValue(result.response.contentAsString, AddProjectResultDTO::class.java)
+        val dto = objectMapper.readValue(result.response.contentAsString, EditProjectResultDTO::class.java)
         assertEquals(true, dto.issues?.issueServiceAccountError)
         assertEquals("APIS_NOT_ENABLED", dto.issues?.serviceAccountIssue)
         assertEquals("portal@test.iam.gserviceaccount.com", dto.issues?.portalServiceAccount)

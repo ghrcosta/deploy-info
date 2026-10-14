@@ -21,7 +21,7 @@ class SecurityConfiguration {
         val registration = FilterRegistrationBean(
             AuthenticationFilter(authenticateUserUseCase, properties),
         )
-        registration.addUrlPatterns("/portal/*", "/settings/*", "/collector/*", "/auth/user")
+        registration.addUrlPatterns("/portal/*", "/project", "/project/*", "/collector/*", "/auth/user")
         return registration
     }
 }

@@ -65,18 +65,18 @@ describe('ProjectsConfigComponent', () => {
   });
 
   it('pluralizes the watched-projects subtitle', () => {
-    expect((fixture.nativeElement.querySelector('.settings-sub') as HTMLElement).textContent)
+    expect((fixture.nativeElement.querySelector('.projects-sub') as HTMLElement).textContent)
       .toContain('2 projects watched for deploys');
 
     network.getProjects.and.returnValue(of([PROJECTS[0]]));
     const singleFixture = TestBed.createComponent(ProjectsConfigComponent);
     singleFixture.detectChanges();
-    expect((singleFixture.nativeElement.querySelector('.settings-sub') as HTMLElement).textContent)
+    expect((singleFixture.nativeElement.querySelector('.projects-sub') as HTMLElement).textContent)
       .toContain('1 project watched for deploys');
   });
 
   it('opens the add dialog from the header button', () => {
-    (fixture.nativeElement.querySelector('.settings-head .btn.primary') as HTMLElement).click();
+    (fixture.nativeElement.querySelector('.projects-head .btn.primary') as HTMLElement).click();
 
     expect(dialogOpenSpy).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining({
       disableClose: true,
@@ -104,7 +104,7 @@ describe('ProjectsConfigComponent', () => {
     const updated = [{ projectId: 'new-project', group: undefined, serviceAccount: 'collector@new-project.iam.gserviceaccount.com' }];
     dialogOpenSpy.and.returnValue({ afterClosed: () => of(updated) } as unknown as MatDialogRef<ProjectDataDialogComponent>);
 
-    (fixture.nativeElement.querySelector('.settings-head .btn.primary') as HTMLElement).click();
+    (fixture.nativeElement.querySelector('.projects-head .btn.primary') as HTMLElement).click();
 
     expect(component.projects).toEqual(updated);
   });
@@ -114,7 +114,7 @@ describe('ProjectsConfigComponent', () => {
     const emptyFixture = TestBed.createComponent(ProjectsConfigComponent);
     emptyFixture.detectChanges();
 
-    expect(emptyFixture.nativeElement.querySelector('.settings-empty')).toBeTruthy();
+    expect(emptyFixture.nativeElement.querySelector('.projects-empty')).toBeTruthy();
     expect(emptyFixture.nativeElement.querySelector('.project-grid')).toBeNull();
   });
 });

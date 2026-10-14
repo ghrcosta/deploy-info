@@ -489,17 +489,17 @@ img, svg { display: block; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* -------------------------------------------------------------- settings */
-.settings-inner { max-width: 980px; margin: 0 auto; padding-top: 8px; }
-.settings-head {
+/* -------------------------------------------------------------- projects */
+.projects-inner { max-width: 980px; margin: 0 auto; padding-top: 8px; }
+.projects-head {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 22px;
 }
-.settings-head h2 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.015em; }
-.settings-sub { color: var(--text-faint, #9aa0a8); font-size: .9rem; margin-top: 3px; }
+.projects-head h2 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.015em; }
+.projects-sub { color: var(--text-faint, #9aa0a8); font-size: .9rem; margin-top: 3px; }
 
 .project-grid {
     display: grid;
@@ -718,8 +718,8 @@ img, svg { display: block; }
     .tabs { width: 100%; }
     .tab-btn { flex: 1; justify-content: center; }
 
-    .settings-head { flex-direction: column; align-items: stretch; }
-    .settings-head .btn { justify-content: center; }
+    .projects-head { flex-direction: column; align-items: stretch; }
+    .projects-head .btn { justify-content: center; }
     .project-field { grid-template-columns: 1fr; gap: 2px; }
 
     .dialog { max-width: none; padding: 20px; }
@@ -736,14 +736,14 @@ img, svg { display: block; }
 }
 
 /* --------------------------------------------------- empty-state panels */
-.settings-empty, .nav-empty {
+.projects-empty, .nav-empty {
     border: 1px dashed var(--border-strong, #c5c9cf);
     border-radius: var(--radius-l, 14px);
     padding: 46px 24px !important;
 }
-.nav-empty h3, .settings-empty h3 { margin-bottom: 2px; }
-.nav-empty h3, .settings-empty h3 { margin-bottom: 2px; }
-.nav-empty .btn, .settings-empty .btn { margin-top: 10px; }
+.nav-empty h3, .projects-empty h3 { margin-bottom: 2px; }
+.nav-empty h3, .projects-empty h3 { margin-bottom: 2px; }
+.nav-empty .btn, .projects-empty .btn { margin-top: 10px; }
 
 /* ------------------------------------------------------------ top bar */
 /* The Help link sits farther from the other nav links (the gap between

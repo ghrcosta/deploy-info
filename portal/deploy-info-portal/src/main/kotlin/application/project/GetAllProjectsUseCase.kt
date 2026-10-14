@@ -1,4 +1,4 @@
-package application.settings
+package application.project
 
 import application.ProjectRepository
 import domain.Project

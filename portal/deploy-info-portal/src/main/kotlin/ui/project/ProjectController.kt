@@ -1,16 +1,16 @@
-package ui.settings
+package ui.project
 
 import application.PortalIdentityResolver
-import application.settings.AddProjectUseCase
-import application.settings.DeleteProjectUseCase
-import application.settings.EditProjectUseCase
-import application.settings.GetAllProjectsUseCase
+import application.project.AddProjectUseCase
+import application.project.DeleteProjectUseCase
+import application.project.EditProjectUseCase
+import application.project.GetAllProjectsUseCase
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("settings")
-class SettingsController(
+@RequestMapping("project")
+class ProjectController(
     private val getAllProjectsUseCase: GetAllProjectsUseCase,
     private val addProjectUseCase: AddProjectUseCase,
     private val editProjectUseCase: EditProjectUseCase,
@@ -18,19 +18,19 @@ class SettingsController(
     private val portalIdentityResolver: PortalIdentityResolver,
 ) {
 
-    @GetMapping("/projects")
+    @GetMapping("/all")
     fun getProjects(): ResponseEntity<List<ProjectDTO>> =
         getAllProjectsUseCase.execute().toResponse()
 
-    @PostMapping("/project")
+    @PostMapping
     fun addProject(@RequestBody project: ProjectDTO): ResponseEntity<AddProjectResultDTO> =
         addProjectUseCase.execute(project.toModel()).toResponse(portalIdentityResolver::resolve)
 
-    @PutMapping("/project")
+    @PutMapping
     fun editProject(@RequestBody project: ProjectDTO): ResponseEntity<EditProjectResultDTO> =
         editProjectUseCase.execute(project.toModel()).toResponse(portalIdentityResolver::resolve)
 
-    @DeleteMapping("/project/{projectId}")
+    @DeleteMapping("/{projectId}")
     fun deleteProject(@PathVariable("projectId") projectId: String): ResponseEntity<List<ProjectDTO>> =
         deleteProjectUseCase.execute(projectId).toResponse()
 }

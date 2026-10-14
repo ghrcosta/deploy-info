@@ -11,6 +11,6 @@ export class ProjectsConfigNetworkService {
     private http = inject(HttpClient)
 
     getProjects(): Observable<Project[]> {
-        return this.http.get<Project[]>(`${environment.url}/settings/projects`)
+        return this.http.get<Project[]>(`${environment.url}/project/all`)
     }
 }

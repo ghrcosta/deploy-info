@@ -2,15 +2,15 @@ package infrastructure.beans
 
 import application.ProjectRepository
 import application.ServiceAccountValidator
-import application.settings.AddProjectUseCase
-import application.settings.DeleteProjectUseCase
-import application.settings.EditProjectUseCase
-import application.settings.GetAllProjectsUseCase
+import application.project.AddProjectUseCase
+import application.project.DeleteProjectUseCase
+import application.project.EditProjectUseCase
+import application.project.GetAllProjectsUseCase
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class SettingsUseCaseBeans(
+class ProjectUseCaseBeans(
     private val projectRepository: ProjectRepository,
     private val serviceAccountValidator: ServiceAccountValidator,
 ) {

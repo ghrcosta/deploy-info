@@ -42,7 +42,7 @@ class AuthenticationFilterRegistrationTests {
     @Test
     fun `The filter covers the protected prefixes with servlet wildcards`() {
         assertEquals(
-            setOf("/portal/*", "/settings/*", "/collector/*", "/auth/user"),
+            setOf("/portal/*", "/project", "/project/*", "/collector/*", "/auth/user"),
             registration?.urlPatterns?.toSet(),
         )
     }

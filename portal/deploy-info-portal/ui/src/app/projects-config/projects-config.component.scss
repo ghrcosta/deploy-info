@@ -1,7 +1,7 @@
-/* Structural styles (.settings-inner, .settings-head, .settings-sub,
+/* Structural styles (.projects-inner, .projects-head, .projects-sub,
    .project-grid, .project-card, .project-card-head, .project-actions,
-   .project-fields, .empty-state/.settings-empty) live in the global
-   stylesheet (src/sass/_structure.scss), mirroring the mock's base.css.
+   .project-fields, .empty-state/.projects-empty) live in the global
+   stylesheet (src/sass/_structure.scss).
    Nothing component-specific is needed. */
 
 :host {
