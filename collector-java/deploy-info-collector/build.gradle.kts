@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "io.github.ghrcosta"
-version = "1.0.0"
+version = "1.0.1"
 
 kotlin {
     // Build with the latest LTS, but emit Java 17 bytecode so consumers running Gradle on JDK 17 can load it.
