@@ -85,4 +85,18 @@ Exit code is `0` on success, `1` on any failure, `2` on malformed arguments.
   </tbody>
 </table>
 
+
+Windows is supported; run with `py -3 deploy_info_collector.py …`.
+
+## Tests
+
+Unit tests live in [`tests/`](tests/) — one module per collector module, mirroring the Java
+plugin's test suite (`collector-java/deploy-info-collector/src/test/kotlin`) 1:1. They use only
+the standard library (`unittest`/`unittest.mock`) and are hermetic: no git, gcloud or network
+access (everything external is mocked).
+
+```
+python3 -m unittest discover -s tests   # from this directory; -v for the verbose list
+```
+
 Windows is supported; run with `py -3 deploy_info_collector.py …`.
