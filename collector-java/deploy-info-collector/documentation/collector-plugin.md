@@ -7,6 +7,12 @@ For how to use it, see the plugin's [README](../README.md); for the trigger/buck
 
 Plugin id: `io.github.ghrcosta.deploy-info-collector`.
 
+## Gradle feature compatibility
+
+To publish the plugin to Gradle Plugin Portal, it needs to declare compatibility status with two
+Gradle features: Configuration cache and Isolated projects. These were validated using functional
+tests.
+
 ## Execution flow
 
 When the `deployInfoCollect` task runs, six steps execute in order:

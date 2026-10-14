@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
+import org.gradle.plugin.compatibility.compatibility
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -11,12 +12,7 @@ plugins {
 }
 
 group = "io.github.ghrcosta"
-
-val pluginId = "${group}.deploy-info-collector"
-val pluginMainClass = "${group}.CollectorPlugin"
-val pluginVersion = "0.0.3"
-val pluginName = "DeployInfo Collector"
-val pluginDescription = "Used to collect the data shown on DeployInfo portal."
+version = "1.0.0"
 
 kotlin {
     // Build with the latest LTS, but emit Java 17 bytecode so consumers running Gradle on JDK 17 can load it.
@@ -47,14 +43,30 @@ tasks.test {
 }
 
 gradlePlugin {
+    website = "https://github.com/ghrcosta/deploy-info"
+    vcsUrl = "https://github.com/ghrcosta/deploy-info.git"
     plugins {
-        create(pluginId) {
-            id = pluginId
-            implementationClass = pluginMainClass
-            version = pluginVersion
-            displayName = pluginName
-            description = pluginDescription
+        create("deployInfoCollectorPlugin") {
+            id = "${group}.deploy-info-collector"
+            displayName = "DeployInfo Collector"
+            description = "Used to collect the data shown on DeployInfo portal."
+            tags = listOf("git", "build-info")
+            implementationClass = "${group}.CollectorPlugin"
+            compatibility {
+                features {
+                    // Declared after being verified by the functional tests in CompatibilityTest,
+                    // which run the plugin under --configuration-cache and isolated projects.
+                    configurationCache = true
+                    isolatedProjects = true
+                }
+            }
         }
+    }
+}
+
+publishing {
+    repositories {
+        maven { url = uri(layout.buildDirectory.dir("localPublication")) }
     }
 }
 
@@ -75,6 +87,9 @@ dependencies {
     // The TestKit runner locates the plugin-under-test metadata file on the TEST runtime classpath,
     // so the pluginUnderTestMetadata output must be part of it.
     "functionalTestRuntimeOnly"(files(tasks.pluginUnderTestMetadata))
+    // The feature-compatibility test reads the generated plugin descriptor (carrying the
+    // compatibility.feature.* flags) from the TEST runtime classpath.
+    "functionalTestRuntimeOnly"(files(tasks.pluginDescriptors))
 }
 
 // Both the production plugin (main runtime classpath, which also carries the Kotlin stdlib)
@@ -88,7 +103,8 @@ tasks.pluginUnderTestMetadata {
 
 val functionalTest = tasks.register<Test>("functionalTest") {
     group = "verification"
-    description = "Runs the Gradle TestKit compatibility matrix tests (7.6+17 and latest+21)."
+    description = "Runs the Gradle TestKit compatibility matrix tests (7.6+17 and latest+21), " +
+        "including configuration-cache and isolated-projects feature tests."
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
     useJUnitPlatform()
