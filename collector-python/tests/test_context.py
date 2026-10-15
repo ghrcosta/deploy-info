@@ -7,7 +7,6 @@ the build dir itself (`<project-root>/build`), so only the project root is given
 """
 
 import unittest
-from unittest import mock
 
 from _support import CollectorTestCase, dic
 
@@ -30,25 +29,44 @@ class ContextTests(CollectorTestCase):
 
     def test_collector_defaults_the_max_file_size_to_50kb(self):
         # Java: Context.init defaults maxFileSizeInKb to 50. Python's Context.init takes the value
-        # explicitly; the 50 KB default lives in the CLI's --max-file-size, so the default is
-        # asserted through the argument parser feeding Context.init.
-        args = dic.parse_arguments(
+        # explicitly; the 50 KB default lives in CollectorParams (applied to CLI and programmatic
+        # calls alike), so it is asserted on the parsed params and end-to-end through run().
+        params = dic.parse_arguments(
             ["--deploy-type", "GAE", "--portal-url", self.PORTAL_URL, "--projects", "proj-prod"]
         )
-        self.assertEqual("50", args.max_file_size)
+        self.assertEqual("50", params.max_file_size)
 
-        context = self.init_context(max_file_size_kb=dic.parse_max_file_size_kb(args.max_file_size))
+        context = self.run_collector(params)
 
         self.assertEqual(50 * 1024, context.max_file_size)
 
     def test_collector_defaults_the_max_git_log_lines_to_30(self):
-        args = dic.parse_arguments(
+        params = dic.parse_arguments(
             ["--deploy-type", "GAE", "--portal-url", self.PORTAL_URL, "--projects", "proj-prod"]
         )
-        self.assertEqual("30", args.max_git_log_lines)
+        self.assertEqual("30", params.max_git_log_lines)
 
-        context = self.init_context(max_git_log_lines=dic.parse_max_git_log_lines(args.max_git_log_lines))
+        context = self.run_collector(params)
 
+        self.assertEqual(30, context.max_git_log_lines)
+
+    def test_collector_params_defaults_the_optional_fields_for_a_hand_built_object(self):
+        # Programmatic contract: a CollectorParams with only the required fields gets every
+        # default applied at construction (project_dir '.', max_file_size '50',
+        # max_git_log_lines '30', collect_git_status True, extra_files [], verbose False).
+        params = dic.CollectorParams(
+            deploy_type=dic.DeployType.GAE, portal_url=self.PORTAL_URL, projects=["proj-prod"]
+        )
+        self.assertEqual(".", str(params.project_dir))
+        self.assertEqual("50", params.max_file_size)
+        self.assertEqual("30", params.max_git_log_lines)
+        self.assertTrue(params.collect_git_status)
+        self.assertEqual([], params.extra_files)
+        self.assertFalse(params.verbose)
+
+        context = self.run_collector(params)
+
+        self.assertEqual(50 * 1024, context.max_file_size)
         self.assertEqual(30, context.max_git_log_lines)
 
     def test_get_before_init_fails(self):

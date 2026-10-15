@@ -18,6 +18,7 @@ Run with: `python3 -m unittest discover -s tests` (from `collector-python/`).
 """
 
 import io
+import os
 import sys
 import tempfile
 import unittest
@@ -76,6 +77,27 @@ class CollectorTestCase(unittest.TestCase):
             dic, "run_command_or_throw", return_value=dic.CommandResult(stdout=user_email, stderr="")
         ):
             return dic.Context.init(self.project_root_dir, max_file_size_kb, deploy_type, max_git_log_lines)
+
+    def run_collector(self, params) -> dic.Context:
+        """Run ``dic.run`` end-to-end with every external effect mocked (the gcloud account
+        command, the access token, the bucket lookup, the upload, the portal trigger and the
+        git/extra-file collection); returns the Context the run built. Used to assert the
+        argument defaults, which live in ``CollectorParams`` (not in the parser, not in ``run``).
+        """
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.test_dir)  # run() chdirs into project_dir; keep that inside the temp dir
+        with (
+            mock.patch.object(dic, "run_command_or_throw", return_value=dic.CommandResult(stdout="user@email.com\n", stderr="")),
+            mock.patch.object(dic, "fetch_gcloud_access_token", return_value=None),
+            mock.patch.object(dic, "lookup_bucket", return_value="bucket"),
+            mock.patch.object(dic, "upload_files"),
+            mock.patch.object(dic, "trigger_portal_processing"),
+            mock.patch.object(dic, "collect_git_status"),
+            mock.patch.object(dic, "collect_extra_files"),
+        ):
+            exit_code = dic.run(params)
+        self.assertEqual(0, exit_code)
+        return dic.Context.get()
 
     def fake_response(self, *, status: int = 200, body: bytes = b"", read_error: Exception | None = None):
         """A mocked HTTP response usable as a `urllib.request.urlopen` return value.

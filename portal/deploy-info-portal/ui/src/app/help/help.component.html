@@ -12,7 +12,11 @@
             <li>
                 <h2>2 &middot; Configure the collector</h2>
                 <p>Add the <span class="mono">deploy-info-collector</span> Gradle plugin to the project's <span class="mono">build.gradle.kts</span> and run <span class="mono">deployInfoCollect</span> after every deployment:</p>
-                <pre class="code"><code>@for (line of snippetLines; track line.n) {<span class="cl"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                <pre class="code code-gradle"><code>@for (line of snippetLines; track line.n) {<span class="cl"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                <p class="help-hint">Not building with Gradle? Call the standalone Python collector (<span class="mono">deploy_info_collector.py</span> from the <a href="https://github.com/ghrcosta/deploy-info" target="_blank" rel="noopener">deploy-info repository</a>) instead, after every deployment — it needs Python &ge; 3.10, <span class="mono">git</span>, and an authenticated <span class="mono">gcloud</span> CLI:</p>
+                <pre class="code code-python-cli"><code>@for (line of pythonCliSnippetLines; track line.n) {<span class="cl"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
+                <p class="help-hint">Or call it from another Python script (e.g. CI tooling):</p>
+                <pre class="code code-python-script"><code>@for (line of pythonScriptSnippetLines; track line.n) {<span class="cl"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
             </li>
             <li>
                 <h2>3 &middot; You're done</h2>

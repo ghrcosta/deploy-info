@@ -95,6 +95,31 @@ Exit code is `0` on success, `1` on any failure, `2` on malformed arguments.
 
 Windows is supported; run with `py -3 deploy_info_collector.py …`.
 
+## Use from another Python script
+
+`main` is only a thin CLI shim; the collector logic lives in `run(params)`, which takes a
+`CollectorParams`:
+
+```python
+import deploy_info_collector as dic                      # same directory as the caller, or put it on sys.path
+
+exit_code = dic.run(dic.CollectorParams(
+    deploy_type=dic.DeployType.GAE,                      # GAE (App Engine) or RUN (Cloud Run) — the enum, not a string
+    portal_url="https://deploy-info-portal.example.com",
+    projects=["proj-prod", "proj-dev"],                  # the final list: no comma-splitting/dedup is applied here
+    project_dir=".",                                     # output goes to <project-dir>/build/collector/…
+    max_file_size=50,                                    # KB
+    max_git_log_lines=30,
+    collect_git_status=True,
+    extra_files=[],                                      # flat list of paths relative to project_dir, files only
+    verbose=False,
+))
+```
+
+`run` returns `0` on success and `1` on failure, logging the error instead of raising. The defaults live
+in `CollectorParams` so the optional fields may be omitted ; only `deploy_type`, `portal_url` and
+`projects` are mandatory. Like the CLI run, `run` `os.chdir`s into `project_dir` while collecting.
+
 ## Tests
 
 Unit tests live in [`tests/`](tests/) — one module per collector module, mirroring the Java

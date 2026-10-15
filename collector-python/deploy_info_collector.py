@@ -749,13 +749,44 @@ def describe_forbidden(body: str | None) -> str:
     return "the authenticated account is not permitted." + response
 
 
-# --- CLI (argparse) + main() ------------------------------------------------------
+# --- CLI (argparse) + CollectorParams + run() / main() ------------------------------
 # Mirrors the Gradle task's parameters and its validateParameters(); exit codes (0/1/2) are in
-# the README.
+# the README. ``run`` is the programmatic entry point (usable from other scripts); ``main``
+# only parses the CLI arguments and hands them to it. The optional-argument defaults live in
+# ``CollectorParams`` so they apply to CLI and programmatic calls alike.
 
 
-def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
-    """Parse and normalize the CLI arguments (projects merged/deduped, extra files flattened)."""
+@dataclass
+class CollectorParams:
+    deploy_type: DeployType  # GAE (App Engine) or RUN (Cloud Run)
+    portal_url: str  # URL of the portal backend, from which the upload bucket is resolved
+    projects: list[str]  # GCP projects; the final list (merge/dedup is the parser's job)
+
+    project_dir: Path | None = None  # project root; output goes to <project_dir>/build/collector/
+    max_file_size: str | int | None = None  # in KB; the CLI passes a string, an int works too
+    max_git_log_lines: str | int | None = None
+    collect_git_status: bool | None = None
+    extra_files: list[str] | None = None  # relative to project_dir, files only
+    verbose: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.project_dir is None:
+            self.project_dir = Path(".")
+        if self.max_file_size is None:
+            self.max_file_size = "50"
+        if self.max_git_log_lines is None:
+            self.max_git_log_lines = "30"
+        if self.collect_git_status is None:
+            self.collect_git_status = True
+        if self.extra_files is None:
+            self.extra_files = []
+        if self.verbose is None:
+            self.verbose = False
+
+
+def parse_arguments(argv: list[str] | None = None) -> CollectorParams:
+    """Parse the CLI arguments into a ``CollectorParams`` (projects merged/deduped, extra files
+    flattened); the defaults come from ``CollectorParams`` itself."""
     parser = argparse.ArgumentParser(
         prog="deploy_info_collector.py",
         description="Collects deployment info (git status/diff and extra files) and uploads it to the deploy-info portal.",
@@ -766,24 +797,32 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
                         help="URL of the portal backend, from which the upload bucket is resolved.")
     parser.add_argument("--projects", required=True, nargs="+", action="append", metavar="PROJECT",
                         help="GCP projects where the code may have been deployed; comma-separated and/or repeatable.")
-    parser.add_argument("--project-dir", default=".", type=Path,
+    parser.add_argument("--project-dir", type=Path,
                         help="Project root directory; the base for git/extra-file paths and the build/collector "
                              "output (default: the current directory).")
-    parser.add_argument("--max-file-size", default="50", metavar="N",
+    parser.add_argument("--max-file-size", metavar="N",
                         help="Maximum size of files that can be included, in KB (default: 50).")
-    parser.add_argument("--max-git-log-lines", default="30", metavar="N",
+    parser.add_argument("--max-git-log-lines", metavar="N",
                         help="Maximum number of lines collected from 'git log --oneline' (default: 30).")
-    parser.add_argument("--collect-git-status", action=argparse.BooleanOptionalAction, default=True,
+    parser.add_argument("--collect-git-status", action=argparse.BooleanOptionalAction,
                         help="If git-related data must be collected (default: true).")
-    parser.add_argument("--extra-files", nargs="*", action="append", default=None, metavar="PATH",
+    parser.add_argument("--extra-files", nargs="*", action="append", metavar="PATH",
                         help="Extra files to include; paths relative to --project-dir, files only, collected "
                              "without parent directories (repeatable / space-separated).")
     parser.add_argument("--verbose", action="store_true", help="Print debug lines (each executed command).")
 
     args = parser.parse_args(argv)
-    args.projects = merge_projects(args.projects)
-    args.extra_files = [path for group in (args.extra_files or []) for path in group]
-    return args
+    return CollectorParams(
+        deploy_type=args.deploy_type,
+        portal_url=args.portal_url,
+        projects=merge_projects(args.projects),
+        project_dir=args.project_dir,
+        max_file_size=args.max_file_size,
+        max_git_log_lines=args.max_git_log_lines,
+        collect_git_status=args.collect_git_status,
+        extra_files=[path for group in (args.extra_files or []) for path in group],
+        verbose=args.verbose,
+    )
 
 
 def merge_projects(raw_groups: list[list[str]] | None) -> list[str]:
@@ -817,53 +856,51 @@ def parse_max_git_log_lines(raw: str) -> int:
     return value
 
 
-def validate_parameters(args: argparse.Namespace) -> tuple[int, int]:
+def validate_parameters(params: CollectorParams) -> tuple[int, int]:
     """Mirror of ``CollectorTask.validateParameters()``.
 
     Returns the validated ``(maxFileSize in KB, maxGitLogLines)`` pair.
     """
-    if not args.portal_url.strip():
+    if not params.portal_url.strip():
         raise CollectorError("'portalUrl' must not be empty.")
-    if not args.projects:
+    if not params.projects:
         raise CollectorError("'projects' must not be empty: list at least one GCP project where the code may be deployed.")
-    if any(not project for project in args.projects):
+    if any(not project for project in params.projects):
         raise CollectorError("'projects' must not contain empty values.")
-    return parse_max_file_size_kb(args.max_file_size), parse_max_git_log_lines(args.max_git_log_lines)
+    return parse_max_file_size_kb(params.max_file_size), parse_max_git_log_lines(params.max_git_log_lines)
 
 
-def main(argv: list[str] | None = None) -> int:
-    """CLI entry point: collect → token → bucket lookup → upload → trigger (mirrors ``TaskImpl.run``)."""
-    args = parse_arguments(argv)
-    Logger.init(verbose=args.verbose)
+def run(params: CollectorParams) -> int:
+    Logger.init(verbose=params.verbose)
     try:
-        max_file_size_kb, max_git_log_lines = validate_parameters(args)
+        max_file_size_kb, max_git_log_lines = validate_parameters(params)
 
         # The Gradle plugin runs its commands with the project root as working directory; mirror
         # that so git resolves the right repository and relative paths behave the same.
-        os.chdir(args.project_dir)
+        os.chdir(params.project_dir)
         project_root = Path.cwd()
 
-        Context.init(project_root, max_file_size_kb, args.deploy_type, max_git_log_lines)
+        Context.init(project_root, max_file_size_kb, params.deploy_type, max_git_log_lines)
 
-        if args.collect_git_status:
+        if params.collect_git_status:
             collect_git_status()
-        if args.extra_files:
-            collect_extra_files(args.extra_files)
+        if params.extra_files:
+            collect_extra_files(params.extra_files)
 
         # One token for both portal calls; None goes header-less (see fetch_gcloud_access_token).
         access_token = fetch_gcloud_access_token()
 
-        bucket_name = lookup_bucket(args.portal_url, access_token)
+        bucket_name = lookup_bucket(params.portal_url, access_token)
         Logger.i(f"Uploads will go to Cloud Storage bucket '{bucket_name}'.")
 
         upload_files(bucket_name)
 
         context = Context.get()
         trigger_portal_processing(
-            portal_url=args.portal_url,
+            portal_url=params.portal_url,
             directory_name=context.output_dir.name,
-            projects=args.projects,
-            deploy_type=args.deploy_type.name,
+            projects=params.projects,
+            deploy_type=params.deploy_type.name,
             user_email=context.user_email,
             access_token=access_token,
         )
@@ -876,6 +913,12 @@ def main(argv: list[str] | None = None) -> int:
         Logger.e(f"Error: {error}")
         return 1
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point: parse the arguments and hand them to ``run`` (argparse itself exits 2 on
+    malformed arguments; ``run`` returns 1 on any failure)."""
+    return run(parse_arguments(argv))
 
 
 if __name__ == "__main__":

@@ -26,34 +26,34 @@ describe('HelpComponent', () => {
         expect(el.querySelectorAll('.help-steps > li').length).toBe(3);
     });
 
-    it('renders the Gradle snippet as a per-line code block', () => {
+    it('includes the Gradle snippet in its code block', () => {
         const el = fixture.nativeElement as HTMLElement;
-        const lines = el.querySelectorAll('.help-steps .code .cl');
-        expect(lines.length).toBe(component.snippetLines.length);
-        expect(lines[0].querySelector('.cln')?.textContent).toBe('1');
-        expect(lines[0].querySelector('.clt')?.textContent).toBe('import io.github.ghrcosta.CollectorTask');
-        expect(lines[1].querySelector('.clt')?.textContent).toBe(' ');
+        const rendered = Array.from(el.querySelectorAll('.help-steps .code-gradle .clt'), e => e.textContent);
+        expect(rendered).toEqual(component.snippetLines.map(line => line.text || ' '));
     });
 
-    it('shows every deployInfoCollect parameter with an aligned comment', () => {
-        const snippetLines = component.snippetLines.map(line => line.text);
-        const snippet = snippetLines.join('\n');
+    it('includes the Python CLI snippet in its code block', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const rendered = Array.from(el.querySelectorAll('.help-steps .code-python-cli .clt'), e => e.textContent);
+        expect(rendered).toEqual(component.pythonCliSnippetLines.map(line => line.text || ' '));
+    });
 
-        expect(snippet).toContain('deployType.set(CollectorTask.DeployType.GAE)');
-        expect(snippet).toContain('portalUrl.set("https://deploy-info.example.com")');
-        expect(snippet).toContain('projects.set(listOf("proj-prod", "proj-dev"))');
-        expect(snippet).toContain('maxFileSize.set(50)');
-        expect(snippet).toContain('collectGitStatus.set(true)');
-        expect(snippet).toContain('extraFilesToCollect.set(listOf(');
-        expect(snippet).not.toContain('required');
-        expect(snippet).not.toContain('optional');
+    it('includes the Python script-call snippet in its code block', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const rendered = Array.from(el.querySelectorAll('.help-steps .code-python-script .clt'), e => e.textContent);
+        expect(rendered).toEqual(component.pythonScriptSnippetLines.map(line => line.text || ' '));
+    });
 
-        // Every trailing comment starts at the same column, and the first
-        // word of each comment is capitalized.
-        const commentColumns = snippetLines
-            .filter(text => text.trimStart().startsWith('//'))
-            .map(text => text.lastIndexOf('//'));
-        expect(new Set(commentColumns).size).toBe(1);
+    it('shows the Python collector as the non-Gradle alternative with its prerequisites and defaults', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const text = el.textContent ?? '';
+        expect(text).toContain('Not building with Gradle?');
+        expect(text).toContain('Python ≥ 3.10');
+
+        // The "deploy-info repository" mention links to GitHub in a new tab.
+        const repoLink = el.querySelector('.help-hint a[href="https://github.com/ghrcosta/deploy-info"]') as HTMLAnchorElement;
+        expect(repoLink).withContext('repository link present').toBeTruthy();
+        expect(repoLink.target).toBe('_blank');
     });
 
     it('does not show the removed collector paragraph', () => {
