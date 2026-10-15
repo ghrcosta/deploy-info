@@ -85,7 +85,7 @@ class CollectorTestCase(unittest.TestCase):
         argument defaults, which live in ``CollectorParams`` (not in the parser, not in ``run``).
         """
         self.addCleanup(os.chdir, os.getcwd())
-        os.chdir(self.test_dir)  # run() chdirs into project_dir; keep that inside the temp dir
+        os.chdir(self.test_dir)  # run() restores the caller's cwd, but keep the whole test inside the temp dir
         with (
             mock.patch.object(dic, "run_command_or_throw", return_value=dic.CommandResult(stdout="user@email.com\n", stderr="")),
             mock.patch.object(dic, "fetch_gcloud_access_token", return_value=None),

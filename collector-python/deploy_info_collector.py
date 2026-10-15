@@ -872,6 +872,7 @@ def validate_parameters(params: CollectorParams) -> tuple[int, int]:
 
 def run(params: CollectorParams) -> int:
     Logger.init(verbose=params.verbose)
+    original_cwd = Path.cwd()
     try:
         max_file_size_kb, max_git_log_lines = validate_parameters(params)
 
@@ -912,6 +913,13 @@ def run(params: CollectorParams) -> int:
     except OSError as error:
         Logger.e(f"Error: {error}")
         return 1
+    finally:
+        # Restore the caller's working directory: programmatic callers run in-process and any
+        # code after the run() call expects the directory it was in before (same for failure paths).
+        try:
+            os.chdir(original_cwd)
+        except OSError as error:
+            Logger.e(f"Error: could not restore the original working directory: {error}")
     return 0
 
 

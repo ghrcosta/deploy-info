@@ -118,7 +118,8 @@ exit_code = dic.run(dic.CollectorParams(
 
 `run` returns `0` on success and `1` on failure, logging the error instead of raising. The defaults live
 in `CollectorParams` so the optional fields may be omitted ; only `deploy_type`, `portal_url` and
-`projects` are mandatory. Like the CLI run, `run` `os.chdir`s into `project_dir` while collecting.
+`projects` are mandatory. Like the CLI run, `run` `os.chdir`s into `project_dir` while collecting,
+and restores the caller's original working directory when it returns (success or failure).
 
 ## Tests
 
