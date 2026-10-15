@@ -18,6 +18,14 @@ import java.io.File
  * and runs the test-only ProbeTask, which exercises the plugin's Gradle API surface without
  * external commands or network access.
  *
+ * In addition to the probe task, the real CollectorTask (deployInfoCollect) is executed twice on the
+ * minimum and latest supported combinations. The task cannot succeed in a test environment (it needs
+ * gcloud and portal network access), so the test asserts that it fails for environmental reasons only,
+ * never with a runtime linkage error. Running it twice is required: the directory-deletion branch in
+ * FileUtils.createEmptyDirectory only triggers when the collector directory already exists, and that
+ * branch is exactly where a Kotlin stdlib version mismatch between the plugin and the Gradle runtime
+ * surfaced in the past as NoSuchMethodError.
+ *
  * Covered combinations:
  *  - minimum supported Java: Gradle 7.6 running on JDK 11
  *  - minimum supported:      Gradle 7.6 running on JDK 17
@@ -41,6 +49,22 @@ class CompatibilityTest {
 
         private const val PROBE_TASK = "deployInfoProbe"
         private const val PROBE_SUCCESS_MARKER = "deployInfoProbe OK:"
+
+        private const val COLLECTOR_TASK = "deployInfoCollect"
+
+        /**
+         * Signatures of JVM runtime linkage failures caused by a Kotlin stdlib version mismatch between
+         * the compiled plugin and the Gradle runtime's embedded Kotlin (e.g. calling a Kotlin 1.8 stdlib
+         * API on Gradle 7.6, which embeds Kotlin 1.7.10). The last marker is the Kotlin 2.x metadata
+         * error documented below for Kotlin DSL consumer scripts.
+         */
+        private val LINKAGE_ERROR_MARKERS = listOf(
+            "NoSuchMethodError",
+            "NoClassDefFoundError",
+            "ExceptionInInitializerError",
+            "LinkageError",
+            "Protocol message contained an invalid tag",
+        )
 
         private const val CONFIGURATION_CACHE_FLAG = "--configuration-cache"
         private const val CONFIGURATION_CACHE_STORED_MARKER = "Configuration cache entry stored."
@@ -77,6 +101,26 @@ class CompatibilityTest {
                 deployType = ProbeTask.DeployType.GAE
                 portalUrl = 'https://deploy-info-portal.example.com'
                 projects = ['proj-a', 'proj-b']
+            }
+        """.trimIndent()
+
+        // Consumer build that runs the REAL collector task. The task is expected to FAIL in this
+        // environment: it needs gcloud and network access to the portal, neither of which is available
+        // in tests. Running it is what exercises the plugin's real code paths (notably
+        // util/FileUtils.kt, which creates the collector directories) under each Gradle version's
+        // embedded Kotlin stdlib. Git collection is disabled to avoid a git dependency.
+        private val collectorBuild = """
+            import io.github.ghrcosta.CollectorTask
+
+            plugins {
+                id "io.github.ghrcosta.deploy-info-collector"
+            }
+
+            tasks.deployInfoCollect {
+                deployType = CollectorTask.DeployType.GAE
+                portalUrl = 'https://deploy-info-portal.example.com'
+                projects = ['proj-a']
+                collectGitStatus = false
             }
         """.trimIndent()
     }
@@ -136,6 +180,24 @@ class CompatibilityTest {
     }
 
     @Test
+    @DisplayName("runs the real CollectorTask on minimum supported Java combination Gradle 7.6 with Java 11")
+    fun runsRealCollectorTaskOnMinimumSupportedJavaCombinationGradle76WithJava11() {
+        verifyCollectorTaskLinksOnGradle(
+            gradleVersion = MINIMUM_SUPPORTED_GRADLE,
+            javaHome = requireJavaHome("compat.java11Home"),
+        )
+    }
+
+    @Test
+    @DisplayName("runs the real CollectorTask on latest supported combination Gradle 9.8.1 with Java 21")
+    fun runsRealCollectorTaskOnLatestSupportedCombinationGradle981WithJava21() {
+        verifyCollectorTaskLinksOnGradle(
+            gradleVersion = LATEST_SUPPORTED_GRADLE,
+            javaHome = requireJavaHome("compat.java21Home"),
+        )
+    }
+
+    @Test
     @DisplayName("publishes the feature compatibility flags of both supported features")
     fun publishesFeatureCompatibilityFlagsOfBothSupportedFeatures() {
         val descriptor = javaClass.classLoader.getResourceAsStream(PLUGIN_DESCRIPTOR_RESOURCE)
@@ -153,6 +215,53 @@ class CompatibilityTest {
             descriptor.contains("compatibility.feature.isolated-projects=$FEATURE_COMPATIBILITY_SUPPORTED_VALUE"),
             "The published plugin descriptor does not declare isolated-projects support:\n$descriptor",
         )
+    }
+
+    /**
+     * Runs the real collector task twice on the given Gradle version and asserts that, on both runs, it
+     * fails for environmental reasons only (no gcloud/network in the test environment) and never with a
+     * runtime linkage error. The first run creates the collector directory; the second run then takes the
+     * delete-existing-directory branch in FileUtils.createEmptyDirectory, which is the exact code path
+     * where a Kotlin stdlib version mismatch between the plugin and the Gradle runtime throws
+     * NoSuchMethodError.
+     */
+    private fun verifyCollectorTaskLinksOnGradle(gradleVersion: String, javaHome: String) {
+        val firstRun = runCollectorTask(gradleVersion, javaHome)
+
+        // The first run must have executed the collector's real code paths far enough to create the
+        // collector directory inside the consumer build directory (done by FileUtils.createEmptyDirectory
+        // at the very start of Context.init, before any external command or network call).
+        val collectorDir = File(projectDir, "build/collector")
+        assertTrue(
+            collectorDir.isDirectory,
+            "The first run did not create the collector directory, so the collector task failed before " +
+                "reaching FileUtils:\n${firstRun.output}",
+        )
+
+        // The second run finds the collector directory already present and deletes it via FileUtils.
+        runCollectorTask(gradleVersion, javaHome)
+    }
+
+    private fun runCollectorTask(gradleVersion: String, javaHome: String): BuildResult {
+        writeConsumerProjectFiles(javaHome, collectorBuild)
+
+        val result = GradleRunner.create()
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .withProjectDir(projectDir)
+            .withArguments(listOf("--console=plain", "--stacktrace", COLLECTOR_TASK))
+            .buildAndFail()
+
+        assertEquals(TaskOutcome.FAILED, result.task(":$COLLECTOR_TASK")?.outcome)
+        LINKAGE_ERROR_MARKERS.forEach { marker ->
+            assertTrue(
+                !result.output.contains(marker),
+                "The collector task on Gradle $gradleVersion failed with a runtime linkage error " +
+                    "('$marker'), i.e. a Kotlin stdlib incompatibility between the plugin and the " +
+                    "Gradle runtime:\n${result.output}",
+            )
+        }
+        return result
     }
 
     private fun verifyConfigurationCacheStoredAndReused(gradleVersion: String, javaHome: String) {
@@ -182,7 +291,7 @@ class CompatibilityTest {
         javaHome: String,
         extraArguments: List<String> = emptyList(),
     ): BuildResult {
-        writeConsumerProjectFiles(javaHome)
+        writeConsumerProjectFiles(javaHome, consumerBuild)
 
         val result = GradleRunner.create()
             .withPluginClasspath()
@@ -196,11 +305,11 @@ class CompatibilityTest {
         return result
     }
 
-    private fun writeConsumerProjectFiles(javaHome: String) {
+    private fun writeConsumerProjectFiles(javaHome: String, buildScript: String) {
         // The consumer build must run on the specific JDK of the compatibility combination.
         File(projectDir, "gradle.properties").writeText("org.gradle.java.home=$javaHome\n")
         File(projectDir, "settings.gradle").writeText(CONSUMER_SETTINGS)
-        File(projectDir, "build.gradle").writeText(consumerBuild)
+        File(projectDir, "build.gradle").writeText(buildScript)
     }
 
     private fun requireJavaHome(systemPropertyName: String): String =

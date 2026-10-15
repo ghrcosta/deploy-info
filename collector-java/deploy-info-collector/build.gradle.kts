@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "io.github.ghrcosta"
-version = "1.0.2"
+version = "1.0.3"
 
 kotlin {
     // Build with the latest LTS, but let the plugin work on JDK 11+. Verified by CompatibilityTest.
@@ -117,7 +117,8 @@ tasks.pluginUnderTestMetadata {
 val functionalTest = tasks.register<Test>("functionalTest") {
     group = "verification"
     description = "Runs the Gradle TestKit compatibility matrix tests (7.6+11, 7.6+17 and latest+21), " +
-        "including configuration-cache and isolated-projects feature tests."
+        "including configuration-cache and isolated-projects feature tests, plus real CollectorTask " +
+        "execution under each Gradle version's embedded Kotlin stdlib."
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
     useJUnitPlatform()

@@ -27,7 +27,8 @@ class CollectorTaskTests {
 
     private fun createTask(): CollectorTask =
         ProjectBuilder.builder().withProjectDir(testDir).build()
-            .tasks.create(CollectorTask.TASK_NAME, CollectorTask::class.java)
+            .tasks.register(CollectorTask.TASK_NAME, CollectorTask::class.java)
+            .get()
 
     @Test
     fun `String inputs are stripped of the surrounding blank space`() {

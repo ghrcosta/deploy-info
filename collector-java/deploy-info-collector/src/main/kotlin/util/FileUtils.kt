@@ -2,8 +2,6 @@ package io.github.ghrcosta.util
 
 import java.io.File
 import java.nio.charset.StandardCharsets
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.deleteRecursively
 
 fun File.getContents(): String {
     return when {
@@ -42,7 +40,6 @@ fun createEmptyFile(
     return newFile
 }
 
-@OptIn(ExperimentalPathApi::class)
 fun createEmptyDirectory(
     directoryName: String,
     destinationDir: File = Context.get().baseDir
@@ -50,7 +47,7 @@ fun createEmptyDirectory(
     val newDir = File(destinationDir, "${directoryName}/")
     if (newDir.exists() && newDir.isDirectory) {
         // Ensure the directory is empty to prevent mixing files from different deployments
-        newDir.toPath().deleteRecursively()
+        newDir.deleteRecursively()
     }
     newDir.mkdirs()
     return newDir
