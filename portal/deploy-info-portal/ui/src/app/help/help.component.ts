@@ -19,7 +19,7 @@ const COLLECTOR_SNIPPET = [
     '',
     '// Add the plugin',
     'plugins {',
-    '    id("io.github.ghrcosta.deploy-info-collector") version "1.0.1"',
+    '    id("io.github.ghrcosta.deploy-info-collector") version "1.0.2"',
     '}',
     '',
     '// Configure the task',

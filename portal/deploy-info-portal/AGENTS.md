@@ -44,6 +44,7 @@ The backend follows a Clean Architecture folder structure:
     purpose is.
   - Only use fully qualified names when required to avoid conflicts. In every other case, add import statements.
   - Remove unused import statements.
+- For code indentation, always use 4 space. Do NOT use tab.
 
 #### Kotlin-specific rules
 
