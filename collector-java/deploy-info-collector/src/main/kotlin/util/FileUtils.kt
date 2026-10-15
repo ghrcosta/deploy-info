@@ -49,7 +49,7 @@ fun createEmptyDirectory(
 ): File {
     val newDir = File(destinationDir, "${directoryName}/")
     if (newDir.exists() && newDir.isDirectory) {
-        // Ensure the directory is empty to prevent mixing files from different deploys
+        // Ensure the directory is empty to prevent mixing files from different deployments
         newDir.toPath().deleteRecursively()
     }
     newDir.mkdirs()

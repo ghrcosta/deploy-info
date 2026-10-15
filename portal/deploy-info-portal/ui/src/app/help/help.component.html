@@ -1,22 +1,22 @@
 <div class="help-inner">
     <article class="help-card">
         <header class="help-head">
-            <h1>Three steps to see your deploys here:</h1>
+            <h1>Three steps to see your deployments here:</h1>
         </header>
         <ol class="help-steps">
             <li>
                 <h2>1 &middot; Register your project</h2>
-                <p>Open <a href="" (click)="openView('projects', $event)">Projects</a> and add each GCP project whose deploys you want to watch. Every project must have a <strong>service account</strong> that the portal uses to list its deploys.</p>
+                <p>Open <a href="" (click)="openView('projects', $event)">Projects</a> and add each GCP project whose deployments you want to watch. Every project must have a <strong>service account</strong> that the portal uses to list its deployments.</p>
                 <p class="help-hint">Roles &amp; permissions: the portal's own service account needs the <strong>Service Account Token Creator</strong> role (<span class="mono">roles/iam.serviceAccountTokenCreator</span>) on the project's service account, and that service account needs read access to the listing APIs (<strong>App Engine Viewer</strong> / <strong>Cloud Run Viewer</strong>).</p>
             </li>
             <li>
                 <h2>2 &middot; Configure the collector</h2>
-                <p>Add the <span class="mono">deploy-info-collector</span> Gradle plugin to the project's <span class="mono">build.gradle.kts</span> and run <span class="mono">deployInfoCollect</span> after every deploy:</p>
+                <p>Add the <span class="mono">deploy-info-collector</span> Gradle plugin to the project's <span class="mono">build.gradle.kts</span> and run <span class="mono">deployInfoCollect</span> after every deployment:</p>
                 <pre class="code"><code>@for (line of snippetLines; track line.n) {<span class="cl"><span class="cln">{{ line.n }}</span><span class="clt">{{ line.text || ' ' }}</span></span>}</code></pre>
             </li>
             <li>
                 <h2>3 &middot; You're done</h2>
-                <p>All deploys collected after that will show up here in <a href="" (click)="openView('deploys', $event)">Deploys</a>.</p>
+                <p>All deployments collected after that will show up here in <a href="" (click)="openView('deployments', $event)">Deployments</a>.</p>
             </li>
         </ol>
     </article>

@@ -7,13 +7,13 @@ import { of } from 'rxjs';
 import { HomeComponent } from './home.component';
 import { HomeService } from './home.service';
 import { AuthState, AuthService } from '../auth/auth.service';
-import { DeployTreeNetworkService } from '../deploy-viewer/deploy-tree.network.service';
+import { DeploymentTreeNetworkService } from '../deployment-viewer/deployment-tree.network.service';
 import { ProjectsConfigNetworkService } from '../projects-config/projects-config.network.service';
 
 const THEME_STORAGE_KEY = 'deploy-info-theme';
 
 // Minimal icon stand-ins: the real ones are registered by AppComponent at
-// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
+// runtime, which the specs do not include (why these are needed at all: deployment-viewer.component.spec.ts).
 const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0Z"/></svg>';
 const ICON_NAMES = [
   'project', 'GAE', 'RUN', 'no_data', 'group', 'deployed_code', 'deployed_code_alert', 'label',
@@ -39,7 +39,7 @@ describe('HomeComponent', () => {
     localStorage.removeItem(THEME_STORAGE_KEY);
     document.documentElement.classList.remove('dark-theme', 'light-theme');
 
-    const treeNetwork = jasmine.createSpyObj<DeployTreeNetworkService>('DeployTreeNetworkService', ['getTree']);
+    const treeNetwork = jasmine.createSpyObj<DeploymentTreeNetworkService>('DeploymentTreeNetworkService', ['getTree']);
     treeNetwork.getTree.and.returnValue(of([]));
     const projectsNetwork = jasmine.createSpyObj<ProjectsConfigNetworkService>('ProjectsConfigNetworkService', ['getProjects']);
     projectsNetwork.getProjects.and.returnValue(of([]));
@@ -49,7 +49,7 @@ describe('HomeComponent', () => {
       imports: [HomeComponent],
       providers: [
         { provide: AuthService, useValue: authService },
-        { provide: DeployTreeNetworkService, useValue: treeNetwork },
+        { provide: DeploymentTreeNetworkService, useValue: treeNetwork },
         { provide: ProjectsConfigNetworkService, useValue: projectsNetwork },
       ],
     }).compileComponents();
@@ -91,7 +91,7 @@ describe('HomeComponent', () => {
     render();
 
     expect(element().querySelector('top-bar')).toBeTruthy();
-    expect(element().querySelector('deploy-viewer')).withContext('the default view is deploys').toBeTruthy();
+    expect(element().querySelector('deployment-viewer')).withContext('the default view is deployments').toBeTruthy();
   });
 
   it('switches the content view with the HomeService view state', () => {
@@ -101,16 +101,16 @@ describe('HomeComponent', () => {
     homeService.openView('projects');
     fixture.detectChanges();
     expect(element().querySelector('projects-config')).toBeTruthy();
-    expect(element().querySelector('deploy-viewer')).toBeNull();
+    expect(element().querySelector('deployment-viewer')).toBeNull();
 
     homeService.openView('help');
     fixture.detectChanges();
     expect(element().querySelector('help')).toBeTruthy();
     expect(element().querySelector('projects-config')).toBeNull();
 
-    homeService.openView('deploys');
+    homeService.openView('deployments');
     fixture.detectChanges();
-    expect(element().querySelector('deploy-viewer')).toBeTruthy();
+    expect(element().querySelector('deployment-viewer')).toBeTruthy();
   });
 });
 

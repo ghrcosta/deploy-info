@@ -1,0 +1,15 @@
+/* Structural styles (.viewer-inner, .deployment-card, .deployment-crumbs, .chip,
+   .deployment-meta, .tabs, .tab-btn, .file-block, .file-head, .file-path, .code,
+   the .cl/.cln/.clt lines with their diff tints, .empty-state) live in the
+   global stylesheet (src/sass/_structure.scss).
+   Only the host display and the loading spinner wrapper are component-specific. */
+
+:host {
+    display: block;
+}
+
+.viewer-loading {
+    display: flex;
+    justify-content: center;
+    padding-top: 48px;
+}

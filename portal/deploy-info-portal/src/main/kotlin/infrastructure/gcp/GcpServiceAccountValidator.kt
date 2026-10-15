@@ -50,12 +50,12 @@ class GcpServiceAccountValidator(
         if (impersonationIssue != null) return impersonationIssue
 
         return try {
-            val appEngineDeploys = appEngineLister.listAllDeploys(project)
-            val cloudRunDeploys = cloudRunLister.listAllDeploys(project)
+            val appEngineDeployments = appEngineLister.listAllDeployments(project)
+            val cloudRunDeployments = cloudRunLister.listAllDeployments(project)
             logger.info(
                 "Service account validation succeeded: project=${project.projectId}, " +
-                    "serviceAccount=${project.serviceAccount}, appEngineVersions=${appEngineDeploys.size}, " +
-                    "cloudRunRevisions=${cloudRunDeploys.size}",
+                    "serviceAccount=${project.serviceAccount}, appEngineVersions=${appEngineDeployments.size}, " +
+                    "cloudRunRevisions=${cloudRunDeployments.size}",
             )
             ServiceAccountIssue.NONE
         } catch (e: GcpListingException) {

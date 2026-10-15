@@ -4,13 +4,13 @@
         <mat-icon>menu</mat-icon>
     </button>
 
-    <a class="brand" href="" (click)="openView('deploys', $event)">
+    <a class="brand" href="" (click)="openView('deployments', $event)">
         <span class="brand-mark"><mat-icon svgIcon="deployed_code"></mat-icon></span>
         <span class="brand-name">DeployInfo</span>
     </a>
 
     <nav class="topbar-nav" aria-label="Main navigation">
-        <a class="topbar-link" [class.active]="view === 'deploys'" href="" (click)="openView('deploys', $event)">Deploys</a>
+        <a class="topbar-link" [class.active]="view === 'deployments'" href="" (click)="openView('deployments', $event)">Deployments</a>
         <a class="topbar-link" [class.active]="view === 'projects'" href="" (click)="openView('projects', $event)">Projects</a>
         <a class="topbar-link topbar-help" [class.active]="view === 'help'" href="" (click)="openView('help', $event)">Help</a>
     </nav>

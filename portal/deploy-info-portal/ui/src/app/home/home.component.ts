@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { TopBarComponent } from "./top-bar/top-bar.component";
-import { DeployViewerComponent } from '../deploy-viewer/deploy-viewer.component';
+import { DeploymentViewerComponent } from '../deployment-viewer/deployment-viewer.component';
 import { ProjectsConfigComponent } from '../projects-config/projects-config.component';
 import { HelpComponent } from '../help/help.component';
 import { HomeService, HomeView } from './home.service';
@@ -14,7 +14,7 @@ import { LoginComponent } from '../auth/login.component';
     changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
         TopBarComponent,
-        DeployViewerComponent,
+        DeploymentViewerComponent,
         ProjectsConfigComponent,
         HelpComponent,
         LoginComponent,
@@ -28,7 +28,7 @@ export class HomeComponent {
     private authService = inject(AuthService);
 
     /** The view currently shown in the content area. */
-    view: HomeView = 'deploys';
+    view: HomeView = 'deployments';
 
     /** True when authentication is disabled (local dev) or the user is signed in. */
     signedIn = false;

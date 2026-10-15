@@ -247,7 +247,7 @@ class Context:
     project_root_dir: Path  # base to resolve the git/extra-file paths
     max_file_size: int  # in bytes; larger files are not collected
     max_git_log_lines: int  # cap of the entries collected from `git log --oneline` into git-log.txt
-    user_email: str  # the gcloud account that performed the deploy and the collection
+    user_email: str  # the gcloud account that performed the deployment and the collection
     git_uuid_map: dict[str, GitCollectedFile] = field(default_factory=dict)
     extra_uuid_map: dict[str, str] = field(default_factory=dict)
 
@@ -342,7 +342,7 @@ def create_empty_file(filename: str, destination_dir: Path | None = None) -> Pat
 def create_empty_directory(directory_name: str, destination_dir: Path | None = None) -> Path:
     """Delete an existing directory recursively, then create it empty (``createEmptyDirectory``).
 
-    Ensures the directory is empty to prevent mixing files from different deploys.
+    Ensures the directory is empty to prevent mixing files from different deployments.
     """
     destination = destination_dir if destination_dir is not None else Context.get().base_dir
     new_dir = destination / directory_name
@@ -646,7 +646,7 @@ def trigger_portal_processing(
     user_email: str,
     access_token: str | None,
 ) -> None:
-    """Notify the portal that an output directory was uploaded, so it can link the deploy.
+    """Notify the portal that an output directory was uploaded, so it can link the deployment.
 
     Calls ``POST {portalUrl}/collector/handleNewDirectory`` with a JSON body
     ``{directoryName, projects, deployType, userEmail}``. The portal owns the matching logic and
@@ -715,13 +715,13 @@ def report_trigger_outcome(url: str, status: int, body: str | None, directory_na
     response_status = response.get("status")
     if response_status in (TRIGGER_STATUS_CREATED, TRIGGER_STATUS_ALREADY_LINKED):
         Logger.i(
-            f"Deploy link result: {response_status} ('{directory_name}' -->  "
+            f"Deployment link result: {response_status} ('{directory_name}' -->  "
             f"[{response.get('project') or '?'}, {response.get('service') or '?'}, "
             f"{response.get('version') or '?'}])."
         )
     elif response_status == TRIGGER_STATUS_PENDING:
         Logger.i(
-            f"Portal accepted the trigger for '{directory_name}' as pending (HTTP {status}): no deploy matched "
+            f"Portal accepted the trigger for '{directory_name}' as pending (HTTP {status}): no deployment matched "
             "yet. The portal will retry matching and may still link the upload or delete its folder."
         )
     else:
@@ -758,10 +758,10 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse and normalize the CLI arguments (projects merged/deduped, extra files flattened)."""
     parser = argparse.ArgumentParser(
         prog="deploy_info_collector.py",
-        description="Collects deploy info (git status/diff and extra files) and uploads it to the deploy-info portal.",
+        description="Collects deployment info (git status/diff and extra files) and uploads it to the deploy-info portal.",
     )
     parser.add_argument("--deploy-type", required=True, type=DeployType, choices=list(DeployType),
-                        metavar="{GAE,RUN}", help="Type of deploy. Supported values are 'GAE' and 'RUN'.")
+                        metavar="{GAE,RUN}", help="Type of deployment. Supported values are 'GAE' and 'RUN'.")
     parser.add_argument("--portal-url", required=True,
                         help="URL of the portal backend, from which the upload bucket is resolved.")
     parser.add_argument("--projects", required=True, nargs="+", action="append", metavar="PROJECT",

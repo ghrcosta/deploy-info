@@ -1,32 +1,32 @@
 package tests.fakes
 
 import application.GcpCloudRunLister
-import domain.CloudRunDeploy
+import domain.CloudRunDeployment
 import domain.GcpListingException
 import domain.Project
 import java.time.Instant
 
 /**
  * In-memory [GcpCloudRunLister] used in unit tests (and later by the `local` profile) instead of
- * calling the real GCP Cloud Run Admin API. Deploys are returned newest first, matching the
+ * calling the real GCP Cloud Run Admin API. Deployments are returned newest first, matching the
  * contract of [infrastructure.gcp.cloudrun.GcpCloudRunApiClient].
  */
 class FakeCloudRunLister(
-    private var deploysByProject: MutableMap<String, List<CloudRunDeploy>> = mutableMapOf(),
+    private var deploymentsByProject: MutableMap<String, List<CloudRunDeployment>> = mutableMapOf(),
 ) : GcpCloudRunLister {
 
-    /** When true, the next (and every subsequent) listing throws instead of returning deploys. */
+    /** When true, the next (and every subsequent) listing throws instead of returning deployments. */
     var throwOnEveryList: Boolean = false
 
-    override fun listAllDeploys(project: Project): List<CloudRunDeploy> {
+    override fun listAllDeployments(project: Project): List<CloudRunDeployment> {
         if (throwOnEveryList) {
             throw GcpListingException("transient listing failure")
         }
-        return deploysByProject[project.projectId].orEmpty().sortedByDescending { it.createTime }
+        return deploymentsByProject[project.projectId].orEmpty().sortedByDescending { it.createTime }
     }
 
-    fun seed(projectId: String, deploys: List<CloudRunDeploy>) {
-        deploysByProject[projectId] = deploys
+    fun seed(projectId: String, deployments: List<CloudRunDeployment>) {
+        deploymentsByProject[projectId] = deployments
     }
 
     companion object {
@@ -37,7 +37,7 @@ class FakeCloudRunLister(
             revisionId: String,
             createTime: Instant,
             createdBy: String? = null,
-        ) = CloudRunDeploy(
+        ) = CloudRunDeployment(
             projectId = projectId,
             location = location,
             serviceId = serviceId,

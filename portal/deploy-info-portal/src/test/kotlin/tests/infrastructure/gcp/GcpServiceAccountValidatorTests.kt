@@ -33,8 +33,8 @@ class GcpServiceAccountValidatorTests {
             .validate(project)
 
         assertEquals(ServiceAccountIssue.NONE, issue)
-        verify(appEngineLister).listAllDeploys(project)
-        verify(cloudRunLister).listAllDeploys(project)
+        verify(appEngineLister).listAllDeployments(project)
+        verify(cloudRunLister).listAllDeployments(project)
     }
 
     @Test
@@ -52,8 +52,8 @@ class GcpServiceAccountValidatorTests {
             .validate(project)
 
         assertEquals(ServiceAccountIssue.MISSING_IMPERSONATION_PERMISSION, issue)
-        verify(appEngineLister, never()).listAllDeploys(any())
-        verify(cloudRunLister, never()).listAllDeploys(any())
+        verify(appEngineLister, never()).listAllDeployments(any())
+        verify(cloudRunLister, never()).listAllDeployments(any())
     }
 
     @Test
@@ -73,7 +73,7 @@ class GcpServiceAccountValidatorTests {
     @Test
     fun `Report MISSING_LISTING_PERMISSION when a listing API denies access`() {
         val appEngineLister = mock<GcpAppEngineLister> {
-            on { listAllDeploys(any()) } doThrow
+            on { listAllDeployments(any()) } doThrow
                 GcpListingException("GCP App Engine API returned PERMISSION_DENIED", statusCode = "PERMISSION_DENIED")
         }
 
@@ -85,7 +85,7 @@ class GcpServiceAccountValidatorTests {
     @Test
     fun `Report PROJECT_NOT_FOUND when a listing API cannot find the project`() {
         val cloudRunLister = mock<GcpCloudRunLister> {
-            on { listAllDeploys(any()) } doThrow
+            on { listAllDeployments(any()) } doThrow
                 GcpListingException("GCP Cloud Run API returned NOT_FOUND", statusCode = "NOT_FOUND")
         }
 
@@ -97,7 +97,7 @@ class GcpServiceAccountValidatorTests {
     @Test
     fun `Report PROJECT_NOT_FOUND when a listing API rejects the project id as invalid`() {
         val appEngineLister = mock<GcpAppEngineLister> {
-            on { listAllDeploys(any()) } doThrow
+            on { listAllDeployments(any()) } doThrow
                 GcpListingException("GCP App Engine API returned INVALID_ARGUMENT", statusCode = "INVALID_ARGUMENT")
         }
 
@@ -109,7 +109,7 @@ class GcpServiceAccountValidatorTests {
     @Test
     fun `Report APIS_NOT_ENABLED when a listing API is not enabled in the project`() {
         val appEngineLister = mock<GcpAppEngineLister> {
-            on { listAllDeploys(any()) } doThrow
+            on { listAllDeployments(any()) } doThrow
                 GcpListingException(
                     "GCP App Engine API returned PERMISSION_DENIED",
                     statusCode = "PERMISSION_DENIED",
@@ -125,7 +125,7 @@ class GcpServiceAccountValidatorTests {
     @Test
     fun `Report MISSING_LISTING_PERMISSION when a permission denial carries another ErrorInfo reason`() {
         val cloudRunLister = mock<GcpCloudRunLister> {
-            on { listAllDeploys(any()) } doThrow
+            on { listAllDeployments(any()) } doThrow
                 GcpListingException(
                     "GCP Cloud Run API returned PERMISSION_DENIED",
                     statusCode = "PERMISSION_DENIED",
@@ -141,7 +141,7 @@ class GcpServiceAccountValidatorTests {
     @Test
     fun `Report PORTAL_ISSUE when a listing fails for another reason`() {
         val appEngineLister = mock<GcpAppEngineLister> {
-            on { listAllDeploys(any()) } doThrow GcpListingException("transient listing failure")
+            on { listAllDeployments(any()) } doThrow GcpListingException("transient listing failure")
         }
 
         val issue = GcpServiceAccountValidator(okCredentialsProvider, appEngineLister, mock()).validate(project)

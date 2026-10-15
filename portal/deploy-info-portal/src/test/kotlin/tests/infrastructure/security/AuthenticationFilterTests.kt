@@ -2,7 +2,7 @@ package tests.infrastructure.security
 
 import application.auth.AuthenticateUserUseCase
 import application.auth.AuthenticationIssue
-import application.collector.CreateDeployLinkUseCase
+import application.collector.CreateDeploymentLinkUseCase
 import application.collector.GetStorageBucketUseCase
 import infrastructure.config.DeployInfoProperties
 import infrastructure.security.AuthenticationFilter
@@ -27,7 +27,7 @@ import kotlin.test.assertEquals
 class AuthenticationFilterTests {
 
     private val authenticateUserUseCase = mock<AuthenticateUserUseCase>()
-    private val createDeployLinkUseCase = mock<CreateDeployLinkUseCase>()
+    private val createDeploymentLinkUseCase = mock<CreateDeploymentLinkUseCase>()
 
     private fun properties(authEnabled: Boolean) = DeployInfoProperties(
         storageBucket = "bucket",
@@ -40,7 +40,7 @@ class AuthenticationFilterTests {
     private fun mockMvc(authEnabled: Boolean): MockMvc {
         val properties = properties(authEnabled)
         val builder = MockMvcBuilders.standaloneSetup(
-            ui.collector.CollectorController(createDeployLinkUseCase, GetStorageBucketUseCase(properties), properties),
+            ui.collector.CollectorController(createDeploymentLinkUseCase, GetStorageBucketUseCase(properties), properties),
         )
         builder.addFilters<StandaloneMockMvcBuilder>(AuthenticationFilter(authenticateUserUseCase, properties))
         return builder.build()

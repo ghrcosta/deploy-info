@@ -6,7 +6,7 @@ import com.google.api.gax.rpc.ApiException
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.run.v2.*
 import com.google.protobuf.Timestamp
-import domain.CloudRunDeploy
+import domain.CloudRunDeployment
 import domain.GcpListingException
 import domain.Project
 import infrastructure.gcp.CredentialsProvider
@@ -27,7 +27,7 @@ class GcpCloudRunApiClient(
 
     private val adminClientsByServiceAccount = ConcurrentHashMap<String, CloudRunAdminClient>()
 
-    override fun listAllDeploys(project: Project): List<CloudRunDeploy> {
+    override fun listAllDeployments(project: Project): List<CloudRunDeployment> {
         val adminClient = adminClientFor(project)
         return catchListingErrors(project) {
             adminClient
@@ -35,7 +35,7 @@ class GcpCloudRunApiClient(
                 .flatMap { service ->
                     val serviceName = ServiceName.parse(service.name)
                     adminClient.listRevisions(service.name).map { revision ->
-                        revision.toCloudRunDeploy(
+                        revision.toCloudRunDeployment(
                             project, serviceName.service, serviceName.location, service.uri.takeIf { it.isNotEmpty() },
                         )
                     }
@@ -69,14 +69,14 @@ class GcpCloudRunApiClient(
             )
         }
 
-    private fun Revision.toCloudRunDeploy(
+    private fun Revision.toCloudRunDeployment(
         project: Project,
         serviceId: String,
         location: String,
         url: String?,
-    ): CloudRunDeploy {
+    ): CloudRunDeployment {
         val revisionName = RevisionName.parse(name)
-        return CloudRunDeploy(
+        return CloudRunDeployment(
             projectId = project.projectId,
             location = location,
             serviceId = serviceId,

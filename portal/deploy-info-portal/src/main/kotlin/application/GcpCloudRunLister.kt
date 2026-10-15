@@ -1,9 +1,9 @@
 package application
 
-import domain.CloudRunDeploy
+import domain.CloudRunDeployment
 import domain.Project
 
-/** Lists the Cloud Run deploys (services/revisions) that exist in a GCP project. */
+/** Lists the Cloud Run deployments (services/revisions) that exist in a GCP project. */
 interface GcpCloudRunLister {
 
     /**
@@ -11,5 +11,5 @@ interface GcpCloudRunLister {
      *
      * @throws domain.GcpListingException when the listing API cannot be reached or returns an error.
      */
-    fun listAllDeploys(project: Project): List<CloudRunDeploy>
+    fun listAllDeployments(project: Project): List<CloudRunDeployment>
 }

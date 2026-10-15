@@ -1,9 +1,9 @@
 package ui.portal
 
-import application.tree.GetDeployTreeUseCase
+import application.tree.GetDeploymentTreeUseCase
 import com.fasterxml.jackson.annotation.JsonProperty
 import domain.ContentFile
-import domain.DeployContent
+import domain.DeploymentContent
 import domain.GitContent
 
 /** Response of `GET /portal/tree` (see `documentation/api.md`): the navigator tree, group level. */
@@ -11,7 +11,7 @@ data class GroupDTO(
     val name: String,
     val projects: List<ProjectDTO>,
 ) {
-    constructor(group: GetDeployTreeUseCase.GroupEntry) : this(
+    constructor(group: GetDeploymentTreeUseCase.GroupEntry) : this(
         name = group.name,
         projects = group.projects.map { ProjectDTO(it) },
     )
@@ -21,7 +21,7 @@ data class ProjectDTO(
     val projectId: String,
     val services: List<ServiceDTO>,
 ) {
-    constructor(project: GetDeployTreeUseCase.ProjectEntry) : this(
+    constructor(project: GetDeploymentTreeUseCase.ProjectEntry) : this(
         projectId = project.projectId,
         services = project.services.map { ServiceDTO(it) },
     )
@@ -32,7 +32,7 @@ data class ServiceDTO(
     val type: String,
     val versions: List<VersionDTO>,
 ) {
-    constructor(service: GetDeployTreeUseCase.ServiceEntry) : this(
+    constructor(service: GetDeploymentTreeUseCase.ServiceEntry) : this(
         name = service.name,
         type = service.type.name,
         versions = service.versions.map { VersionDTO(it) },
@@ -41,7 +41,7 @@ data class ServiceDTO(
 
 /** A selectable version node; the fields the file-viewer header needs ride along with the identity. */
 data class VersionDTO(
-    /** The deployment identity key (format: GetDeployTreeUseCase.VersionEntry). */
+    /** The deployment identity key (format: GetDeploymentTreeUseCase.VersionEntry). */
     val id: String,
     val name: String,
     val type: String,
@@ -51,7 +51,7 @@ data class VersionDTO(
     val timestamp: Long,
     val storageFolder: String,
 ) {
-    constructor(version: GetDeployTreeUseCase.VersionEntry) : this(
+    constructor(version: GetDeploymentTreeUseCase.VersionEntry) : this(
         id = version.id,
         name = version.name,
         type = version.type.name,
@@ -64,11 +64,11 @@ data class VersionDTO(
 }
 
 /** Response of `GET /portal/deploy/content` (see `documentation/api.md`): the collected files. */
-data class DeployContentDTO(
+data class DeploymentContentDTO(
     val git: GitDTO?,
     val extras: List<ContentFileDTO>,
 ) {
-    constructor(content: DeployContent) : this(
+    constructor(content: DeploymentContent) : this(
         git = content.git?.let { GitDTO(it) },
         extras = content.extras.map { ContentFileDTO(it) },
     )

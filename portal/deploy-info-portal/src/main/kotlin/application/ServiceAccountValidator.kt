@@ -8,7 +8,7 @@ import domain.Project
  */
 enum class ServiceAccountIssue {
 
-    /** The portal can impersonate the service account and list the project's deploys with it. */
+    /** The portal can impersonate the service account and list the project's deployments with it. */
     NONE,
 
     /**
@@ -19,7 +19,7 @@ enum class ServiceAccountIssue {
 
     /**
      * The service account lacks the App Engine Viewer / Cloud Run Viewer roles required to list the
-     * project's deploys. Fixable by the user.
+     * project's deployments. Fixable by the user.
      */
     MISSING_LISTING_PERMISSION,
 
@@ -45,7 +45,7 @@ interface ServiceAccountValidator {
 
     /**
      * Checks that the portal can impersonate the project's service account and list its GAE and
-     * Cloud Run deploys with it, hitting the real GCP APIs (see `GcpServiceAccountValidator`).
+     * Cloud Run deployments with it, hitting the real GCP APIs (see `GcpServiceAccountValidator`).
      */
     fun validate(project: Project): ServiceAccountIssue
 }

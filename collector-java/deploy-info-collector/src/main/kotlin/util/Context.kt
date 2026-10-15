@@ -15,7 +15,7 @@ class Context(
     val maxFileSize: Int,
     /** Maximum number of entries collected from `git log --oneline` by [io.github.ghrcosta.action.GitCollector] */
     val maxGitLogLines: Int,
-    /** The gcloud account that performed the deploy and the collection */
+    /** The gcloud account that performed the deployment and the collection */
     val userEmail: String,
     /** Map of UUID for files collected by [io.github.ghrcosta.action.GitCollector], their real path and git state (new/modified) */
     val gitUuidMap: MutableMap<String, GitCollectedFile> = mutableMapOf(),

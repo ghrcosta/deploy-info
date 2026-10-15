@@ -6,7 +6,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ServiceAccountErrorDialogComponent, ServiceAccountErrorDialogData, ServiceAccountIssueCode } from './service-account-error-dialog.component';
 
 // Minimal icon stand-ins: the real ones are registered by AppComponent at
-// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
+// runtime, which the specs do not include (why these are needed at all: deployment-viewer.component.spec.ts).
 const STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0Z"/></svg>';
 
 const BASE: ServiceAccountErrorDialogData = {

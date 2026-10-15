@@ -65,7 +65,7 @@ abstract class CollectorTask : DefaultTask() {
 
     @get:Input
     @get:Option(
-        description = "Type of deploy. Supported values are 'GAE' and 'RUN'."
+        description = "Type of deployment. Supported values are 'GAE' and 'RUN'."
     )
     abstract val deployType: Property<DeployType>
     @Suppress("unused") enum class DeployType { GAE, RUN }

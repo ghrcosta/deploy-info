@@ -63,18 +63,18 @@ class GcpCloudRunApiClientTests {
             )
         }
 
-        val deploys = client(adminClient).listAllDeploys(project)
+        val deployments = client(adminClient).listAllDeployments(project)
 
-        assertEquals(listOf("rev-3", "rev-2", "rev-1"), deploys.map { it.revisionId })
-        assertEquals(listOf("worker", "web-api", "web-api"), deploys.map { it.serviceId })
-        assertEquals(listOf("us-central1", "europe-west1", "europe-west1"), deploys.map { it.location })
-        assertEquals(listOf(PROJECT_ID, PROJECT_ID, PROJECT_ID), deploys.map { it.projectId })
+        assertEquals(listOf("rev-3", "rev-2", "rev-1"), deployments.map { it.revisionId })
+        assertEquals(listOf("worker", "web-api", "web-api"), deployments.map { it.serviceId })
+        assertEquals(listOf("us-central1", "europe-west1", "europe-west1"), deployments.map { it.location })
+        assertEquals(listOf(PROJECT_ID, PROJECT_ID, PROJECT_ID), deployments.map { it.projectId })
         assertEquals(
             listOf(instant(30), instant(20), instant(10)),
-            deploys.map { it.createTime },
+            deployments.map { it.createTime },
         )
-        assertEquals(listOf(null, "https://web-api.example.com", "https://web-api.example.com"), deploys.map { it.url })
-        assertEquals(listOf(null, "deployer@example.com", null), deploys.map { it.createdBy })
+        assertEquals(listOf(null, "https://web-api.example.com", "https://web-api.example.com"), deployments.map { it.url })
+        assertEquals(listOf(null, "deployer@example.com", null), deployments.map { it.createdBy })
     }
 
     @Test
@@ -84,8 +84,8 @@ class GcpCloudRunApiClientTests {
         }
         val client = client(adminClient)
 
-        client.listAllDeploys(project)
-        client.listAllDeploys(project)
+        client.listAllDeployments(project)
+        client.listAllDeployments(project)
 
         org.mockito.kotlin.verify(adminClient, org.mockito.kotlin.times(2)).listServices(PROJECT_ID)
     }
@@ -97,7 +97,7 @@ class GcpCloudRunApiClientTests {
                 ApiException(RuntimeException("no permission"), statusCode(StatusCode.Code.PERMISSION_DENIED), false)
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals(
             "GCP Cloud Run API returned PERMISSION_DENIED for project ${PROJECT_ID}",
@@ -115,7 +115,7 @@ class GcpCloudRunApiClientTests {
                 ApiException(RuntimeException("not found"), statusCode(StatusCode.Code.NOT_FOUND), false)
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals(
             "GCP Cloud Run API returned NOT_FOUND for project ${PROJECT_ID}",
@@ -132,7 +132,7 @@ class GcpCloudRunApiClientTests {
                 ApiException(RuntimeException("invalid argument"), statusCode(StatusCode.Code.INVALID_ARGUMENT), false)
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals(
             "GCP Cloud Run API returned INVALID_ARGUMENT for project ${PROJECT_ID}",
@@ -157,7 +157,7 @@ class GcpCloudRunApiClientTests {
             )
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals("PERMISSION_DENIED", exception.statusCode)
         assertTrue(exception.isPermissionDenied)

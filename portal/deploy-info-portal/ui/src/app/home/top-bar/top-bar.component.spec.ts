@@ -8,7 +8,7 @@ import { HomeService, HomeView } from '../home.service';
 const THEME_STORAGE_KEY = 'deploy-info-theme';
 
 // Minimal icon stand-ins: the real ones are registered by AppComponent at
-// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
+// runtime, which the specs do not include (why these are needed at all: deployment-viewer.component.spec.ts).
 const DEPLOYED_CODE_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0H0Z"/></svg>';
 
@@ -70,12 +70,12 @@ describe('TopBarComponent', () => {
     expect(views).toEqual(['help']);
   });
 
-  it('returns to the deploys view when the app name is clicked', () => {
+  it('returns to the deployments view when the app name is clicked', () => {
     views = [];
 
     (fixture.nativeElement.querySelector('.brand') as HTMLElement).click();
 
-    expect(views).toEqual(['deploys']);
+    expect(views).toEqual(['deployments']);
   });
 
   it('does not navigate when a nav link is clicked', () => {

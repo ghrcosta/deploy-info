@@ -6,7 +6,7 @@ import com.google.api.gax.rpc.ApiException
 import com.google.appengine.v1.*
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.protobuf.Timestamp
-import domain.AppEngineDeploy
+import domain.AppEngineDeployment
 import domain.GcpListingException
 import domain.Project
 import infrastructure.gcp.CredentialsProvider
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * The client library takes care of authentication, request building, JSON parsing and pagination;
  * this class only caches the underlying client per service account and maps the library's resources
- * into [AppEngineDeploy] domain objects.
+ * into [AppEngineDeployment] domain objects.
  */
 class GcpAppEngineApiClient(
     private val credentialsProvider: CredentialsProvider,
@@ -29,13 +29,13 @@ class GcpAppEngineApiClient(
 
     private val adminClientsByServiceAccount = ConcurrentHashMap<String, AppEngineAdminClient>()
 
-    override fun listAllDeploys(project: Project): List<AppEngineDeploy> {
+    override fun listAllDeployments(project: Project): List<AppEngineDeployment> {
         val adminClient = adminClientFor(project)
         val services = catchListingErrors(project) { adminClient.listServices(project.projectId) }
         return services
             .flatMap { service ->
                 val versions = catchListingErrors(project) { adminClient.listVersions(project.projectId, service.id) }
-                versions.map { it.toAppEngineDeploy(project, service.id) }
+                versions.map { it.toAppEngineDeployment(project, service.id) }
             }
             .sortedByDescending { it.createTime }
     }
@@ -65,8 +65,8 @@ class GcpAppEngineApiClient(
             )
         }
 
-    private fun Version.toAppEngineDeploy(project: Project, serviceId: String): AppEngineDeploy =
-        AppEngineDeploy(
+    private fun Version.toAppEngineDeployment(project: Project, serviceId: String): AppEngineDeployment =
+        AppEngineDeployment(
             projectId = project.projectId,
             serviceId = serviceId,
             versionId = id,

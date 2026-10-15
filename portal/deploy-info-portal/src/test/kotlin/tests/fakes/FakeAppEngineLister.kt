@@ -1,34 +1,34 @@
 package tests.fakes
 
 import application.GcpAppEngineLister
-import domain.AppEngineDeploy
+import domain.AppEngineDeployment
 import domain.GcpListingException
 import domain.Project
 import java.time.Instant
 
 /**
  * In-memory [GcpAppEngineLister] used in unit tests (and later by the `local` profile) instead of
- * calling the real GCP App Engine Admin API. Deploys are returned newest first, matching the
+ * calling the real GCP App Engine Admin API. Deployments are returned newest first, matching the
  * contract of [infrastructure.gcp.appengine.GcpAppEngineApiClient].
  */
 class FakeAppEngineLister(
-    private var deploysByProject: MutableMap<String, List<AppEngineDeploy>> = mutableMapOf(),
+    private var deploymentsByProject: MutableMap<String, List<AppEngineDeployment>> = mutableMapOf(),
 ) : GcpAppEngineLister {
 
-    /** When true, the next (and every subsequent) listing throws instead of returning deploys. */
+    /** When true, the next (and every subsequent) listing throws instead of returning deployments. */
     var throwOnEveryList: Boolean = false
 
-    /** When set, listings for the projects matching this predicate throw instead of returning deploys. */
+    /** When set, listings for the projects matching this predicate throw instead of returning deployments. */
     var throwOnProject: ((String) -> Boolean)? = null
 
     private var throwOnNextList: Boolean = false
 
-    override fun listAllDeploys(project: Project): List<AppEngineDeploy> {
+    override fun listAllDeployments(project: Project): List<AppEngineDeployment> {
         if (throwOnEveryList || throwOnNextList || throwOnProject?.invoke(project.projectId) == true) {
             throwOnNextList = false
             throw GcpListingException("transient listing failure")
         }
-        return deploysByProject[project.projectId].orEmpty().sortedByDescending { it.createTime }
+        return deploymentsByProject[project.projectId].orEmpty().sortedByDescending { it.createTime }
     }
 
     /** Makes the next listing throw [GcpListingException] (simulating a transient failure). */
@@ -36,8 +36,8 @@ class FakeAppEngineLister(
         throwOnNextList = true
     }
 
-    fun seed(projectId: String, deploys: List<AppEngineDeploy>) {
-        deploysByProject[projectId] = deploys
+    fun seed(projectId: String, deployments: List<AppEngineDeployment>) {
+        deploymentsByProject[projectId] = deployments
     }
 
     companion object {
@@ -47,7 +47,7 @@ class FakeAppEngineLister(
             versionId: String,
             createTime: Instant,
             createdBy: String? = null,
-        ) = AppEngineDeploy(
+        ) = AppEngineDeployment(
             projectId = projectId,
             serviceId = serviceId,
             versionId = versionId,

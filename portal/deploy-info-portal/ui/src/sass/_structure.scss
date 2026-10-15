@@ -314,8 +314,8 @@ img, svg { display: block; }
 .nav-project[data-filtered-out] { display: none; }
 .nav-group[data-filtered-out] { display: none; }
 
-/* ---------------------------------------------------------- deploy card */
-.deploy-card {
+/* ------------------------------------------------------ deployment card */
+.deployment-card {
     padding: 18px 22px;
     border-radius: var(--radius-l, 14px);
     background: var(--surface, #fff);
@@ -323,7 +323,7 @@ img, svg { display: block; }
     box-shadow: var(--shadow-1, 0 1px 3px rgba(0,0,0,.06));
 }
 
-.deploy-crumbs {
+.deployment-crumbs {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -332,9 +332,9 @@ img, svg { display: block; }
 .crumb-version { font-weight: 600; }
 .crumb-sep { display: inline-flex; color: var(--text-faint, #9aa0a8); }
 .crumb-sep .icon { width: 16px; height: 16px; }
-.deploy-crumbs .badge { margin-left: 6px; }
+.deployment-crumbs .badge { margin-left: 6px; }
 
-.deploy-meta {
+.deployment-meta {
     display: flex;
     align-items: center;
     gap: 20px;
@@ -725,11 +725,11 @@ img, svg { display: block; }
     .brand-name { display: none; }
     .brand-mark { width: 34px; height: 34px; }
 
-    .deploy-card { padding: 15px 16px; }
-    .deploy-crumbs { gap: 4px; }
+    .deployment-card { padding: 15px 16px; }
+    .deployment-crumbs { gap: 4px; }
     .chip { font-size: .8rem; padding: 4px 9px; }
-    .deploy-crumbs .badge { display: none; }
-    .deploy-meta { gap: 12px; }
+    .deployment-crumbs .badge { display: none; }
+    .deployment-meta { gap: 12px; }
 
     .tabs { width: 100%; }
     .tab-btn { flex: 1; justify-content: center; }
@@ -763,11 +763,11 @@ img, svg { display: block; }
 
 /* ------------------------------------------------------------ top bar */
 /* The Help link sits farther from the other nav links (the gap between
-   Deploys and Projects is 4px). */
+   Deployments and Projects is 4px). */
 .topbar-help { margin-left: 14px; }
 
 /* ------------------------------------------------- viewer empty state */
-/* With no deploys at all the navigator is hidden and the viewer centers
+/* With no deployments at all the navigator is hidden and the viewer centers
    its empty state in the remaining space. */
 body.nav-hidden .navigator { display: none; }
 body.nav-hidden .nav-toggle { display: none; }

@@ -1,6 +1,6 @@
 # GCP deployment listing
 
-How the portal backend lists the existing deploys of a configured GCP project: given a configured
+How the portal backend lists the existing deployments of a configured GCP project: given a configured
 project, the portal discovers every App Engine version and Cloud Run revision that exists in it, newest
 first. It is the data source for the linking logic that associates a collector upload with the deployment it
 was built for.

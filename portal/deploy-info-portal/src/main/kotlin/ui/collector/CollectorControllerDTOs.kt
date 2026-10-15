@@ -1,6 +1,6 @@
 package ui.collector
 
-import domain.DeployType
+import domain.DeploymentType
 
 /** Request body of `POST /collector/handleNewDirectory` (see `documentation/api.md`). */
 data class CollectorRequest(
@@ -9,7 +9,7 @@ data class CollectorRequest(
     /** Candidate GCP projects the code may have been deployed to. */
     val projects: List<String>,
     /** `GAE` or `RUN`. */
-    val deployType: DeployType,
+    val deployType: DeploymentType,
     /** The gcloud account that ran the deployment and the collection. */
     val userEmail: String,
 )

@@ -2,7 +2,7 @@ package tests.ui.collector
 
 import application.auth.AuthenticateUserUseCase
 import application.auth.AuthenticationIssue
-import application.collector.CreateDeployLinkUseCase
+import application.collector.CreateDeploymentLinkUseCase
 import application.collector.GetStorageBucketUseCase
 import infrastructure.config.DeployInfoProperties
 import infrastructure.security.AuthenticationFilter
@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 class CollectorTriggerEmailMatchTests {
 
     private val authenticateUserUseCase = mock<AuthenticateUserUseCase>()
-    private val createDeployLinkUseCase = mock<CreateDeployLinkUseCase>()
+    private val createDeploymentLinkUseCase = mock<CreateDeploymentLinkUseCase>()
 
     private fun properties(requireEmailMatch: Boolean, authEnabled: Boolean = true) = DeployInfoProperties(
         storageBucket = "bucket",
@@ -43,7 +43,7 @@ class CollectorTriggerEmailMatchTests {
     private fun mockMvc(requireEmailMatch: Boolean, authEnabled: Boolean = true): MockMvc {
         val properties = properties(requireEmailMatch, authEnabled)
         val builder = MockMvcBuilders.standaloneSetup(
-            ui.collector.CollectorController(createDeployLinkUseCase, GetStorageBucketUseCase(properties), properties),
+            ui.collector.CollectorController(createDeploymentLinkUseCase, GetStorageBucketUseCase(properties), properties),
         )
         builder.addFilters<StandaloneMockMvcBuilder>(AuthenticationFilter(authenticateUserUseCase, properties))
         return builder.build()
@@ -63,7 +63,7 @@ class CollectorTriggerEmailMatchTests {
     private fun permit(email: String) {
         whenever(authenticateUserUseCase.authenticate(any(), any()))
             .thenReturn(AuthenticateUserUseCase.AuthenticatedUser(email, AuthenticationIssue.NONE))
-        whenever(createDeployLinkUseCase.execute(any())).thenReturn(CreateDeployLinkUseCase.Output.NotLinked)
+        whenever(createDeploymentLinkUseCase.execute(any())).thenReturn(CreateDeploymentLinkUseCase.Output.NotLinked)
     }
 
     @Test
@@ -87,7 +87,7 @@ class CollectorTriggerEmailMatchTests {
             """{"error":"email-mismatch","tokenEmail":"other@example.com","requestUserEmail":"victim@example.com"}""",
             result.response.contentAsString,
         )
-        verify(createDeployLinkUseCase, never()).execute(any())
+        verify(createDeploymentLinkUseCase, never()).execute(any())
     }
 
     @Test

@@ -8,7 +8,7 @@ data class TriggerRequest(
     val projects: List<String>,
     /** `GAE` or `RUN`. */
     val deployType: String,
-    /** The gcloud account that performed the deploy and the collection. */
+    /** The gcloud account that performed the deployment and the collection. */
     val userEmail: String,
 )
 
@@ -16,7 +16,7 @@ data class TriggerRequest(
 data class TriggerResponse(
     /** `created`, `already-linked`, `pending` or `unknown-project`. */
     val status: String,
-    /** Present on `created` and `already-linked`: the deploy the upload was linked to. */
+    /** Present on `created` and `already-linked`: the deployment the upload was linked to. */
     val project: String? = null,
     val service: String? = null,
     val version: String? = null,

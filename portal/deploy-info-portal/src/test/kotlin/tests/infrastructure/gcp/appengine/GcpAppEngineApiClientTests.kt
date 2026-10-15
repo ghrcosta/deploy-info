@@ -44,17 +44,17 @@ class GcpAppEngineApiClientTests {
             )
         }
 
-        val deploys = client(adminClient).listAllDeploys(project)
+        val deployments = client(adminClient).listAllDeployments(project)
 
-        assertEquals(listOf("1", "2", "1"), deploys.map { it.versionId })
-        assertEquals(listOf("worker", "web", "web"), deploys.map { it.serviceId })
-        assertEquals(listOf(PROJECT_ID, PROJECT_ID, PROJECT_ID), deploys.map { it.projectId })
+        assertEquals(listOf("1", "2", "1"), deployments.map { it.versionId })
+        assertEquals(listOf("worker", "web", "web"), deployments.map { it.serviceId })
+        assertEquals(listOf(PROJECT_ID, PROJECT_ID, PROJECT_ID), deployments.map { it.projectId })
         assertEquals(
             listOf(instant(30), instant(20), instant(10)),
-            deploys.map { it.createTime },
+            deployments.map { it.createTime },
         )
-        assertEquals(listOf(null, "https://web-2.example.com", null), deploys.map { it.url })
-        assertEquals(listOf(null, "deployer@example.com", null), deploys.map { it.createdBy })
+        assertEquals(listOf(null, "https://web-2.example.com", null), deployments.map { it.url })
+        assertEquals(listOf(null, "deployer@example.com", null), deployments.map { it.createdBy })
     }
 
     @Test
@@ -64,8 +64,8 @@ class GcpAppEngineApiClientTests {
         }
         val client = client(adminClient)
 
-        client.listAllDeploys(project)
-        client.listAllDeploys(project)
+        client.listAllDeployments(project)
+        client.listAllDeployments(project)
 
         org.mockito.kotlin.verify(adminClient, org.mockito.kotlin.times(2)).listServices(PROJECT_ID)
     }
@@ -77,7 +77,7 @@ class GcpAppEngineApiClientTests {
                 ApiException(RuntimeException("no permission"), statusCode(StatusCode.Code.PERMISSION_DENIED), false)
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals(
             "GCP App Engine API returned PERMISSION_DENIED for project ${PROJECT_ID}",
@@ -95,7 +95,7 @@ class GcpAppEngineApiClientTests {
                 ApiException(RuntimeException("not found"), statusCode(StatusCode.Code.NOT_FOUND), false)
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals(
             "GCP App Engine API returned NOT_FOUND for project ${PROJECT_ID}",
@@ -112,7 +112,7 @@ class GcpAppEngineApiClientTests {
                 ApiException(RuntimeException("invalid argument"), statusCode(StatusCode.Code.INVALID_ARGUMENT), false)
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals(
             "GCP App Engine API returned INVALID_ARGUMENT for project ${PROJECT_ID}",
@@ -137,7 +137,7 @@ class GcpAppEngineApiClientTests {
             )
         }
 
-        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeploys(project) }
+        val exception = assertFailsWith<GcpListingException> { client(adminClient).listAllDeployments(project) }
 
         assertEquals("PERMISSION_DENIED", exception.statusCode)
         assertTrue(exception.isPermissionDenied)

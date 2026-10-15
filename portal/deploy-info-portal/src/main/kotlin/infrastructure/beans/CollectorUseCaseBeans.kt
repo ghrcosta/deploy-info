@@ -1,7 +1,7 @@
 package infrastructure.beans
 
 import application.*
-import application.collector.CreateDeployLinkUseCase
+import application.collector.CreateDeploymentLinkUseCase
 import application.collector.GetStorageBucketUseCase
 import com.google.cloud.storage.Storage
 import infrastructure.config.DeployInfoProperties
@@ -16,7 +16,7 @@ class CollectorUseCaseBeans(
     private val projectRepository: ProjectRepository,
     private val appEngineLister: GcpAppEngineLister,
     private val cloudRunLister: GcpCloudRunLister,
-    private val deployLinkRepository: DeployLinkRepository,
+    private val deploymentLinkRepository: DeploymentLinkRepository,
     private val storageProvider: ObjectProvider<Storage>,
     private val properties: DeployInfoProperties,
 ) {
@@ -32,14 +32,14 @@ class CollectorUseCaseBeans(
     fun retryScheduler(): RetryScheduler = SimpleRetryScheduler()
 
     @Bean
-    fun createDeployLinkUseCase(
+    fun createDeploymentLinkUseCase(
         storageCleaner: StorageCleaner,
         retryScheduler: RetryScheduler,
-    ): CreateDeployLinkUseCase = CreateDeployLinkUseCase(
+    ): CreateDeploymentLinkUseCase = CreateDeploymentLinkUseCase(
         projectRepository = projectRepository,
         appEngineLister = appEngineLister,
         cloudRunLister = cloudRunLister,
-        deployLinkRepository = deployLinkRepository,
+        deploymentLinkRepository = deploymentLinkRepository,
         storageCleaner = storageCleaner,
         retryScheduler = retryScheduler,
         window = properties.linking.window,

@@ -22,7 +22,7 @@ describe('HelpComponent', () => {
 
     it('renders the getting-started card with the three steps', () => {
         const el = fixture.nativeElement as HTMLElement;
-        expect(el.querySelector('.help-head h1')?.textContent).toBe('Three steps to see your deploys here:');
+        expect(el.querySelector('.help-head h1')?.textContent).toBe('Three steps to see your deployments here:');
         expect(el.querySelectorAll('.help-steps > li').length).toBe(3);
     });
 
@@ -61,19 +61,19 @@ describe('HelpComponent', () => {
         expect(text).not.toContain('The plugin collects');
     });
 
-    it('switches to the Projects/Deploys views from the internal links', () => {
+    it('switches to the Projects/Deployments views from the internal links', () => {
         const homeService = TestBed.inject(HomeService);
         const views: HomeView[] = [];
         homeService.viewObservable.subscribe(view => views.push(view));
 
         const el = fixture.nativeElement as HTMLElement;
         const projectsLink = el.querySelector('.help-steps li:nth-child(1) a') as HTMLElement;
-        const deploysLink = el.querySelector('.help-steps li:nth-child(3) a') as HTMLElement;
+        const deploymentsLink = el.querySelector('.help-steps li:nth-child(3) a') as HTMLElement;
 
         projectsLink.click();
-        deploysLink.click();
+        deploymentsLink.click();
 
         expect(views).toContain('projects');
-        expect(views).toContain('deploys');
+        expect(views).toContain('deployments');
     });
 });

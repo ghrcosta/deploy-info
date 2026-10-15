@@ -1,9 +1,9 @@
 package application
 
-import domain.AppEngineDeploy
+import domain.AppEngineDeployment
 import domain.Project
 
-/** Lists the App Engine deploys (services/versions) that exist in a GCP project. */
+/** Lists the App Engine deployments (services/versions) that exist in a GCP project. */
 interface GcpAppEngineLister {
 
     /**
@@ -11,5 +11,5 @@ interface GcpAppEngineLister {
      *
      * @throws domain.GcpListingException when the listing API cannot be reached or returns an error.
      */
-    fun listAllDeploys(project: Project): List<AppEngineDeploy>
+    fun listAllDeployments(project: Project): List<AppEngineDeployment>
 }

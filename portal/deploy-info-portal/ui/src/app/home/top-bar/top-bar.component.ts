@@ -22,7 +22,7 @@ export class TopBarComponent implements OnInit {
     ) {}
 
     /** The view whose nav link is shown as active. */
-    view: HomeView = 'deploys';
+    view: HomeView = 'deployments';
 
     isDarkMode = false;
 

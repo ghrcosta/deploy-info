@@ -1,6 +1,6 @@
 package ui.collector
 
-import application.collector.CreateDeployLinkUseCase
+import application.collector.CreateDeploymentLinkUseCase
 import application.collector.GetStorageBucketUseCase
 import domain.InvalidDirectoryNameException
 import infrastructure.config.DeployInfoProperties
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("collector")
 class CollectorController(
-    private val createDeployLinkUseCase: CreateDeployLinkUseCase,
+    private val createDeploymentLinkUseCase: CreateDeploymentLinkUseCase,
     private val getStorageBucketUseCase: GetStorageBucketUseCase,
     private val properties: DeployInfoProperties,
 ) {
@@ -37,21 +37,21 @@ class CollectorController(
                 )
             )
         }
-        return when (val output = createDeployLinkUseCase.execute(request.toUseCaseInput())) {
-            is CreateDeployLinkUseCase.Output.Created ->
+        return when (val output = createDeploymentLinkUseCase.execute(request.toUseCaseInput())) {
+            is CreateDeploymentLinkUseCase.Output.Created ->
                 ResponseEntity.ok(
                     CollectorResponse.created(
-                        output.deployLink.projectId, output.deployLink.serviceId, output.deployLink.versionId,
+                        output.deploymentLink.projectId, output.deploymentLink.serviceId, output.deploymentLink.versionId,
                     )
                 )
-            is CreateDeployLinkUseCase.Output.AlreadyLinked ->
+            is CreateDeploymentLinkUseCase.Output.AlreadyLinked ->
                 ResponseEntity.ok(
                     CollectorResponse.alreadyLinked(
                         output.existing.projectId, output.existing.serviceId, output.existing.versionId,
                     )
                 )
-            is CreateDeployLinkUseCase.Output.NotLinked -> ResponseEntity.accepted().body(CollectorResponse.PENDING)
-            is CreateDeployLinkUseCase.Output.UnknownProject ->
+            is CreateDeploymentLinkUseCase.Output.NotLinked -> ResponseEntity.accepted().body(CollectorResponse.PENDING)
+            is CreateDeploymentLinkUseCase.Output.UnknownProject ->
                 ResponseEntity.unprocessableContent().body(CollectorResponse.UNKNOWN_PROJECT)
         }
     }
@@ -68,10 +68,10 @@ class CollectorController(
     @ExceptionHandler(InvalidDirectoryNameException::class)
     fun onInvalidDirectoryName(): ResponseEntity<Void> = ResponseEntity.badRequest().build()
 
-    private fun CollectorRequest.toUseCaseInput() = CreateDeployLinkUseCase.Input(
+    private fun CollectorRequest.toUseCaseInput() = CreateDeploymentLinkUseCase.Input(
         directoryName = directoryName,
         projects = projects,
-        deployType = deployType,
+        deploymentType = deployType,
         userEmail = userEmail,
     )
 }

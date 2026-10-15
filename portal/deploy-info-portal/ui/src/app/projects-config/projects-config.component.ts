@@ -31,7 +31,7 @@ export class ProjectsConfigComponent implements OnInit {
     /** Page subtitle with a properly pluralized project count. */
     get watchedProjectsSubtitle(): string {
         const projects = this.projects ?? [];
-        return `${projects.length} ${projects.length === 1 ? 'project' : 'projects'} watched for deploys`;
+        return `${projects.length} ${projects.length === 1 ? 'project' : 'projects'} watched for deployments`;
     }
 
     ngOnInit() {

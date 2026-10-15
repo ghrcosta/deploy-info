@@ -14,7 +14,7 @@ const PROJECTS = [
 ];
 
 // Minimal icon stand-ins: the real ones are registered by AppComponent at
-// runtime, which the specs do not include (why these are needed at all: deploy-viewer.component.spec.ts).
+// runtime, which the specs do not include (why these are needed at all: deployment-viewer.component.spec.ts).
 const ICON_STUB =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M0-960h960V0H0Z"/></svg>';
 const ICON_NAMES = ['project', 'add', 'edit', 'delete', 'group', 'service_account'];
@@ -66,13 +66,13 @@ describe('ProjectsConfigComponent', () => {
 
   it('pluralizes the watched-projects subtitle', () => {
     expect((fixture.nativeElement.querySelector('.projects-sub') as HTMLElement).textContent)
-      .toContain('2 projects watched for deploys');
+      .toContain('2 projects watched for deployments');
 
     network.getProjects.and.returnValue(of([PROJECTS[0]]));
     const singleFixture = TestBed.createComponent(ProjectsConfigComponent);
     singleFixture.detectChanges();
     expect((singleFixture.nativeElement.querySelector('.projects-sub') as HTMLElement).textContent)
-      .toContain('1 project watched for deploys');
+      .toContain('1 project watched for deployments');
   });
 
   it('opens the add dialog from the header button', () => {

@@ -11,7 +11,7 @@ import java.net.URL
 
 /**
  * Notifies the portal that a collection output directory has been uploaded to the bucket, so it can
- * link the upload to the GCP deploy it was built for.
+ * link the upload to the GCP deployment it was built for.
  *
  * Calls `POST {portalUrl}/collector/handleNewDirectory` (see `documentation/api.md`) with a
  * [TriggerRequest] JSON body, using plain `HttpURLConnection` like [BucketLookup] (no HTTP
@@ -26,7 +26,7 @@ class PortalTrigger(
     private val projects: List<String>,
     /** `GAE` or `RUN`. */
     private val deployType: String,
-    /** The gcloud account that performed the deploy and the collection. */
+    /** The gcloud account that performed the deployment and the collection. */
     private val userEmail: String,
     /** gcloud access token as the Bearer credential, or null — see [io.github.ghrcosta.action.GcloudAccessTokenProvider]. */
     private val accessToken: String? = null,
@@ -145,11 +145,11 @@ class PortalTrigger(
 
         when (response.status) {
             TriggerResponse.STATUS_CREATED, TriggerResponse.STATUS_ALREADY_LINKED -> Logger.i(
-                "Deploy link result: ${response.status} ('${ directoryName}' -->  " +
+                "Deployment link result: ${response.status} ('${ directoryName}' -->  " +
                         "[${response.project ?: "?"}, ${response.service ?: "?"}, ${response.version ?: "?"}])."
             )
             TriggerResponse.STATUS_PENDING -> Logger.i(
-                "Portal accepted the trigger for '${directoryName}' as pending (HTTP ${status}): no deploy matched " +
+                "Portal accepted the trigger for '${directoryName}' as pending (HTTP ${status}): no deployment matched " +
                         "yet. The portal will retry matching and may still link the upload or delete its folder."
             )
             else -> throw GradleException(

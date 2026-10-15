@@ -1,7 +1,7 @@
 package infrastructure.beans
 
 import application.*
-import application.cleanup.CleanupInvalidDeployLinksUseCase
+import application.cleanup.CleanupInvalidDeploymentLinksUseCase
 import application.cleanup.CleanupStateRepository
 import application.cleanup.RunCleanupIfDueUseCase
 import infrastructure.config.DeployInfoProperties
@@ -16,18 +16,18 @@ class CleanupBeans(private val properties: DeployInfoProperties) {
     fun systemClock(): Clock = Clock.systemUTC()
 
     @Bean
-    fun cleanupInvalidDeployLinksUseCase(
+    fun cleanupInvalidDeploymentLinksUseCase(
         projectRepository: ProjectRepository,
         appEngineLister: GcpAppEngineLister,
         cloudRunLister: GcpCloudRunLister,
-        deployLinkRepository: DeployLinkRepository,
+        deploymentLinkRepository: DeploymentLinkRepository,
         storageCleaner: StorageCleaner,
         clock: Clock,
-    ): CleanupInvalidDeployLinksUseCase = CleanupInvalidDeployLinksUseCase(
+    ): CleanupInvalidDeploymentLinksUseCase = CleanupInvalidDeploymentLinksUseCase(
         projectRepository = projectRepository,
         appEngineLister = appEngineLister,
         cloudRunLister = cloudRunLister,
-        deployLinkRepository = deployLinkRepository,
+        deploymentLinkRepository = deploymentLinkRepository,
         storageCleaner = storageCleaner,
         clock = clock,
         gracePeriod = properties.cleanup.gracePeriod,
@@ -35,12 +35,12 @@ class CleanupBeans(private val properties: DeployInfoProperties) {
 
     @Bean
     fun runCleanupIfDueUseCase(
-        cleanupInvalidDeployLinksUseCase: CleanupInvalidDeployLinksUseCase,
+        cleanupInvalidDeploymentLinksUseCase: CleanupInvalidDeploymentLinksUseCase,
         cleanupStateRepository: CleanupStateRepository,
         clock: Clock,
     ): RunCleanupIfDueUseCase = RunCleanupIfDueUseCase(
         enabled = properties.cleanup.enabled,
-        sweep = { cleanupInvalidDeployLinksUseCase.execute() },
+        sweep = { cleanupInvalidDeploymentLinksUseCase.execute() },
         cleanupStateRepository = cleanupStateRepository,
         clock = clock,
         interval = properties.cleanup.interval,
