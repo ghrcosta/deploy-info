@@ -1,3 +1,4 @@
+import org.gradle.api.attributes.java.TargetJvmVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
@@ -12,20 +13,20 @@ plugins {
 }
 
 group = "io.github.ghrcosta"
-version = "1.0.1"
+version = "1.0.2"
 
 kotlin {
-    // Build with the latest LTS, but emit Java 17 bytecode so consumers running Gradle on JDK 17 can load it.
+    // Build with the latest LTS, but let the plugin work on JDK 11+. Verified by CompatibilityTest.
     jvmToolchain(21)
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
+        jvmTarget = JvmTarget.JVM_11
     }
 }
 
 java {
-    // Keep the Java side aligned with the Kotlin jvmTarget (Java 17 bytecode).
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    // Keep the Java side aligned with the Kotlin jvmTarget
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 repositories {
@@ -49,7 +50,7 @@ gradlePlugin {
         create("deployInfoCollectorPlugin") {
             id = "${group}.deploy-info-collector"
             displayName = "DeployInfo Collector"
-            description = "Collects git state and uploads to your own deploy of DeployInfo portal."
+            description = "Collects git state and uploads to your own deployment of DeployInfo portal."
             tags = listOf("git", "build-info")
             implementationClass = "${group}.CollectorPlugin"
             compatibility {
@@ -78,6 +79,18 @@ publishing {
 // nothing from this source set is wired into `jar`, `publishPlugins` or any production artifact.
 val functionalTestSourceSet: SourceSet = sourceSets.create("functionalTest")
 
+// JUnit 6 (used only by the functionalTest source set) requires Java 17, while the plugin's
+// published bytecode targets Java 11. The functionalTest source set is never published and
+// always runs on the Gradle daemon's JDK (21), so its classpath configurations resolve against
+// Java 17 instead of the project-wide Java 11 target, allowing JUnit 6 on the classpath.
+listOf("functionalTestCompileClasspath", "functionalTestRuntimeClasspath").forEach { configName ->
+    configurations.getByName(configName) {
+        attributes {
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 17)
+        }
+    }
+}
+
 dependencies {
     "functionalTestImplementation"(gradleApi())
     "functionalTestImplementation"(gradleTestKit())
@@ -103,7 +116,7 @@ tasks.pluginUnderTestMetadata {
 
 val functionalTest = tasks.register<Test>("functionalTest") {
     group = "verification"
-    description = "Runs the Gradle TestKit compatibility matrix tests (7.6+17 and latest+21), " +
+    description = "Runs the Gradle TestKit compatibility matrix tests (7.6+11, 7.6+17 and latest+21), " +
         "including configuration-cache and isolated-projects feature tests."
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
@@ -114,8 +127,10 @@ val functionalTest = tasks.register<Test>("functionalTest") {
     // Resolve (and auto-provision, via the foojay resolver) the JVMs used to run the consumer
     // builds, and hand their JAVA_HOMEs to the tests.
     val javaToolchainService = project.extensions.getByType(JavaToolchainService::class.java)
+    val jdk11 = javaToolchainService.launcherFor { languageVersion.set(JavaLanguageVersion.of(11)) }
     val jdk17 = javaToolchainService.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) }
     val jdk21 = javaToolchainService.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) }
+    systemProperty("compat.java11Home", jdk11.map { launcher -> launcher.metadata.installationPath.asFile.absolutePath }.get())
     systemProperty("compat.java17Home", jdk17.map { launcher -> launcher.metadata.installationPath.asFile.absolutePath }.get())
     systemProperty("compat.java21Home", jdk21.map { launcher -> launcher.metadata.installationPath.asFile.absolutePath }.get())
 }

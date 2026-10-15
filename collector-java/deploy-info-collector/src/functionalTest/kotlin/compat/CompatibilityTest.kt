@@ -18,9 +18,10 @@ import java.io.File
  * and runs the test-only ProbeTask, which exercises the plugin's Gradle API surface without
  * external commands or network access.
  *
- * Covered combinations (the two corners of the compatibility matrix):
- *  - minimum supported:  Gradle 7.6 running on JDK 17 (catches too-new bytecode and APIs missing in 7.6)
- *  - maximum supported:  Gradle 9.8.1 running on JDK 21 (catches APIs removed in new Gradle and JDK-21 issues)
+ * Covered combinations:
+ *  - minimum supported Java: Gradle 7.6 running on JDK 11
+ *  - minimum supported:      Gradle 7.6 running on JDK 17
+ *  - maximum supported:      Gradle 9.8.1 running on JDK 21
  *
  * It also covers the two Gradle features the plugin declares compatibility with (see the `compatibility`
  * block in `build.gradle.kts`):
@@ -82,6 +83,12 @@ class CompatibilityTest {
 
     @TempDir
     lateinit var projectDir: File
+
+    @Test
+    @DisplayName("runs on minimum supported Java combination Gradle 7.6 with Java 11")
+    fun runsOnMinimumSupportedJavaCombinationGradle76WithJava11() {
+        runProbeTask(gradleVersion = MINIMUM_SUPPORTED_GRADLE, javaHome = requireJavaHome("compat.java11Home"))
+    }
 
     @Test
     @DisplayName("runs on minimum supported combination Gradle 7.6 with Java 17")
