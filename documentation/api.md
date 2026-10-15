@@ -200,8 +200,10 @@ parameter of its own).
 ## Main-screen contract — `GET /portal/tree`
 
 A list of groups. Projects without a group (and links of projects no longer configured in the portal) are
-under the `""` group, which is sorted last. Every level is sorted by name. Services are keyed by deployment
-type, so the same service name may appear once as a GAE and once as a RUN service.
+under the `""` group, which is sorted last. Groups, projects and services are sorted alphabetically
+(case-insensitive); versions are sorted naturally, comparing embedded numbers numerically (e.g. `v2` before
+`v10`). Services are keyed by deployment type, so the same service name may appear once as a GAE and once
+as a RUN service.
 
 **Note:** when the on-request cleanup trigger is enabled and due
 (see [deploy-cleanup.md](../portal/deploy-info-portal/documentation/backend/deploy-cleanup.md)), the cleanup sweep

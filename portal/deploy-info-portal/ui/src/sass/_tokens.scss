@@ -28,6 +28,11 @@
     --accent-soft: #dbe7fd;
     --on-accent-soft: #0f2f66;
 
+    /* Search-match highlight: a bright yellow that stands out at a glance
+       against both the neutral surfaces and the blue accent. */
+    --highlight: #ffe064;
+    --on-highlight: #4a3900;
+
     --border: #e4e8ee;
     --border-strong: #c9d1db;
 
@@ -87,6 +92,10 @@ html.dark-theme,
     --on-accent: #0b2c66;
     --accent-soft: #24344f;
     --on-accent-soft: #c4d9ff;
+
+    /* Search-match highlight: bright yellow reads clearly on the dark surfaces. */
+    --highlight: #ffd54f;
+    --on-highlight: #33270a;
 
     --border: #262c35;
     --border-strong: #3a424e;

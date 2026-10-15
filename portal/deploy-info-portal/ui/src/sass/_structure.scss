@@ -324,6 +324,14 @@ img, svg { display: block; }
 .nav-project[data-filtered-out] { display: none; }
 .nav-group[data-filtered-out] { display: none; }
 
+/* search-match highlight inside the navigator's node names */
+.nav-tree mark {
+    background: var(--highlight, #ffe064);
+    color: var(--on-highlight, #4a3900);
+    border-radius: 3px;
+    padding: 0 1px;
+}
+
 /* ------------------------------------------------------ deployment card */
 .deployment-card {
     padding: 18px 22px;

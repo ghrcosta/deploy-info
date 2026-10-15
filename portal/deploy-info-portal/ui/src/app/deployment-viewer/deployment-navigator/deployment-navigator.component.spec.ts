@@ -186,7 +186,7 @@ describe('DeploymentNavigatorComponent', () => {
     expect(webService.open).toBeTrue();
   });
 
-  it('should keep a service visible on a self-match even when all its versions are filtered out', () => {
+  it('should keep a service and its versions visible on a service self-match', () => {
     const search = element().querySelector('.nav-search input') as HTMLInputElement;
     search.value = 'worker';
     search.dispatchEvent(new Event('input'));
@@ -194,8 +194,73 @@ describe('DeploymentNavigatorComponent', () => {
     const workerService = serviceOf('worker');
     expect(workerService.hasAttribute('data-filtered-out')).toBeFalse();
     expect(workerService.open).toBeTrue();
-    expect(versionButton('v1').hasAttribute('data-filtered-out')).toBeTrue();
+    expect(versionButton('v1').hasAttribute('data-filtered-out')).toBeFalse();
     expect(versionButton('v42').hasAttribute('data-filtered-out')).toBeTrue();
+  });
+
+  it('should keep a project, its services and versions visible on a project self-match', () => {
+    const search = element().querySelector('.nav-search input') as HTMLInputElement;
+    search.value = 'Project C';
+    search.dispatchEvent(new Event('input'));
+
+    const project = projectOf('Project C');
+    expect(project.hasAttribute('data-filtered-out')).toBeFalse();
+    expect(project.open).toBeTrue();
+    const webService = serviceOf('web');
+    expect(webService.hasAttribute('data-filtered-out')).toBeFalse();
+    expect(webService.open).toBeTrue();
+    expect(versionButton('v42').hasAttribute('data-filtered-out')).toBeFalse();
+    expect(versionButton('v7').hasAttribute('data-filtered-out')).toBeFalse();
+    // 'Project D' and its group keep nothing visible and do not self-match
+    expect(projectOf('Project D').hasAttribute('data-filtered-out')).toBeTrue();
+    expect(Array.from(element().querySelectorAll('.nav-group'))[1].hasAttribute('data-filtered-out')).toBeTrue();
+  });
+
+  it('should keep everything under a group visible on a group self-match', () => {
+    const search = element().querySelector('.nav-search input') as HTMLInputElement;
+    search.value = 'prod';
+    search.dispatchEvent(new Event('input'));
+
+    const groups = Array.from(element().querySelectorAll('.nav-group'));
+    expect(groups[0].hasAttribute('data-filtered-out')).toBeFalse();
+    expect(groups[1].hasAttribute('data-filtered-out')).toBeTrue();
+    expect(projectOf('Project C').hasAttribute('data-filtered-out')).toBeFalse();
+    expect(serviceOf('web').hasAttribute('data-filtered-out')).toBeFalse();
+    expect(versionButton('v42').hasAttribute('data-filtered-out')).toBeFalse();
+    expect(versionButton('v7').hasAttribute('data-filtered-out')).toBeFalse();
+  });
+
+  it('should match node names only, not the relative timestamps', () => {
+    const search = element().querySelector('.nav-search input') as HTMLInputElement;
+    search.value = 'ago';
+    search.dispatchEvent(new Event('input'));
+
+    expect(versionButton('v42').hasAttribute('data-filtered-out')).toBeTrue();
+    expect(versionButton('v7').hasAttribute('data-filtered-out')).toBeTrue();
+    expect(versionButton('v1').hasAttribute('data-filtered-out')).toBeTrue();
+    expect(Array.from(element().querySelectorAll('.nav-service')).every(el => el.hasAttribute('data-filtered-out'))).toBeTrue();
+  });
+
+  it('should highlight the matching substrings of the node names with <mark>', () => {
+    const search = element().querySelector('.nav-search input') as HTMLInputElement;
+    search.value = 'WEB';
+    search.dispatchEvent(new Event('input'));
+
+    const webName = serviceOf('web')!.querySelector('.nav-service-name')!;
+    expect(webName.querySelectorAll('mark').length).toEqual(1);
+    expect(webName.querySelector('mark')!.textContent).toEqual('web');
+
+    search.value = 'v4';
+    search.dispatchEvent(new Event('input'));
+    const v42Name = versionButton('v42').querySelector('.nav-version-name')!;
+    expect(v42Name.querySelector('mark')!.textContent).toEqual('v4');
+    expect(v42Name.textContent).toEqual('v42');
+
+    // Clearing the search restores the plain names, with no <mark> left behind.
+    search.value = '';
+    search.dispatchEvent(new Event('input'));
+    expect(element().querySelectorAll('mark').length).toEqual(0);
+    expect(serviceOf('web')!.querySelector('.nav-service-name')!.textContent).toEqual('web');
   });
 
   it('should show the empty state with a "Manage projects" button when there is no data', () => {
