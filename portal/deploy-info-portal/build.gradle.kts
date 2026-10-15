@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.ghrcosta"
-version = "1.0.1"
+version = "1.0.2"
 
 java {
     toolchain {
