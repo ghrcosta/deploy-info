@@ -206,7 +206,10 @@ img, svg { display: block; }
 }
 
 .navigator {
-    overflow-y: auto;
+    /* Always show the scrollbar (even when the tree fits), so the column's
+       content does not shift sideways once the list grows long enough to
+       scroll. */
+    overflow-y: scroll;
     padding: 16px 14px 24px;
     background: var(--surface, #fff);
     border-right: 1px solid var(--border, #e3e6ea);
