@@ -408,6 +408,9 @@ img, svg { display: block; }
     overflow: hidden;
 }
 
+// Chrome-specific fix
+.file-block:not([open])::details-content { display: none; }
+
 .file-head {
     display: flex;
     align-items: center;
