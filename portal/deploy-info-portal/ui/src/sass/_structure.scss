@@ -215,6 +215,13 @@ img, svg { display: block; }
 .viewer {
     overflow-y: auto;
     padding: 20px 28px 48px;
+    /* The global thin/custom-scrollbar rule makes Chromium draw a classic,
+       space-taking scrollbar here, which pops in (and shifts the centered
+       content) as soon as an expanded file-block makes this column scroll.
+       Firefox presents the same scroller without a persistent bar, so hide
+       the indicator to replicate the behavior in Chromium; scrolling itself
+       is unaffected. */
+    scrollbar-width: none;
 }
 .viewer-inner { max-width: var(--viewer-max-width, 980px); margin: 0 auto; }
 
