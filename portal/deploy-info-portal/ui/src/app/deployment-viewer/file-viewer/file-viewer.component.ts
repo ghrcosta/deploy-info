@@ -124,11 +124,8 @@ export class FileViewerComponent {
     private buildViewModels(content: DeploymentContent) {
         this.gitLogLines = content.git?.gitlog ? toCodeLines(content.git.gitlog, false) : [];
         this.gitStatusLines = content.git?.gitstatus ? toCodeLines(content.git.gitstatus, false) : [];
-        // Only modified files carry a `git diff`; new/untracked files store the full file content,
-        // so their +/-/@@-prefixed lines must not be diff-tinted.
-        this.changeBlocks = (content.git?.changes ?? [])
-            .map(change => toFileBlock(change, change.status === 'modified'));
-        this.extraBlocks = content.extras.map(extra => toFileBlock(extra, false));
+        this.changeBlocks = (content.git?.changes ?? []).map(change => toFileBlock(change, false));
+        this.extraBlocks = content.extras.map(extra => toFileBlock(extra, true));
     }
 }
 
@@ -152,6 +149,17 @@ function toCodeLines(text: string, diff: boolean): CodeLine[] {
     });
 }
 
-function toFileBlock(file: ContentFile, diff: boolean): FileBlock {
+/**
+ * Builds a `.file-block` view model. Extras are never diff-tinted; git changes are
+ * diff-tinted only when explicitly marked as `modified` AND the stored content is an
+ * actual `git diff`.
+ */
+function toFileBlock(file: ContentFile, isExtra: boolean = false): FileBlock {
+    const diff = !isExtra && file.status === 'modified' && isGitDiff(file.content);
     return { filepath: file.filepath, status: file.status, lines: toCodeLines(file.content, diff) };
+}
+
+/** True when the text starts with the `diff --git` header every `git diff` output begins with. */
+function isGitDiff(content: string): boolean {
+    return content.startsWith('diff --git ');
 }

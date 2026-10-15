@@ -37,10 +37,11 @@ describe('FileViewerComponent', () => {
       changes: [
         { filepath: '/src/main.kt', content: 'diff --git a/x b/x\n@@ -1,1 +1,1 @@\n-old line\n+new line\nkept line\n', status: 'modified' },
         { filepath: '/src/new-file.kt', content: 'full file content\n-removed-looking line\n+added-looking line\n@@ hunk-looking @@\n', status: 'new' },
-        { filepath: '/src/untracked-file.kt', content: 'untracked file content\n-untracked-looking line\n', status: 'untracked' },
+        { filepath: '/docs/notes.md', content: '---\ntitle: deploy notes\n---\n# Notes\n-dash-looking line\n', status: 'untracked' },
+        { filepath: '/src/full-content.md', content: '---\nfrontmatter\n---\nbody\n', status: 'modified' },
       ],
     },
-    extras: [{ filepath: '/docs/readme.md', content: '# readme\n', status: 'modified' }],
+    extras: [{ filepath: '/docs/readme.md', content: '# readme\n+added-looking line\n-deleted-looking line\n', status: 'modified' }],
   };
   const EMPTY_CONTENT: DeploymentContent = { git: null, extras: [] };
 
@@ -110,12 +111,13 @@ describe('FileViewerComponent', () => {
     fixture.detectChanges();
 
     const blocks = element().querySelectorAll('.file-block');
-    expect(blocks.length).toEqual(5);
+    expect(blocks.length).toEqual(6);
     expect(blocks[0].querySelector('.file-path')!.textContent).toContain('git log');
     expect(blocks[1].querySelector('.file-path')!.textContent).toContain('git status');
     expect(blocks[2].querySelector('.file-path')!.textContent).toContain('/src/main.kt');
     expect(blocks[3].querySelector('.file-path')!.textContent).toContain('/src/new-file.kt');
-    expect(blocks[4].querySelector('.file-path')!.textContent).toContain('/src/untracked-file.kt');
+    expect(blocks[4].querySelector('.file-path')!.textContent).toContain('/docs/notes.md');
+    expect(blocks[5].querySelector('.file-path')!.textContent).toContain('/src/full-content.md');
     expect(element().querySelectorAll('[aria-label="Extras"] .file-block').length).toEqual(0);
   });
 
@@ -130,6 +132,7 @@ describe('FileViewerComponent', () => {
     expect(blocks[2].querySelector('.status-chip.st-new')).toBeNull();
     expect(blocks[3].querySelector('.status-chip.st-new')!.textContent).toContain('New');
     expect(blocks[4].querySelector('.status-chip.st-untracked')!.textContent).toContain('Untracked');
+    expect(blocks[5].querySelector('.status-chip.st-modified')!.textContent).toContain('Modified');
   });
 
   it('should render numbered code lines and the diff tints of changed files', () => {
@@ -151,10 +154,14 @@ describe('FileViewerComponent', () => {
     expect(diffLines[4].querySelector('.cln')!.textContent).toEqual('5');
 
     // New/untracked files store full file content (not a diff), so their +/-/@@-prefixed
-    // lines stay plain: only modified files are diff-tinted
+    // lines stay plain — including a markdown file's `---` YAML frontmatter lines.
+    // A `modified` file whose stored content is the full file (the collectors' empty-diff
+    // fallback) stays plain too: only real `git diff` content of modified files is tinted.
     expect(blockWithPath('/src/new-file.kt').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
     expect(blockWithPath('/src/new-file.kt').querySelectorAll('.cl').length).toEqual(4);
-    expect(blockWithPath('/src/untracked-file.kt').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
+    expect(blockWithPath('/docs/notes.md').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
+    expect(blockWithPath('/docs/notes.md').querySelectorAll('.cl').length).toEqual(5);
+    expect(blockWithPath('/src/full-content.md').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
   });
 
   it('should show the tab counts and switch between the Git and Extras panels', () => {
@@ -162,7 +169,7 @@ describe('FileViewerComponent', () => {
     fixture.detectChanges();
 
     const tabs = element().querySelectorAll('.tab-btn');
-    expect(tabs[0].textContent).toContain('5');
+    expect(tabs[0].textContent).toContain('6');
     expect(tabs[1].textContent).toContain('1');
     expect(tabs[0].classList.contains('active')).toBeTrue();
 
@@ -175,6 +182,8 @@ describe('FileViewerComponent', () => {
     const extrasPanel = element().querySelector('[aria-label="Extras"]')!;
     expect(extrasPanel.querySelector('.file-path')!.textContent).toContain('/docs/readme.md');
     expect(extrasPanel.querySelector('.status-chip.st-extra')!.textContent).toContain('Extra');
+    // Extras are never diff-tinted, even when their content has +/--prefixed lines.
+    expect(extrasPanel.querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
   });
 
   it('should render the file paths exactly as received, keeping the leading slash', () => {
@@ -199,7 +208,7 @@ describe('FileViewerComponent', () => {
     fixture.detectChanges();
 
     const blocks = Array.from(element().querySelectorAll('details.file-block')) as HTMLDetailsElement[];
-    expect(blocks.length).toEqual(5);
+    expect(blocks.length).toEqual(6);
     blocks.forEach(block => expect(block.open).withContext('closed by default').toBeFalse());
     expect(element().querySelector('.copy-btn')).withContext('no copy button').toBeNull();
   });
