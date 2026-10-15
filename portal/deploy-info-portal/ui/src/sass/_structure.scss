@@ -549,6 +549,13 @@ img, svg { display: block; }
 .project-field dd { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; }
 
 /* --------------------------------------------------------------- dialogs */
+/* Material dialogs shrink-wrap their content but cap the panel at a default max-width, which
+   silently clipped dialogs wider than that (e.g. the service-account error dialog). */
+:root {
+    --mat-dialog-container-max-width: min(calc(100vw - 48px), 720px);
+    --mat-dialog-container-small-max-width: calc(100vw - 48px);
+}
+
 .dialog-root { position: fixed; inset: 0; z-index: 100; }
 .dialog-backdrop {
     position: absolute;

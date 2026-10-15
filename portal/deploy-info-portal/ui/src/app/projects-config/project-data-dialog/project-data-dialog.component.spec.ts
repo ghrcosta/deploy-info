@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 
 import { ProjectDataDialogAction, ProjectDataDialogComponent } from './project-data-dialog.component';
 import { ProjectDataDialogNetworkService } from './project-data-dialog.network.service';
@@ -207,6 +207,28 @@ describe('ProjectDataDialogComponent', () => {
 
     expect(network.deleteProject).toHaveBeenCalledWith('proj-x');
     expect(dialogRef.close).toHaveBeenCalledWith(UPDATED_PROJECTS);
+  });
+
+  it('shows an indefinite loading spinner in the save button while the request is ongoing', async () => {
+    await setup(ProjectDataDialogAction.ADD);
+    component.projectIdFormControl.setValue('new-proj');
+    component.serviceAccountFormControl.setValue('collector@new-proj.iam.gserviceaccount.com');
+    // A request that never emits: the button must keep showing the spinner.
+    network.addProject.and.returnValue(new Observable(() => {}));
+    fixture.detectChanges();
+
+    saveButton().click();
+    fixture.detectChanges();
+
+    expect(saveButton().disabled).withContext('the request is ongoing').toBeTrue();
+    expect(saveButton().textContent).not.toContain('Add');
+    const spinner = saveButton().querySelector('mat-spinner');
+    expect(spinner).withContext('the button shows an indefinite spinner').toBeTruthy();
+    expect(spinner!.classList.contains('_mat-animation-noopable'))
+      .withContext('the spinner must not be frozen by a noop-animations setup').toBeFalse();
+    const circle = spinner!.querySelector('circle');
+    expect(circle).withContext('the spinner draws a circle arc').toBeTruthy();
+    expect(getComputedStyle(circle!).stroke).toBe('rgb(255, 255, 255)');
   });
 
   it('shows a snackbar with the error and re-enables saving when the request fails', async () => {

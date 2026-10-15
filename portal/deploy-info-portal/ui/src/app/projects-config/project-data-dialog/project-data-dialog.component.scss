@@ -14,7 +14,12 @@
     }
 }
 
-.button-spinner circle {
+/* ::ng-deep is required here: the spinner's internal <circle> comes from the
+   MatProgressSpinner component template, so with view encapsulation a plain
+   `.button-spinner circle` rule (which carries this component's _ngcontent
+   attribute) never matches it — and without the override the stroke falls back
+   to the theme primary, i.e. blue on the accent-blue button (invisible). */
+:host ::ng-deep .button-spinner circle {
     // The spinner sits on the accent-colored primary button — stroke it with
     // the on-accent color instead of the accent itself.
     stroke: var(--on-accent, #fff) !important;
