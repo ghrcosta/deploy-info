@@ -1,14 +1,10 @@
 plugins {
-	alias(libs.plugins.kotlin.jvm)
-	alias(libs.plugins.kotlin.spring)
-	alias(libs.plugins.spring.boot)
-	alias(libs.plugins.spring.dependencyManagement)
-	alias(libs.plugins.google.appengine)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependencyManagement)
     alias(libs.plugins.google.appengine)
+    alias(libs.plugins.deployInfoCollector)
 }
 
 group = "io.github.ghrcosta"
