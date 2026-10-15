@@ -124,14 +124,18 @@ export class FileViewerComponent {
     private buildViewModels(content: DeploymentContent) {
         this.gitLogLines = content.git?.gitlog ? toCodeLines(content.git.gitlog, false) : [];
         this.gitStatusLines = content.git?.gitstatus ? toCodeLines(content.git.gitstatus, false) : [];
-        this.changeBlocks = (content.git?.changes ?? []).map(change => toFileBlock(change, true));
+        // Only modified files carry a `git diff`; new/untracked files store the full file content,
+        // so their +/-/@@-prefixed lines must not be diff-tinted.
+        this.changeBlocks = (content.git?.changes ?? [])
+            .map(change => toFileBlock(change, change.status === 'modified'));
         this.extraBlocks = content.extras.map(extra => toFileBlock(extra, false));
     }
 }
 
 /**
  * Per-line code renderer: every line becomes a `.cl` span with a `.cln` number
- * and a `.clt` text; when `diff` is set, lines starting with +, - or @@ get the
+ * and a `.clt` text; when `diff` is set (only for modified files, whose content
+ * is a `git diff`), lines starting with +, - or @@ get the
  * `cl-add`/`cl-del`/`cl-hunk` tint classes driven by the add/del/hunk design tokens.
  */
 function toCodeLines(text: string, diff: boolean): CodeLine[] {

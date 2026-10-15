@@ -36,8 +36,8 @@ describe('FileViewerComponent', () => {
       gitstatus: 'On branch main ...',
       changes: [
         { filepath: '/src/main.kt', content: 'diff --git a/x b/x\n@@ -1,1 +1,1 @@\n-old line\n+new line\nkept line\n', status: 'modified' },
-        { filepath: '/src/new-file.kt', content: 'full file content\n', status: 'new' },
-        { filepath: '/src/untracked-file.kt', content: 'untracked file content\n', status: 'untracked' },
+        { filepath: '/src/new-file.kt', content: 'full file content\n-removed-looking line\n+added-looking line\n@@ hunk-looking @@\n', status: 'new' },
+        { filepath: '/src/untracked-file.kt', content: 'untracked file content\n-untracked-looking line\n', status: 'untracked' },
       ],
     },
     extras: [{ filepath: '/docs/readme.md', content: '# readme\n', status: 'modified' }],
@@ -150,8 +150,11 @@ describe('FileViewerComponent', () => {
     expect(diffLines[4].classList).not.toContain('cl-');
     expect(diffLines[4].querySelector('.cln')!.textContent).toEqual('5');
 
-    // Changed files render diff-tinted, but a line without +/-/@@ prefix stays plain
+    // New/untracked files store full file content (not a diff), so their +/-/@@-prefixed
+    // lines stay plain: only modified files are diff-tinted
     expect(blockWithPath('/src/new-file.kt').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
+    expect(blockWithPath('/src/new-file.kt').querySelectorAll('.cl').length).toEqual(4);
+    expect(blockWithPath('/src/untracked-file.kt').querySelectorAll('.cl-add, .cl-del, .cl-hunk').length).toEqual(0);
   });
 
   it('should show the tab counts and switch between the Git and Extras panels', () => {
